@@ -1,0 +1,78 @@
+/* ===== App Layout ===== */
+.app-layout {
+  display: flex;
+  min-height: 100vh;
+}
+
+.main-content {
+  flex: 1;
+  min-width: 0;
+  margin-left: var(--sidebar-width);
+  transition: margin-left var(--transition-slow);
+  min-height: 100vh;
+  display: flex;
+  flex-direction: column;
+}
+
+.main-content.sidebar-collapsed {
+  margin-left: var(--sidebar-collapsed);
+}
+
+.main-body {
+  position: relative;
+  flex: 1;
+  min-width: 0;
+  padding: calc(var(--navbar-height) + 24px) 24px 40px;
+  overflow-y: auto;
+}
+
+/* Ambient Background */
+.main-ambient {
+  position: fixed;
+  inset: 0;
+  pointer-events: none;
+  z-index: 0;
+  overflow: hidden;
+}
+
+.main-ambient-orb {
+  position: absolute;
+  border-radius: 50%;
+  filter: blur(120px);
+  opacity: 0.15;
+}
+
+.main-ambient-orb.orb-1 {
+  width: 500px;
+  height: 500px;
+  background: rgba(99, 102, 241, 0.25);
+  top: -150px;
+  right: -100px;
+  animation: ambient-rotate 30s linear infinite;
+}
+
+.main-ambient-orb.orb-2 {
+  width: 400px;
+  height: 400px;
+  background: rgba(139, 92, 246, 0.2);
+  bottom: -100px;
+  left: 20%;
+  animation: ambient-rotate 25s linear infinite reverse;
+}
+
+/* Ensure content is above ambient */
+.main-body > *:not(.main-ambient) {
+  position: relative;
+  z-index: 1;
+}
+
+/* Responsive */
+@media (max-width: 768px) {
+  .main-content {
+    margin-left: 0 !important;
+  }
+
+  .main-body {
+    padding: calc(var(--navbar-height) + 16px) 16px 80px;
+  }
+}
