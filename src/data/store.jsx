@@ -296,7 +296,9 @@ export function StoreProvider({ children }) {
       });
       if (response.ok) {
         const data = await response.json();
-        return data.url;
+        // Return absolute URL so frontend can load it from Render, not Vercel
+        const baseUrl = API_BASE_URL.replace(/\/api$/, '');
+        return `${baseUrl}${data.url}`;
       }
     } catch (error) {
       console.error('File upload error:', error);
