@@ -45,13 +45,24 @@ mongoose.connect(process.env.MONGODB_URI)
     .then(() => console.log('✅ Connected to MongoDB'))
     .catch((err) => console.error('❌ MongoDB connection error:', err));
 
-// Export the app for Vercel
-module.exports = app;
+// Keep Render free tier awake by pinging itself every 14 minutes
+app.get('/api/ping', (req, res) => res.send('pong'));
 
-// Start Server (only if not running on Vercel)
-if (process.env.NODE_ENV !== 'production' || !process.env.VERCEL) {
-    const PORT = process.env.PORT || 5001;
-    app.listen(PORT, () => {
-        console.log(`🚀 Server is running on port ${PORT}`);
-    });
-}
+// Start Server
+const PORT = process.env.PORT || 5001;
+app.listen(PORT, () => {
+    console.log(`🚀 Server is running on port ${PORT}`);
+    
+    // Auto-ping logic (runs every 14 minutes = 840000 ms)
+    setInterval(() => {
+        const targetUrl = process.env.RENDER_EXTERNAL_URL || `http://localhost:${PORT}`;
+        try {
+            fetch(`${targetUrl}/api/ping`)
+                .then(res => res.text())
+                .then(text => console.log(`[Keep-Alive Ping] Status: ${text} at ${new Date().toISOString()}`))
+                .catch(err => console.error('[Keep-Alive Ping] Fetch error:', err.message));
+        } catch (error) {
+            console.error('[Keep-Alive Ping] Error:', error.message);
+        }
+    }, 840000);
+});
