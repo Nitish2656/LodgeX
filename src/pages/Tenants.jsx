@@ -7,7 +7,7 @@ import './Pages.css';
 export default function TenantsPage() {
   const { 
     tenants, rooms, payments, updateTenant, deleteTenant, 
-    addTenant, addPayment, fetchTenants, fetchTenantById,
+    addTenant, addPayment, fetchTenants, fetchRooms, fetchTenantById,
     pageAction, setPageAction, uploadFile 
   } = useStore();
 
@@ -25,6 +25,17 @@ export default function TenantsPage() {
   const [filter, setFilter] = useState('all');
 
   const [selectedTenant, setSelectedTenant] = useState(null);
+  
+  // Sync selectedTenant with global tenants state to ensure fresh data (like pendingDues)
+  useEffect(() => {
+    if (selectedTenant) {
+        const updated = tenants.find(t => (t._id || t.id) === (selectedTenant._id || selectedTenant.id));
+        if (updated && updated.pendingDues !== selectedTenant.pendingDues) {
+            setSelectedTenant(prev => ({ ...prev, ...updated }));
+        }
+    }
+  }, [tenants]);
+
   const [showProfileModal, setShowProfileModal] = useState(false);
   const [showAddModal, setShowAddModal] = useState(false);
   const [showPayDuesModal, setShowPayDuesModal] = useState(false);
@@ -46,7 +57,7 @@ export default function TenantsPage() {
   const [addStep, setAddStep] = useState(1);
   const [addData, setAddData] = useState({
     name: '', phone: '', address: '',
-    parentName: '', parentPhone: '',
+    parentName: '', parentPhone: '', joinDate: '',
     coTenants: [],
     roomId: '', rent: '', deposit: '', paidAmount: '', dueAmount: 0,
     method: 'Cash',
@@ -63,7 +74,7 @@ export default function TenantsPage() {
                         t.roomNumber.toString().includes(search) ||
                         t.phone.includes(search);
     return matchFilter && matchSearch;
-  });
+  }).sort((a, b) => new Date(b.joinDate) - new Date(a.joinDate));
 
   const archivedTenants = tenants.filter(t => t.status === 'archived');
   const availableRooms = rooms.filter(r => r.status === 'available' || (isEditing && (r._id || r.id).toString() === addData.roomId?.toString()));
@@ -96,6 +107,7 @@ export default function TenantsPage() {
 
     setAddData({
       ...tenant,
+      joinDate: tenant.joinDate ? tenant.joinDate.split('T')[0] : new Date().toISOString().split('T')[0],
       roomId: assignedRoom ? tenant.roomId : '',
       roomNumber: assignedRoom ? assignedRoom.number : 'Unassigned',
       rent: tenantRent,
@@ -131,7 +143,7 @@ export default function TenantsPage() {
       setShowPayDuesModal(true);
   };
 
-  const handlePayDuesSubmit = (e) => {
+  const handlePayDuesSubmit = async (e) => {
       e.preventDefault();
       const amountPaid = Number(payDuesData.amount);
       if (!amountPaid || amountPaid <= 0) return alert('Enter a valid amount');
@@ -139,7 +151,7 @@ export default function TenantsPage() {
       
       const newDues = payDuesTenantObj.pendingDues - amountPaid;
       
-      addPayment({
+      await addPayment({
           tenantId: payDuesTenantObj._id || payDuesTenantObj.id,
           tenantName: payDuesTenantObj.name,
           roomId: payDuesTenantObj.roomId,
@@ -148,15 +160,14 @@ export default function TenantsPage() {
           paidAmount: amountPaid,
           dueAmount: newDues,
           method: payDuesData.method,
-          status: newDues > 0 ? 'pending' : 'completed',
+          status: 'completed',
           month: new Date().toLocaleDateString('en-IN', { month: 'short', year: 'numeric' }),
-          notes: 'Dues clearance'
+          notes: newDues > 0 ? `Partial payment (₹${newDues.toLocaleString('en-IN')} remaining)` : 'Full dues cleared'
       });
       
+      // Update local state immediately so UI reflects the change if modal reopened
+      setPayDuesTenantObj(prev => prev ? { ...prev, pendingDues: newDues } : prev);
       setShowPayDuesModal(false);
-      if (selectedTenant && (selectedTenant._id || selectedTenant.id) === (payDuesTenantObj._id || payDuesTenantObj.id)) {
-          setSelectedTenant({ ...selectedTenant, pendingDues: newDues });
-      }
   };
 
   const confirmDelete = (e, tenant) => {
@@ -186,6 +197,7 @@ export default function TenantsPage() {
     setAddData({
       name: '', phone: '', address: '',
       parentName: '', parentPhone: '',
+      joinDate: new Date().toISOString().split('T')[0],
       coTenants: [],
       roomId: firstRoom?._id || firstRoom?.id || '', rent: firstRoom?.rent || '', deposit: '', paidAmount: '', dueAmount: 0,
       method: 'Cash',
@@ -393,6 +405,7 @@ export default function TenantsPage() {
       deposit: Number(addData.deposit) || 0,
       pendingDues: Number(addData.dueAmount) || 0,
       avatar: avatar,
+      joinDate: new Date(addData.joinDate).toISOString(),
       status: 'active',
       vacateDate: null
     };
@@ -434,6 +447,19 @@ export default function TenantsPage() {
     setShowAddModal(false);
   };
 
+  const [isRefreshing, setIsRefreshing] = useState(false);
+
+  const handleRefresh = async () => {
+    setIsRefreshing(true);
+    try {
+      await Promise.all([fetchTenants(), fetchRooms()]);
+    } catch (error) {
+      console.error("Refresh failed:", error);
+    } finally {
+      setIsRefreshing(false);
+    }
+  };
+
   return (
     <div className="page">
       <div className="page-header animate-in">
@@ -442,8 +468,20 @@ export default function TenantsPage() {
           <p className="page-subtitle">Managing {activeTenants.length} active tenants</p>
         </div>
         <div style={{ display: 'flex', gap: '12px' }}>
-          <button className="page-header-btn" onClick={() => fetchTenants()} style={{ background: 'var(--bg-secondary)', border: '1px solid var(--border-primary)', color: 'var(--text-secondary)' }}>
-            <History size={16} /> Refresh
+          <button 
+            className="page-header-btn" 
+            onClick={handleRefresh} 
+            disabled={isRefreshing}
+            style={{ 
+              background: 'var(--bg-secondary)', 
+              border: '1px solid var(--border-primary)', 
+              color: 'var(--text-secondary)',
+              opacity: isRefreshing ? 0.7 : 1,
+              cursor: isRefreshing ? 'not-allowed' : 'pointer'
+            }}
+          >
+            <History size={16} className={isRefreshing ? 'animate-spin' : ''} />
+            {isRefreshing ? 'Refreshing...' : 'Refresh'}
           </button>
           <button className="page-header-btn primary" onClick={openAddModal}>
             <Plus size={16} /> Add Tenant
@@ -883,7 +921,14 @@ export default function TenantsPage() {
                 {getTenantPayments(selectedTenant._id || selectedTenant.id).length > 0 ? (
                     getTenantPayments(selectedTenant._id || selectedTenant.id).map((p, idx, arr) => (
                     <tr key={p._id || p.id}>
-                        <td style={{ paddingLeft: '24px', borderBottom: idx === arr.length - 1 ? 'none' : '1px solid var(--border-primary)' }}>{new Date(p.date).toLocaleDateString('en-IN', { day: 'numeric', month: 'short', year: 'numeric' })}</td>
+                        <td style={{ paddingLeft: '24px', borderBottom: idx === arr.length - 1 ? 'none' : '1px solid var(--border-primary)' }}>
+                          <div style={{ display: 'flex', flexDirection: 'column', gap: '2px' }}>
+                            <span style={{ fontSize: '13px', fontWeight: '500' }}>{new Date(p.date).toLocaleDateString('en-IN', { day: 'numeric', month: 'short', year: 'numeric' })}</span>
+                            <span style={{ fontSize: '11px', color: 'var(--text-tertiary)', opacity: 0.8 }}>
+                              {new Date(p.date).toLocaleTimeString('en-IN', { hour: '2-digit', minute: '2-digit', hour12: true })}
+                            </span>
+                          </div>
+                        </td>
                         <td style={{ borderBottom: idx === arr.length - 1 ? 'none' : '1px solid var(--border-primary)' }} className="text-bold text-success">+₹{p.paidAmount.toLocaleString('en-IN')}</td>
                         <td style={{ borderBottom: idx === arr.length - 1 ? 'none' : '1px solid var(--border-primary)' }}><span style={{ background: 'var(--bg-card)', padding: '4px 10px', borderRadius: '8px', fontSize: '12px', fontWeight: 600 }}>{p.method}</span></td>
                         <td style={{ paddingRight: '24px', borderBottom: idx === arr.length - 1 ? 'none' : '1px solid var(--border-primary)' }}><span className={`status-pill ${p.status}`}>{p.status}</span></td>
@@ -939,6 +984,11 @@ export default function TenantsPage() {
                     ))}
                   </select>
                 )}
+              </div>
+              
+              <div className="form-group full">
+                <label className="form-label">Date of Joining</label>
+                <input type="date" className="form-input" value={addData.joinDate} onChange={e => setAddData({...addData, joinDate: e.target.value})} required />
               </div>
               
               <div className="form-group">
@@ -1184,7 +1234,7 @@ export default function TenantsPage() {
             
             {/* Outstanding Summary */}
             <div className="payment-summary-card" style={{ background: 'linear-gradient(135deg, rgba(99, 102, 241, 0.1) 0%, rgba(167, 139, 250, 0.1) 100%)', borderRadius: '20px', padding: '24px', border: '1px solid rgba(99, 102, 241, 0.2)', textAlign: 'center' }}>
-                <span style={{ fontSize: '12px', fontWeight: 600, color: 'rgba(255,255,255,0.5)', textTransform: 'uppercase', letterSpacing: '1px' }}>Total Outstanding</span>
+                <span style={{ fontSize: '12px', fontWeight: 700, color: 'var(--text-secondary)', textTransform: 'uppercase', letterSpacing: '1.5px' }}>Total Outstanding</span>
                 <div style={{ fontSize: '32px', fontWeight: 900, color: 'var(--danger)', marginTop: '4px' }}>₹{(payDuesTenantObj?.pendingDues || 0).toLocaleString('en-IN')}</div>
             </div>
 
@@ -1195,20 +1245,18 @@ export default function TenantsPage() {
                     <h4 style={{ margin: 0, fontSize: '14px', fontWeight: 700 }}>Dues Breakdown</h4>
                 </div>
                 <div style={{ background: 'rgba(255,255,255,0.03)', borderRadius: '16px', border: '1px solid var(--border-primary)', overflow: 'hidden' }}>
-                    {payments.filter(p => (p.tenantId === payDuesTenantObj?._id || p.tenantId === payDuesTenantObj?.id) && p.status === 'pending').length > 0 ? (
-                        payments
-                        .filter(p => (p.tenantId === payDuesTenantObj?._id || p.tenantId === payDuesTenantObj?.id) && p.status === 'pending')
-                        .map((p, idx) => (
-                            <div key={idx} style={{ display: 'flex', justifyContent: 'space-between', padding: '12px 16px', borderBottom: idx === payments.filter(p => (p.tenantId === payDuesTenantObj?._id || p.tenantId === payDuesTenantObj?.id) && p.status === 'pending').length - 1 ? 'none' : '1px solid var(--border-primary)' }}>
-                                <div>
-                                    <div style={{ fontSize: '13px', fontWeight: 600 }}>{p.month}</div>
-                                    <div style={{ fontSize: '11px', color: 'var(--text-tertiary)' }}>Due on {new Date(p.date).toLocaleDateString()}</div>
+                    {payDuesTenantObj?.pendingDues > 0 ? (
+                        <div style={{ display: 'flex', justifyContent: 'space-between', padding: '12px 16px' }}>
+                            <div>
+                                <div style={{ fontSize: '13px', fontWeight: 600 }}>
+                                    {new Date().toLocaleDateString('en-IN', { month: 'long', year: 'numeric' })}
                                 </div>
-                                <div style={{ fontWeight: 700, color: 'var(--danger)' }}>₹{p.totalAmount.toLocaleString('en-IN')}</div>
+                                <div style={{ fontSize: '11px', color: 'var(--text-tertiary)' }}>Current outstanding</div>
                             </div>
-                        ))
+                            <div style={{ fontWeight: 700, color: 'var(--danger)' }}>₹{payDuesTenantObj.pendingDues.toLocaleString('en-IN')}</div>
+                        </div>
                     ) : (
-                        <div style={{ padding: '16px', textAlign: 'center', color: 'var(--text-tertiary)', fontSize: '13px' }}>No specific monthly records found.</div>
+                        <div style={{ padding: '16px', textAlign: 'center', color: 'var(--text-tertiary)', fontSize: '13px' }}>No pending dues found.</div>
                     )}
                 </div>
             </div>
@@ -1223,8 +1271,14 @@ export default function TenantsPage() {
                     <label className="form-label" style={{ fontSize: '12px', fontWeight: 600 }}>Payment Method</label>
                     <select className="form-select" style={{ height: '48px', borderRadius: '12px', fontWeight: 600 }} value={payDuesData.method} onChange={e => setPayDuesData({...payDuesData, method: e.target.value})} required>
                         <option value="Cash">💵 Cash</option>
-                        <option value="UPI">📱 UPI</option>
+                        <option value="Google Pay">📱 Google Pay</option>
+                        <option value="PhonePe">📱 PhonePe</option>
+                        <option value="Paytm">📱 Paytm</option>
+                        <option value="UPI">📱 Other UPI</option>
+                        <option value="CRED">💳 CRED</option>
+                        <option value="Amazon Pay">🛒 Amazon Pay</option>
                         <option value="Bank Transfer">🏦 Bank Transfer</option>
+                        <option value="Card">💳 Debit/Credit Card</option>
                     </select>
                 </div>
             </div>

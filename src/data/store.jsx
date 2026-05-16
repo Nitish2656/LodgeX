@@ -201,9 +201,13 @@ export function StoreProvider({ children }) {
   const toggleTheme = useCallback(() => setTheme(prev => prev === 'dark' ? 'light' : 'dark'), []);
 
   const [sidebarOpen, setSidebarOpen] = useState(true);
-  const [activePage, setActivePage] = useState('dashboard');
+  const [activePage, setActivePage] = useState(() => localStorage.getItem('lodgex_active_page') || 'dashboard');
   const [searchQuery, setSearchQuery] = useState('');
   const [pageAction, setPageAction] = useState(null);
+
+  useEffect(() => {
+    localStorage.setItem('lodgex_active_page', activePage);
+  }, [activePage]);
 
   const navigateWithAction = useCallback((page, action) => {
     setPageAction(action);
@@ -233,6 +237,24 @@ export function StoreProvider({ children }) {
       return false;
     }
   }, []);
+
+  const updatePassword = async (currentPassword, newPassword) => {
+    try {
+      const token = localStorage.getItem('lodgex_token');
+      const response = await fetch(`http://${window.location.hostname}:5001/api/auth/update-password`, {
+        method: 'POST',
+        headers: { 
+            'Content-Type': 'application/json',
+            'Authorization': `Bearer ${token}`
+        },
+        body: JSON.stringify({ currentPassword, newPassword })
+      });
+      return response.ok;
+    } catch (error) {
+      console.error('Update password error:', error);
+      return false;
+    }
+  };
 
   const signup = useCallback(async (name, email, password) => {
     try {
@@ -290,14 +312,21 @@ export function StoreProvider({ children }) {
         body: JSON.stringify(paymentData)
       });
       if (response.ok) {
-        // Update tenant dues
+        // 1. Optimistic update — show correct amount instantly in UI
+        setTenants(prev => prev.map(t =>
+          (t._id || t.id).toString() === paymentData.tenantId?.toString()
+            ? { ...t, pendingDues: paymentData.dueAmount }
+            : t
+        ));
+        // 2. Persist to DB
         await fetch(`http://${window.location.hostname}:5001/api/tenants/${paymentData.tenantId}`, {
           method: 'PATCH',
           headers: { 'Content-Type': 'application/json' },
           body: JSON.stringify({ pendingDues: paymentData.dueAmount })
         });
-        fetchPayments();
-        fetchTenants();
+        // 3. Refresh data from DB to confirm
+        await fetchPayments();
+        await fetchTenants();
       }
     } catch (error) {
       console.error('Error adding payment:', error);
@@ -311,7 +340,7 @@ export function StoreProvider({ children }) {
         headers: { 'Content-Type': 'application/json' },
         body: JSON.stringify({
           ...tenantData,
-          joinDate: new Date().toISOString(),
+          joinDate: tenantData.joinDate || new Date().toISOString(),
           status: 'active'
         })
       });
@@ -803,13 +832,13 @@ export function StoreProvider({ children }) {
   }, []);
 
   const value = {
-    rooms, setRooms,
+    rooms, setRooms, fetchRooms,
     tenants, activeTenants, setTenants, fetchTenants, fetchTenantById,
-    payments, setPayments,
-    expenses, setExpenses,
-    electricity, setElectricity,
+    payments, setPayments, fetchPayments,
+    expenses, setExpenses, fetchExpenses,
+    electricity, setElectricity, fetchElectricity,
     notifications,
-    settings, updateSettings,
+    settings, fetchSettings, updateSettings,
 
     addPayment, updatePayment, deletePayment,
     addTenant,
@@ -825,7 +854,7 @@ export function StoreProvider({ children }) {
     addElectricity, updateElectricity, deleteElectricity,
     uploadFile,
 
-    isAuthenticated, currentUser, login, signup, logout,
+    isAuthenticated, currentUser, login, signup, logout, updatePassword,
     theme, toggleTheme,
     sidebarOpen, setSidebarOpen, activePage, setActivePage,
     searchQuery, setSearchQuery, searchResults,

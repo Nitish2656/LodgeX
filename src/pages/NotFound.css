@@ -1,0 +1,122 @@
+.notfound-page {
+  position: fixed;
+  inset: 0;
+  background-color: var(--bg-primary);
+  background-image: radial-gradient(circle at center, rgba(139, 92, 246, 0.05) 0%, transparent 70%);
+  z-index: 9999;
+  display: flex;
+  flex-direction: column;
+  justify-content: center;
+  align-items: center;
+  color: white;
+  text-align: center;
+  animation: fadeIn 0.4s ease-out;
+}
+
+.notfound-header {
+  margin-bottom: 30px;
+}
+
+.notfound-title-game {
+  font-size: 64px;
+  font-weight: 800;
+  letter-spacing: 4px;
+  margin: 0;
+  background: linear-gradient(135deg, var(--accent-primary), var(--accent-secondary));
+  -webkit-background-clip: text;
+  -webkit-text-fill-color: transparent;
+  line-height: 1;
+}
+
+.notfound-subtitle-game {
+  font-size: 18px;
+  font-weight: 400;
+  margin: 10px 0 0;
+  color: var(--text-secondary);
+}
+
+.notfound-game-container {
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  background: var(--bg-glass);
+  padding: 30px;
+  border-radius: var(--radius-lg);
+  border: 1px solid var(--border-primary);
+  box-shadow: 0 20px 40px rgba(0,0,0,0.3);
+}
+
+.notfound-score-board {
+  display: flex;
+  justify-content: space-between;
+  width: 100%;
+  max-width: 800px;
+  margin-bottom: 20px;
+}
+
+.score-box {
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+}
+
+.notfound-score-board.single-player {
+  justify-content: space-around;
+}
+
+.score-box.ai {
+  color: #8b5cf6;
+}
+
+.score-box.player {
+  color: #34d399;
+}
+
+.score-box span {
+  font-size: 14px;
+  text-transform: uppercase;
+  letter-spacing: 1px;
+  opacity: 0.8;
+  margin-bottom: 5px;
+}
+
+.score-box h2 {
+  font-size: 36px;
+  margin: 0;
+  font-weight: 700;
+}
+
+.notfound-canvas {
+  background-color: #1e1f2e;
+  border-radius: var(--radius-md);
+  border: 2px solid rgba(255,255,255,0.05);
+  box-shadow: inset 0 0 20px rgba(0,0,0,0.5);
+  cursor: none; /* Hide default cursor since player controls paddle */
+  touch-action: none; /* Prevent scrolling while playing on mobile */
+  width: 100%;
+  max-width: 100%;
+}
+
+.notfound-hint {
+  font-size: 13px;
+  color: var(--text-tertiary);
+  margin: 15px 0 0;
+  font-style: italic;
+}
+
+.notfound-actions {
+  margin-top: 40px;
+}
+
+@media (max-width: 768px) {
+  .notfound-title-game {
+    font-size: 48px;
+  }
+  .notfound-subtitle-game {
+    font-size: 16px;
+  }
+  .notfound-game-container {
+    padding: 15px;
+    width: 95%;
+  }
+}

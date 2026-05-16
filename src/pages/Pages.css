@@ -241,11 +241,34 @@
 }
 
 .room-status-badge {
-  font-size: 11px;
-  font-weight: 600;
-  padding: 3px 10px;
-  border-radius: var(--radius-sm);
-  text-transform: capitalize;
+  font-size: 10px;
+  font-weight: 700;
+  padding: 4px 10px;
+  border-radius: 20px;
+  text-transform: uppercase;
+  letter-spacing: 0.5px;
+  border: 1px solid transparent;
+}
+
+.room-status-badge.available {
+  background: rgba(16, 185, 129, 0.1);
+  color: #10b981;
+  border-color: rgba(16, 185, 129, 0.2);
+  box-shadow: 0 0 12px rgba(16, 185, 129, 0.1);
+}
+
+.room-status-badge.occupied {
+  background: rgba(99, 102, 241, 0.1);
+  color: #818cf8;
+  border-color: rgba(99, 102, 241, 0.2);
+  box-shadow: 0 0 12px rgba(99, 102, 241, 0.1);
+}
+
+.room-status-badge.maintenance {
+  background: rgba(245, 158, 11, 0.1);
+  color: #f59e0b;
+  border-color: rgba(245, 158, 11, 0.2);
+  box-shadow: 0 0 12px rgba(245, 158, 11, 0.1);
 }
 
 .room-card-body {
@@ -444,13 +467,17 @@
   display: flex;
   align-items: center;
   gap: 4px;
-  padding: 4px 10px;
-  border-radius: var(--radius-sm);
-  background: var(--danger-bg);
-  color: var(--danger);
-  font-size: 12px;
-  font-weight: 600;
+  padding: 4px 12px;
+  border-radius: 20px;
+  background: rgba(239, 68, 68, 0.1);
+  color: #ef4444;
+  border: 1px solid rgba(239, 68, 68, 0.2);
+  font-size: 11px;
+  font-weight: 700;
   flex-shrink: 0;
+  box-shadow: 0 0 15px rgba(239, 68, 68, 0.15);
+  text-transform: uppercase;
+  letter-spacing: 0.5px;
 }
 
 .tenant-card-body {
@@ -515,7 +542,8 @@
 
 .data-table {
   width: 100%;
-  border-collapse: collapse;
+  border-collapse: separate;
+  border-spacing: 0;
 }
 
 .data-table thead {
@@ -529,12 +557,22 @@
   text-align: left;
   font-size: 12px;
   font-weight: 600;
-  color: var(--text-tertiary);
+  color: #8f99b0; /* Light slate text from the image */
   text-transform: uppercase;
   letter-spacing: 0.5px;
-  background: rgba(15, 15, 24, 0.8);
-  border-bottom: 1px solid var(--border-primary);
+  background: #3e414f; /* Solid dark slate background from the image */
+  border-bottom: none; /* Removing border to match the solid pill-like look */
   white-space: nowrap;
+}
+
+.data-table th:first-child {
+  border-top-left-radius: 8px;
+  border-bottom-left-radius: 8px;
+}
+
+.data-table th:last-child {
+  border-top-right-radius: 8px;
+  border-bottom-right-radius: 8px;
 }
 
 .data-table td {
@@ -604,26 +642,50 @@
 .status-pill {
   display: inline-flex;
   align-items: center;
-  gap: 4px;
-  padding: 4px 10px;
-  border-radius: var(--radius-sm);
-  font-size: 11px;
-  font-weight: 600;
-  text-transform: capitalize;
+  gap: 6px;
+  padding: 5px 14px;
+  border-radius: 20px;
+  font-size: 10px;
+  font-weight: 700;
+  text-transform: uppercase;
+  letter-spacing: 0.5px;
+  border: 1px solid transparent;
+  transition: all var(--transition-base);
 }
 
 .status-pill.completed,
 .status-pill.confirmed,
 .status-pill.paid,
 .status-pill.success {
-  background: var(--success-bg);
-  color: var(--success);
+  background: rgba(16, 185, 129, 0.1);
+  color: #10b981;
+  border-color: rgba(16, 185, 129, 0.2);
+  box-shadow: 0 0 10px rgba(16, 185, 129, 0.1);
 }
 
 .status-pill.pending,
 .status-pill.warning {
-  background: var(--warning-bg);
-  color: var(--warning);
+  background: rgba(245, 158, 11, 0.1);
+  color: #f59e0b;
+  border-color: rgba(245, 158, 11, 0.2);
+  box-shadow: 0 0 10px rgba(245, 158, 11, 0.1);
+}
+
+@keyframes badge-pulse {
+  0% { box-shadow: 0 0 8px rgba(239, 68, 68, 0.2); }
+  50% { box-shadow: 0 0 15px rgba(239, 68, 68, 0.4); }
+  100% { box-shadow: 0 0 8px rgba(239, 68, 68, 0.2); }
+}
+
+.status-pill.danger,
+.status-pill.unpaid,
+.status-pill.failed,
+.tenant-due-badge {
+  background: rgba(239, 68, 68, 0.12);
+  color: #ef4444;
+  border-color: rgba(239, 68, 68, 0.25);
+  box-shadow: 0 0 10px rgba(239, 68, 68, 0.15);
+  animation: badge-pulse 2s infinite ease-in-out;
 }
 
 .method-badge {
@@ -1835,4 +1897,23 @@
 
 .tenant-stats-grid {
   grid-template-columns: repeat(3, 1fr);
+}
+
+.pass-toggle-btn {
+  background: transparent;
+  border: none;
+  color: var(--text-tertiary);
+  cursor: pointer;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  padding: 4px;
+  border-radius: 50%;
+  transition: all 0.2s ease;
+  margin-left: 4px;
+}
+
+.pass-toggle-btn:hover {
+  color: var(--accent-primary);
+  background: rgba(99, 102, 241, 0.1);
 }

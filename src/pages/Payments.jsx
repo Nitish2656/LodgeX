@@ -85,7 +85,8 @@ export default function PaymentsPage() {
     e.preventDefault();
     addPayment({
         ...formData,
-        status: formData.dueAmount > 0 ? 'pending' : 'completed',
+        status: 'completed',
+        date: new Date().toISOString(),
         month: new Date().toLocaleDateString('en-IN', { month: 'short', year: 'numeric' })
     });
     setShowAddModal(false);
@@ -95,7 +96,7 @@ export default function PaymentsPage() {
     e.preventDefault();
     updatePayment(selectedPayment._id || selectedPayment.id, {
         ...formData,
-        status: formData.dueAmount > 0 ? 'pending' : 'completed'
+        status: 'completed'
     });
     setShowEditModal(false);
   };
@@ -135,9 +136,6 @@ export default function PaymentsPage() {
             </div>
         </div>
         <div className="toolbar-right">
-            <button className="page-header-btn primary" onClick={openAdd}>
-                <Plus size={16} /> Record Payment
-            </button>
         </div>
       </div>
 
@@ -172,7 +170,14 @@ export default function PaymentsPage() {
                       {p.method}
                     </div>
                   </td>
-                  <td>{new Date(p.date).toLocaleDateString('en-IN', { day: 'numeric', month: 'short', year: 'numeric' })}</td>
+                  <td>
+                    <div style={{ display: 'flex', flexDirection: 'column', gap: '2px' }}>
+                      <span style={{ fontSize: '13px', fontWeight: '500' }}>{new Date(p.date).toLocaleDateString('en-IN', { day: 'numeric', month: 'short', year: 'numeric' })}</span>
+                      <span style={{ fontSize: '11px', color: 'var(--text-tertiary)', opacity: 0.8 }}>
+                        {new Date(p.date).toLocaleTimeString('en-IN', { hour: '2-digit', minute: '2-digit', hour12: true })}
+                      </span>
+                    </div>
+                  </td>
                   <td><span className={`status-pill ${p.status}`}>{p.status}</span></td>
                   <td>
                     <div style={{ display: 'flex', gap: '4px' }}>
@@ -188,76 +193,7 @@ export default function PaymentsPage() {
         {filtered.length === 0 && <div className="page-empty">No payments match your search</div>}
       </div>
 
-      {/* Add Payment Modal */}
-      <Modal isOpen={showAddModal} onClose={() => setShowAddModal(false)} title="Record New Payment">
-        <form onSubmit={handleAddSubmit}>
-          <div className="form-grid">
-            <div className="form-group full">
-                <label className="form-label">Tenant</label>
-                <select className="form-select" value={formData.tenantId || ''} onChange={e => {
-                    const t = activeTenants.find(tenant => (tenant._id || tenant.id) === e.target.value);
-                    const amount = t.pendingDues > 0 ? t.pendingDues : t.rent;
-                    setFormData({
-                      ...formData, 
-                      tenantId: t._id || t.id, 
-                      tenantName: t.name,
-                      roomId: t.roomId, 
-                      roomNumber: t.roomNumber,
-                      totalAmount: amount, 
-                      paidAmount: amount, 
-                      dueAmount: 0,
-                      notes: t.pendingDues > 0 ? 'Clearing pending dues' : 'Monthly rent payment'
-                    });
-                }} required>
-                    {activeTenants.map(t => (
-                        <option key={t._id || t.id} value={t._id || t.id}>{t.name} - Room {t.roomNumber}</option>
-                    ))}
-                </select>
-            </div>
-            <div className="form-group">
-              <label className="form-label">Total Amount (₹)</label>
-              <input type="number" className="form-input" value={formData.totalAmount ?? ''} onChange={e => {
-                  const val = parseNum(e.target.value);
-                  const paid = formData.paidAmount || 0;
-                  setFormData({...formData, totalAmount: val, dueAmount: Math.max(0, val - paid)});
-              }} required />
-            </div>
-            <div className="form-group">
-              <label className="form-label">Paid Amount (₹)</label>
-              <input type="number" className="form-input" value={formData.paidAmount ?? ''} onChange={e => {
-                  const val = parseNum(e.target.value);
-                  const total = formData.totalAmount || 0;
-                  setFormData({...formData, paidAmount: val, dueAmount: Math.max(0, total - val)});
-              }} required />
-            </div>
-            <div className="form-group">
-              <label className="form-label">Due Amount (₹)</label>
-              <input type="number" className="form-input" value={formData.dueAmount ?? ''} onChange={e => setFormData({...formData, dueAmount: parseNum(e.target.value)})} required />
-            </div>
-            <div className="form-group">
-              <label className="form-label">Payment Method</label>
-              <select className="form-select" value={formData.method || 'Cash'} onChange={e => setFormData({...formData, method: e.target.value})}>
-                <option value="Cash">Cash</option>
-                <option value="UPI">UPI</option>
-                <option value="Bank Transfer">Bank Transfer</option>
-                <option value="Card">Card</option>
-                <option value="Google Pay">Google Pay</option>
-                <option value="PhonePe">PhonePe</option>
-                <option value="Paytm">Paytm</option>
-                <option value="Other">Other</option>
-              </select>
-            </div>
-            <div className="form-group full">
-              <label className="form-label">Notes</label>
-              <textarea className="form-textarea" placeholder="Optional notes" value={formData.notes || ''} onChange={e => setFormData({...formData, notes: e.target.value})}></textarea>
-            </div>
-          </div>
-          <div className="form-actions">
-            <button type="button" className="btn btn-ghost" onClick={() => setShowAddModal(false)}>Cancel</button>
-            <button type="submit" className="btn btn-primary"><IndianRupee size={16}/> Record Payment</button>
-          </div>
-        </form>
-      </Modal>
+
 
       {/* Edit Payment Modal */}
       <Modal isOpen={showEditModal} onClose={() => setShowEditModal(false)} title="Edit Payment Record">

@@ -49,9 +49,9 @@ export default function Sidebar() {
       {/* Mobile overlay */}
       {mobileOpen && <div className="sidebar-overlay" onClick={() => setMobileOpen(false)} />}
 
-      {/* Mobile toggle button */}
-      <button className="sidebar-mobile-toggle" onClick={() => setMobileOpen(!mobileOpen)} aria-label="Toggle menu">
-        <span /><span /><span />
+      {/* Hidden trigger for Navbar */}
+      <button className="sidebar-mobile-toggle" style={{ display: 'none' }} onClick={() => setMobileOpen(!mobileOpen)} aria-label="Toggle menu">
+        <span />
       </button>
 
       <aside

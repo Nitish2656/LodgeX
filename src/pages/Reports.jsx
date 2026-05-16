@@ -35,7 +35,7 @@ export default function ReportsPage() {
                     const t = tenants.find(t => (t._id || t.id) === p.tenantId);
                     const name = p.tenantName || t?.name || '-';
                     const room = p.roomNumber || t?.roomNumber || '-';
-                    return [new Date(p.date).toLocaleDateString(), name, room, p.paidAmount, p.method];
+                    return [new Date(p.date).toLocaleString('en-IN', { day: '2-digit', month: '2-digit', year: 'numeric', hour: '2-digit', minute: '2-digit', hour12: true }), name, room, p.paidAmount, p.method];
                 })
             };
         case 3: // Pending Dues

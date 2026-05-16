@@ -1,10 +1,10 @@
 import { useState, useEffect } from 'react';
-import { User, Building, Shield, Palette, Save, Lock, Key, CheckCircle } from 'lucide-react';
+import { User, Building, Shield, Palette, Save, Lock, Key, CheckCircle, Eye, EyeOff } from 'lucide-react';
 import { useStore } from '../data/store';
 import './Pages.css';
 
 export default function SettingsPage() {
-  const { settings, updateSettings } = useStore();
+  const { settings, updateSettings, updatePassword } = useStore();
   
   const [electricRate, setElectricRate] = useState('8');
   const [autoBackup, setAutoBackup] = useState(true);
@@ -12,6 +12,7 @@ export default function SettingsPage() {
   const [dueReminders, setDueReminders] = useState(true);
   const [saved, setSaved] = useState(false);
   const [passwords, setPasswords] = useState({ current: '', new: '', confirm: '' });
+  const [showPass, setShowPass] = useState({ current: false, new: false, confirm: false });
   const [passSaved, setPassSaved] = useState(false);
   const [activePanel, setActivePanel] = useState('security');
 
@@ -35,14 +36,21 @@ export default function SettingsPage() {
     setTimeout(() => setSaved(false), 2000);
   };
 
-  const handleUpdatePassword = (e) => {
+  const handleUpdatePassword = async (e) => {
     e.preventDefault();
+    if (!passwords.current || !passwords.new) return alert('Please fill all fields');
     if (passwords.new !== passwords.confirm) return alert('Passwords do not match');
-    setPassSaved(true);
-    setTimeout(() => {
-      setPassSaved(false);
-      setPasswords({ current: '', new: '', confirm: '' });
-    }, 2000);
+    
+    const success = await updatePassword(passwords.current, passwords.new);
+    if (success) {
+        setPassSaved(true);
+        setTimeout(() => {
+          setPassSaved(false);
+          setPasswords({ current: '', new: '', confirm: '' });
+        }, 2000);
+    } else {
+        alert('Failed to update password. Please check your current password.');
+    }
   };
 
   return (
@@ -83,11 +91,14 @@ export default function SettingsPage() {
                 <div className="input-box">
                   <Lock size={16} />
                   <input 
-                    type="password" 
+                    type={showPass.current ? "text" : "password"} 
                     placeholder="••••••••" 
                     value={passwords.current}
                     onChange={e => setPasswords({...passwords, current: e.target.value})}
                   />
+                  <button type="button" className="pass-toggle-btn" onClick={() => setShowPass({...showPass, current: !showPass.current})}>
+                    {showPass.current ? <EyeOff size={16} /> : <Eye size={16} />}
+                  </button>
                 </div>
               </div>
 
@@ -97,11 +108,14 @@ export default function SettingsPage() {
                   <div className="input-box">
                     <Key size={16} />
                     <input 
-                      type="password" 
+                      type={showPass.new ? "text" : "password"} 
                       placeholder="New password" 
                       value={passwords.new}
                       onChange={e => setPasswords({...passwords, new: e.target.value})}
                     />
+                    <button type="button" className="pass-toggle-btn" onClick={() => setShowPass({...showPass, new: !showPass.new})}>
+                      {showPass.new ? <EyeOff size={16} /> : <Eye size={16} />}
+                    </button>
                   </div>
                 </div>
                 <div className="input-field-premium">
@@ -109,11 +123,14 @@ export default function SettingsPage() {
                   <div className="input-box">
                     <CheckCircle size={16} />
                     <input 
-                      type="password" 
+                      type={showPass.confirm ? "text" : "password"} 
                       placeholder="Confirm" 
                       value={passwords.confirm}
                       onChange={e => setPasswords({...passwords, confirm: e.target.value})}
                     />
+                    <button type="button" className="pass-toggle-btn" onClick={() => setShowPass({...showPass, confirm: !showPass.confirm})}>
+                      {showPass.confirm ? <EyeOff size={16} /> : <Eye size={16} />}
+                    </button>
                   </div>
                 </div>
               </div>

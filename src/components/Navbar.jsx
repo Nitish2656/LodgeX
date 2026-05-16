@@ -1,5 +1,5 @@
 import { useState, useRef, useEffect } from 'react';
-import { Search, Bell, X, User, ChevronDown, Moon, Sun } from 'lucide-react';
+import { Search, Bell, X, User, ChevronDown, Moon, Sun, LogOut } from 'lucide-react';
 import { useStore } from '../data/store';
 import './Navbar.css';
 
@@ -7,7 +7,7 @@ export default function Navbar() {
   const {
     searchQuery, setSearchQuery, searchResults, setActivePage,
     notifications, unreadNotifications, markNotificationRead, markAllNotificationsRead,
-    theme, toggleTheme
+    theme, toggleTheme, logout
   } = useStore();
   const [searchFocused, setSearchFocused] = useState(false);
   const [showNotifPanel, setShowNotifPanel] = useState(false);
@@ -43,6 +43,21 @@ export default function Navbar() {
 
   return (
     <header className="navbar">
+      {/* Mobile Menu Toggle */}
+      <button 
+        className="navbar-mobile-toggle" 
+        onClick={() => {
+          // Find the hidden sidebar toggle and click it, or we could handle state here.
+          // Since Sidebar.jsx handles its own mobile state, let's trigger it.
+          document.querySelector('.sidebar-mobile-toggle')?.click();
+        }}
+        aria-label="Open Menu"
+      >
+        <span />
+        <span />
+        <span />
+      </button>
+
       {/* Search */}
       <div className="navbar-search-wrapper" ref={searchRef}>
         <div className={`navbar-search ${searchFocused ? 'focused' : ''}`}>
@@ -169,8 +184,11 @@ export default function Navbar() {
 
           {showProfileMenu && (
             <div className="profile-menu">
-              <button className="profile-menu-item" onClick={() => { setShowProfileMenu(false); }}>
+              <button className="profile-menu-item" onClick={() => { setActivePage('settings'); setShowProfileMenu(false); }}>
                 <User size={16} /> Profile Settings
+              </button>
+              <button className="profile-menu-item logout" onClick={() => logout()}>
+                <LogOut size={16} /> Logout
               </button>
             </div>
           )}

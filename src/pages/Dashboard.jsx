@@ -130,8 +130,9 @@ export default function Dashboard() {
         paidAmount: amountPaid,
         dueAmount: dueAmount,
         method: paymentFormData.method,
-        status: dueAmount > 0 ? 'pending' : 'completed',
-        notes: paymentFormData.notes,
+        status: 'completed',
+        notes: dueAmount > 0 ? `Partial payment (₹${dueAmount.toLocaleString('en-IN')} remaining)` : (paymentFormData.notes || 'Full payment'),
+        date: new Date().toISOString(),
         month: new Date().toLocaleDateString('en-IN', { month: 'short', year: 'numeric' })
     });
     setShowAddPaymentModal(false);
@@ -335,7 +336,10 @@ export default function Dashboard() {
                 </div>
                 <div className="insight-list-right">
                   <span className="insight-list-amount positive">+₹{p.paidAmount?.toLocaleString('en-IN')}</span>
-                  <span className="insight-list-date">{new Date(p.date).toLocaleDateString('en-IN', { day: 'numeric', month: 'short' })}</span>
+                  <div style={{ display: 'flex', flexDirection: 'column', alignItems: 'flex-end', gap: '2px' }}>
+                    <span className="insight-list-date" style={{ fontSize: '12px' }}>{new Date(p.date).toLocaleDateString('en-IN', { day: 'numeric', month: 'short' })}</span>
+                    <span style={{ fontSize: '10px', color: 'var(--text-tertiary)' }}>{new Date(p.date).toLocaleTimeString('en-IN', { hour: '2-digit', minute: '2-digit', hour12: true })}</span>
+                  </div>
                 </div>
               </div>
             )})}
@@ -430,17 +434,15 @@ export default function Dashboard() {
             {/* Arrears Breakdown */}
             <div className="payment-section">
                 <div style={{ background: 'rgba(255,255,255,0.02)', borderRadius: '12px', border: '1px solid var(--border-primary)', maxHeight: '120px', overflowY: 'auto' }}>
-                    {payments.filter(p => (p.tenantId === paymentFormData.tenantId) && p.status === 'pending').length > 0 ? (
-                        payments
-                        .filter(p => (p.tenantId === paymentFormData.tenantId) && p.status === 'pending')
-                        .map((p, idx) => (
-                            <div key={idx} style={{ display: 'flex', justifyContent: 'space-between', padding: '10px 14px', borderBottom: '1px solid var(--border-primary)' }}>
-                                <span style={{ fontSize: '12px', color: 'var(--text-secondary)' }}>{p.month}</span>
-                                <span style={{ fontSize: '12px', fontWeight: 700, color: 'var(--danger)' }}>₹{p.totalAmount.toLocaleString('en-IN')}</span>
-                            </div>
-                        ))
+                    {(paymentFormData.pendingDues || 0) > 0 ? (
+                        <div style={{ display: 'flex', justifyContent: 'space-between', padding: '10px 14px' }}>
+                            <span style={{ fontSize: '12px', color: 'var(--text-secondary)' }}>
+                                {new Date().toLocaleDateString('en-IN', { month: 'long', year: 'numeric' })}
+                            </span>
+                            <span style={{ fontSize: '12px', fontWeight: 700, color: 'var(--danger)' }}>₹{paymentFormData.pendingDues.toLocaleString('en-IN')}</span>
+                        </div>
                     ) : (
-                        <div style={{ padding: '12px', textAlign: 'center', color: 'var(--text-tertiary)', fontSize: '12px' }}>No detailed arrears found.</div>
+                        <div style={{ padding: '12px', textAlign: 'center', color: 'var(--text-tertiary)', fontSize: '12px' }}>No pending dues.</div>
                     )}
                 </div>
             </div>
@@ -455,8 +457,14 @@ export default function Dashboard() {
                     <label className="form-label" style={{ fontSize: '12px', fontWeight: 600 }}>Method</label>
                     <select className="form-select" style={{ height: '48px', borderRadius: '12px' }} value={paymentFormData.method || 'Cash'} onChange={e => setPaymentFormData({...paymentFormData, method: e.target.value})}>
                         <option value="Cash">💵 Cash</option>
-                        <option value="UPI">📱 UPI</option>
+                        <option value="Google Pay">📱 Google Pay</option>
+                        <option value="PhonePe">📱 PhonePe</option>
+                        <option value="Paytm">📱 Paytm</option>
+                        <option value="UPI">📱 Other UPI</option>
+                        <option value="CRED">💳 CRED</option>
+                        <option value="Amazon Pay">🛒 Amazon Pay</option>
                         <option value="Bank Transfer">🏦 Bank Transfer</option>
+                        <option value="Card">💳 Debit/Credit Card</option>
                     </select>
                 </div>
             </div>

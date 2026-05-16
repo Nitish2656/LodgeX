@@ -19,19 +19,9 @@ export default function Login() {
     setLoading(true);
 
     try {
-      if (isLogin) {
-        const success = await login(email, password);
-        if (!success) {
-          setError('Invalid credentials. Please try again.');
-        }
-      } else {
-        const success = await signup(name, email, password);
-        if (success) {
-          setIsLogin(true);
-          setError('Signup successful! Please login.');
-        } else {
-          setError('Signup failed. Email might already be in use.');
-        }
+      const success = await login(email, password);
+      if (!success) {
+        setError('Invalid credentials. Please try again.');
       }
     } catch (err) {
       setError('An error occurred. Please try again later.');
@@ -63,25 +53,11 @@ export default function Login() {
         {/* Form Card */}
         <form className="login-card" onSubmit={handleSubmit}>
           <div className="login-card-header">
-            <h2>{isLogin ? 'Welcome Back' : 'Create Account'}</h2>
-            <p>{isLogin ? 'Sign in to your admin dashboard' : 'Join LodgeX management system'}</p>
+            <h2>Admin Login</h2>
+            <p>Sign in to your management dashboard</p>
           </div>
 
           <div className="login-fields">
-            {!isLogin && (
-              <div className={`login-field ${name ? 'has-value' : ''}`}>
-                <User size={18} className="login-field-icon" />
-                <input
-                  id="login-name"
-                  type="text"
-                  value={name}
-                  onChange={(e) => setName(e.target.value)}
-                  placeholder="Full Name"
-                  required
-                />
-              </div>
-            )}
-
             <div className={`login-field ${email ? 'has-value' : ''}`}>
               <Mail size={18} className="login-field-icon" />
               <input
@@ -89,7 +65,7 @@ export default function Login() {
                 type="email"
                 value={email}
                 onChange={(e) => setEmail(e.target.value)}
-                placeholder="Email Address"
+                placeholder="Admin Email"
                 autoComplete="email"
                 required
               />
@@ -103,7 +79,7 @@ export default function Login() {
                 value={password}
                 onChange={(e) => setPassword(e.target.value)}
                 placeholder="Password"
-                autoComplete={isLogin ? 'current-password' : 'new-password'}
+                autoComplete="current-password"
                 required
               />
               <button
@@ -118,7 +94,7 @@ export default function Login() {
           </div>
 
           {error && (
-            <div className={`login-error ${error.includes('successful') ? 'success' : ''}`}>
+            <div className="login-error">
               {error}
             </div>
           )}
@@ -132,25 +108,12 @@ export default function Login() {
               <div className="login-spinner" />
             ) : (
               <>
-                {isLogin ? 'Sign In' : 'Create Account'}
-                {isLogin ? <ArrowRight size={18} /> : <UserPlus size={18} />}
+                Sign In
+                <ArrowRight size={18} />
               </>
             )}
           </button>
-
-          <div className="login-toggle">
-            <button 
-              type="button" 
-              onClick={() => {
-                setIsLogin(!isLogin);
-                setError('');
-              }}
-            >
-              {isLogin ? "Don't have an account? Sign Up" : "Already have an account? Sign In"}
-            </button>
-          </div>
         </form>
-
         <div className="login-footer">
           <p>© 2026 LodgeX — Lodge Management System</p>
         </div>

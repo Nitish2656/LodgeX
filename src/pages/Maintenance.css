@@ -1,0 +1,33 @@
+.error-503 {
+  background-color: #080f14;
+  background-image: radial-gradient(circle at center, rgba(56, 189, 248, 0.05) 0%, transparent 70%);
+}
+
+.error-503 .error-title {
+  background: linear-gradient(135deg, #38bdf8, #0369a1);
+  -webkit-background-clip: text;
+  -webkit-text-fill-color: transparent;
+}
+
+.error-503 .error-game-container {
+  background: rgba(8, 15, 20, 0.6);
+  border: 1px solid rgba(56, 189, 248, 0.2);
+  box-shadow: 0 20px 40px rgba(56, 189, 248, 0.1);
+}
+
+.error-score-board.single {
+  justify-content: center;
+}
+
+.error-503 .score-box h2 {
+  color: #38bdf8; /* Cyan */
+}
+
+.error-503 .error-canvas {
+  background-color: #0F172A;
+  border: 2px solid rgba(56, 189, 248, 0.2);
+  cursor: crosshair;
+  touch-action: none;
+  width: 100%;
+  max-width: 100%;
+}

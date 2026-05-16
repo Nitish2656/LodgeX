@@ -76,3 +76,47 @@
     padding: calc(var(--navbar-height) + 16px) 16px 80px;
   }
 }
+
+/* ===== Premium Action Button (Used in Error Pages) ===== */
+.btn-glass-premium {
+  background: rgba(255, 255, 255, 0.05);
+  color: #ffffff;
+  border: 1px solid rgba(255, 255, 255, 0.15);
+  padding: 14px 36px;
+  border-radius: 30px;
+  font-size: 14px;
+  font-weight: 600;
+  letter-spacing: 1.5px;
+  cursor: pointer;
+  transition: all 0.3s cubic-bezier(0.4, 0, 0.2, 1);
+  backdrop-filter: blur(10px);
+  -webkit-backdrop-filter: blur(10px);
+  outline: none;
+  text-transform: uppercase;
+  font-family: var(--font-family, system-ui, -apple-system, sans-serif);
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  white-space: nowrap;
+}
+
+.btn-glass-premium:hover {
+  background: rgba(255, 255, 255, 0.15);
+  border-color: rgba(255, 255, 255, 0.3);
+  transform: translateY(-2px);
+  box-shadow: 0 10px 25px rgba(0,0,0,0.3);
+}
+
+.btn-glass-premium:active {
+  transform: translateY(0);
+  box-shadow: 0 5px 15px rgba(0,0,0,0.2);
+}
+
+@media (max-width: 768px) {
+  .btn-glass-premium {
+    padding: 12px 28px;
+    font-size: 13px;
+    width: 100%;
+    max-width: 250px;
+  }
+}

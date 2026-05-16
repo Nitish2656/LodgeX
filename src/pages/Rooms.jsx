@@ -387,7 +387,6 @@ export default function RoomsPage() {
                         {tenant ? (
                           <>
                             <button className="action-menu-item" onClick={() => openModal(room, 'edit')}><Edit2 size={14} /> Edit Tenant</button>
-                            <button className="action-menu-item success" onClick={() => openModal(room, 'payment')}><IndianRupee size={14} /> Record Payment</button>
                             <button className="action-menu-item" onClick={() => openModal(room, 'shift')}><ArrowRightLeft size={14} /> Shift Room</button>
                             <button className="action-menu-item" onClick={() => openModal(room, 'editRoom')}><Edit2 size={14} /> Edit Room Details</button>
                             <button className="action-menu-item" onClick={() => handleToggleMaintenance(room)}><Wrench size={14} /> Toggle Maintenance</button>
@@ -589,53 +588,7 @@ export default function RoomsPage() {
       </Modal>
 
       {/* Add Payment Modal */}
-      <Modal isOpen={showPaymentModal} onClose={() => setShowPaymentModal(false)} title={`Add Payment - Room ${selectedRoom?.number}`}>
-        <form onSubmit={handlePaymentSubmit}>
-          <div className="form-grid">
-            <div className="form-group">
-              <label className="form-label">Total Amount (₹)</label>
-              <input type="number" className="form-input" value={paymentData.totalAmount ?? ''} onChange={e => {
-                  const val = parseNum(e.target.value);
-                  const paid = paymentData.paidAmount || 0;
-                  setPaymentData({...paymentData, totalAmount: val, dueAmount: Math.max(0, val - paid)});
-              }} required />
-            </div>
-            <div className="form-group">
-              <label className="form-label">Paid Amount (₹)</label>
-              <input type="number" className="form-input" value={paymentData.paidAmount ?? ''} onChange={e => {
-                  const val = parseNum(e.target.value);
-                  const total = paymentData.totalAmount || 0;
-                  setPaymentData({...paymentData, paidAmount: val, dueAmount: Math.max(0, total - val)});
-              }} required />
-            </div>
-            <div className="form-group">
-              <label className="form-label">Due Amount (₹)</label>
-              <input type="number" className="form-input" value={paymentData.dueAmount ?? ''} onChange={e => setPaymentData({...paymentData, dueAmount: parseNum(e.target.value)})} required />
-            </div>
-            <div className="form-group">
-              <label className="form-label">Payment Method</label>
-              <select className="form-select" value={paymentData.method || 'Cash'} onChange={e => setPaymentData({...paymentData, method: e.target.value})}>
-                <option value="Cash">Cash</option>
-                <option value="UPI">UPI</option>
-                <option value="Bank Transfer">Bank Transfer</option>
-                <option value="Card">Card</option>
-                <option value="Google Pay">Google Pay</option>
-                <option value="PhonePe">PhonePe</option>
-                <option value="Paytm">Paytm</option>
-                <option value="Other">Other</option>
-              </select>
-            </div>
-            <div className="form-group full">
-              <label className="form-label">Notes</label>
-              <textarea className="form-textarea" placeholder="Optional notes" value={paymentData.notes || ''} onChange={e => setPaymentData({...paymentData, notes: e.target.value})}></textarea>
-            </div>
-          </div>
-          <div className="form-actions">
-            <button type="button" className="btn btn-ghost" onClick={() => setShowPaymentModal(false)}>Cancel</button>
-            <button type="submit" className="btn btn-primary"><IndianRupee size={16}/> Record Payment</button>
-          </div>
-        </form>
-      </Modal>
+
 
       {/* Assign Tenant Modal */}
       <Modal isOpen={showAssignModal} onClose={() => setShowAssignModal(false)} title={`Assign Tenant - Room ${selectedRoom?.number}`} maxWidth="700px">

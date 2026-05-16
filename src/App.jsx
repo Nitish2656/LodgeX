@@ -1,6 +1,7 @@
 import { useStore, StoreProvider } from './data/store';
 import Sidebar from './components/Sidebar';
 import Navbar from './components/Navbar';
+import BottomNav from './components/BottomNav';
 import Login from './pages/Login';
 import Dashboard from './pages/Dashboard';
 import Rooms from './pages/Rooms';
@@ -12,6 +13,10 @@ import Reports from './pages/Reports';
 import Backup from './pages/Backup';
 import Notifications from './pages/Notifications';
 import Settings from './pages/Settings';
+import NotFound from './pages/NotFound';
+import AccessDenied from './pages/AccessDenied';
+import ServerError from './pages/ServerError';
+import Maintenance from './pages/Maintenance';
 import './App.css';
 
 const pages = {
@@ -25,6 +30,10 @@ const pages = {
   backup: Backup,
   notifications: Notifications,
   settings: Settings,
+  '404': NotFound,
+  '403': AccessDenied,
+  '500': ServerError,
+  '503': Maintenance,
 };
 
 function AppContent() {
@@ -32,7 +41,7 @@ function AppContent() {
 
   if (!isAuthenticated) return <Login />;
 
-  const ActivePage = pages[activePage] || Dashboard;
+  const ActivePage = pages[activePage] || NotFound;
 
   return (
     <div className="app-layout">
@@ -48,6 +57,7 @@ function AppContent() {
           <ActivePage />
         </div>
       </main>
+      <BottomNav />
     </div>
   );
 }
