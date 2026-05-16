@@ -41,9 +41,13 @@ app.get('/', (req, res) => {
 });
 
 // Database Connection
-mongoose.connect(process.env.MONGODB_URI)
-    .then(() => console.log('✅ Connected to MongoDB'))
-    .catch((err) => console.error('❌ MongoDB connection error:', err));
+if (process.env.MONGODB_URI && process.env.MONGODB_URI.startsWith('mongodb')) {
+    mongoose.connect(process.env.MONGODB_URI)
+        .then(() => console.log('✅ Connected to MongoDB'))
+        .catch((err) => console.error('❌ MongoDB connection error:', err));
+} else {
+    console.error('⚠️ MONGODB_URI is invalid or not set. Database not connected.');
+}
 
 // Keep Render free tier awake by pinging itself every 14 minutes
 app.get('/api/ping', (req, res) => res.send('pong'));
@@ -56,11 +60,14 @@ app.listen(PORT, () => {
     // Auto-ping logic (runs every 14 minutes = 840000 ms)
     setInterval(() => {
         const targetUrl = process.env.RENDER_EXTERNAL_URL || `http://localhost:${PORT}`;
+        const httpLib = targetUrl.startsWith('https') ? require('https') : require('http');
+        
         try {
-            fetch(`${targetUrl}/api/ping`)
-                .then(res => res.text())
-                .then(text => console.log(`[Keep-Alive Ping] Status: ${text} at ${new Date().toISOString()}`))
-                .catch(err => console.error('[Keep-Alive Ping] Fetch error:', err.message));
+            httpLib.get(`${targetUrl}/api/ping`, (res) => {
+                console.log(`[Keep-Alive Ping] Status Code: ${res.statusCode} at ${new Date().toISOString()}`);
+            }).on('error', (err) => {
+                console.error('[Keep-Alive Ping] Request error:', err.message);
+            });
         } catch (error) {
             console.error('[Keep-Alive Ping] Error:', error.message);
         }
