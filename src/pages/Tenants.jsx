@@ -1326,20 +1326,24 @@ export default function TenantsPage() {
             }} />
           </label>
           <div style={{textAlign: 'center', color: 'var(--text-tertiary)', fontSize: '12px', fontWeight: 600}}>OR</div>
-          <label className="btn btn-primary" style={{display: 'flex', justifyContent: 'center', cursor: 'pointer', margin: 0}} onClick={(e) => {
-             if (navigator.mediaDevices && navigator.mediaDevices.getUserMedia && !/Mobi|Android|iPad|iPhone|iPod/i.test(navigator.userAgent)) {
-                 e.preventDefault();
-                 const target = photoSourceTarget;
-                 setPhotoSourceTarget(null);
-                 openCamera(target.isCoTenant, target.index);
-             }
-          }}>
-            <Camera size={16}/> Take Live Photo
-            <input type="file" accept="image/*" capture="environment" style={{display: 'none'}} onChange={(e) => {
-              handlePhotoUpload(e, photoSourceTarget?.isCoTenant, photoSourceTarget?.index);
+          {/* On mobile: open native camera. On desktop: open webcam modal */}
+          {/Mobi|Android|iPad|iPhone|iPod/i.test(navigator.userAgent) ? (
+            <label className="btn btn-primary" style={{display: 'flex', justifyContent: 'center', cursor: 'pointer', margin: 0}}>
+              <Camera size={16}/> Take Live Photo
+              <input type="file" accept="image/*" capture="user" style={{display: 'none'}} onChange={(e) => {
+                handlePhotoUpload(e, photoSourceTarget?.isCoTenant, photoSourceTarget?.index);
+                setPhotoSourceTarget(null);
+              }} />
+            </label>
+          ) : (
+            <button type="button" className="btn btn-primary" style={{display: 'flex', justifyContent: 'center', cursor: 'pointer', margin: 0}} onClick={() => {
+              const target = photoSourceTarget;
               setPhotoSourceTarget(null);
-            }} />
-          </label>
+              openCamera(target?.isCoTenant ?? false, target?.index ?? 0);
+            }}>
+              <Camera size={16}/> Take Live Photo (Webcam)
+            </button>
+          )}
         </div>
       </Modal>
 
