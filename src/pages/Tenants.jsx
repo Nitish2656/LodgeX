@@ -301,8 +301,14 @@ export default function TenantsPage() {
       })
       .catch(err => {
         console.error('Camera error', err);
-        alert('Could not access camera. Please allow camera permissions.');
         setShowCamera(false);
+        if (err.name === 'NotAllowedError' || err.name === 'PermissionDeniedError') {
+          alert('📷 Camera permission denied!\n\nTo fix this:\n1. Click the camera/lock icon in your browser address bar\n2. Select "Allow" for camera\n3. Refresh the page and try again\n\nOr: Use "Upload from Device" to upload a photo from your files instead.');
+        } else if (err.name === 'NotFoundError') {
+          alert('No camera found on this device. Please use "Upload from Device" instead.');
+        } else {
+          alert('Could not access camera. Please use "Upload from Device" as an alternative.');
+        }
       });
   };
 
