@@ -48,6 +48,7 @@ export default function TenantsPage() {
 
   const [payDuesTenantObj, setPayDuesTenantObj] = useState(null);
   const [payDuesData, setPayDuesData] = useState({ amount: '', method: 'Cash' });
+  const [isSubmittingPayment, setIsSubmittingPayment] = useState(false);
 
   const [isEditing, setIsEditing] = useState(false);
   const [editingId, setEditingId] = useState(null);
@@ -145,29 +146,38 @@ export default function TenantsPage() {
 
   const handlePayDuesSubmit = async (e) => {
       e.preventDefault();
+      if (isSubmittingPayment) return; // Prevent double submission
       const amountPaid = Number(payDuesData.amount);
       if (!amountPaid || amountPaid <= 0) return alert('Enter a valid amount');
       if (amountPaid > payDuesTenantObj.pendingDues) return alert('Amount cannot exceed pending dues');
       
+      setIsSubmittingPayment(true);
       const newDues = payDuesTenantObj.pendingDues - amountPaid;
       
-      await addPayment({
-          tenantId: payDuesTenantObj._id || payDuesTenantObj.id,
-          tenantName: payDuesTenantObj.name,
-          roomId: payDuesTenantObj.roomId,
-          roomNumber: payDuesTenantObj.roomNumber,
-          totalAmount: payDuesTenantObj.pendingDues,
-          paidAmount: amountPaid,
-          dueAmount: newDues,
-          method: payDuesData.method,
-          status: 'completed',
-          month: new Date().toLocaleDateString('en-IN', { month: 'short', year: 'numeric' }),
-          notes: newDues > 0 ? `Partial payment (₹${newDues.toLocaleString('en-IN')} remaining)` : 'Full dues cleared'
-      });
-      
-      // Update local state immediately so UI reflects the change if modal reopened
-      setPayDuesTenantObj(prev => prev ? { ...prev, pendingDues: newDues } : prev);
-      setShowPayDuesModal(false);
+      try {
+        await addPayment({
+            tenantId: payDuesTenantObj._id || payDuesTenantObj.id,
+            tenantName: payDuesTenantObj.name,
+            roomId: payDuesTenantObj.roomId,
+            roomNumber: payDuesTenantObj.roomNumber,
+            totalAmount: payDuesTenantObj.pendingDues,
+            paidAmount: amountPaid,
+            dueAmount: newDues,
+            method: payDuesData.method,
+            status: 'completed',
+            month: new Date().toLocaleDateString('en-IN', { month: 'short', year: 'numeric' }),
+            notes: newDues > 0 ? `Partial payment (₹${newDues.toLocaleString('en-IN')} remaining)` : 'Full dues cleared'
+        });
+        
+        // Update local state immediately so UI reflects the change if modal reopened
+        setPayDuesTenantObj(prev => prev ? { ...prev, pendingDues: newDues } : prev);
+        setShowPayDuesModal(false);
+      } catch(err) {
+        console.error('Payment submission error:', err);
+        alert('Payment failed. Please try again.');
+      } finally {
+        setIsSubmittingPayment(false);
+      }
   };
 
   const confirmDelete = (e, tenant) => {
@@ -1285,8 +1295,10 @@ export default function TenantsPage() {
 
           </div>
           <div className="form-actions" style={{ marginTop: '24px', borderTop: '1px solid var(--border-primary)', paddingTop: '24px' }}>
-            <button type="button" className="btn btn-ghost" style={{ flex: 1, height: '48px' }} onClick={() => setShowPayDuesModal(false)}>Cancel</button>
-            <button type="submit" className="btn btn-primary" style={{ flex: 2, height: '48px', fontWeight: 700, borderRadius: '12px' }}>Pay ₹{(Number(payDuesData.amount) || 0).toLocaleString('en-IN')}</button>
+            <button type="button" className="btn btn-ghost" style={{ flex: 1, height: '48px' }} onClick={() => setShowPayDuesModal(false)} disabled={isSubmittingPayment}>Cancel</button>
+            <button type="submit" className="btn btn-primary" disabled={isSubmittingPayment} style={{ flex: 2, height: '48px', fontWeight: 700, borderRadius: '12px', opacity: isSubmittingPayment ? 0.7 : 1, cursor: isSubmittingPayment ? 'not-allowed' : 'pointer' }}>
+              {isSubmittingPayment ? 'Processing...' : `Pay ₹${(Number(payDuesData.amount) || 0).toLocaleString('en-IN')}`}
+            </button>
           </div>
         </form>
       </Modal>
