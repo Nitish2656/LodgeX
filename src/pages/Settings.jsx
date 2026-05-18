@@ -1,10 +1,10 @@
 import { useState, useEffect } from 'react';
-import { User, Building, Shield, Palette, Save, Lock, Key, CheckCircle, Eye, EyeOff } from 'lucide-react';
+import { User, Building, Shield, Palette, Save, Lock, Key, CheckCircle, Eye, EyeOff, LogOut } from 'lucide-react';
 import { useStore } from '../data/store';
 import './Pages.css';
 
 export default function SettingsPage() {
-  const { settings, updateSettings, updatePassword } = useStore();
+  const { settings, updateSettings, updatePassword, logout } = useStore();
   
   const [electricRate, setElectricRate] = useState('8');
   const [autoBackup, setAutoBackup] = useState(true);
@@ -198,6 +198,10 @@ export default function SettingsPage() {
 
               <button onClick={handleSavePreferences} className={`btn-premium-action ${saved ? 'success' : ''}`} style={{ marginTop: '20px' }}>
                 {saved ? <><CheckCircle size={18} /> Preferences Saved</> : 'Save Preferences'}
+              </button>
+
+              <button onClick={logout} className="btn-premium-action" style={{ marginTop: '16px', background: 'var(--danger-bg)', color: 'var(--danger)', border: '1px solid rgba(239, 68, 68, 0.2)' }}>
+                <LogOut size={18} /> Logout from LodgeX
               </button>
             </div>
           </div>
