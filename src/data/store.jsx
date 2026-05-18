@@ -837,11 +837,14 @@ export function StoreProvider({ children }) {
   const unreadNotifications = notifications.filter(n => !n.read).length;
 
   const searchResults = useMemo(() => searchQuery.length >= 1 ? [
-    ...activeTenants.filter(t =>
+    ...activeTenants.map(t => {
+      const actualRoom = rooms.find(r => (r._id || r.id)?.toString() === t.roomId?.toString());
+      return { ...t, type: 'tenant', computedRoomNumber: actualRoom ? actualRoom.number : 'Unassigned' };
+    }).filter(t =>
       t.name.toLowerCase().includes(searchQuery.toLowerCase()) ||
       t.phone.includes(searchQuery) ||
-      (t.roomNumber && t.roomNumber.includes(searchQuery))
-    ).map(t => ({ ...t, type: 'tenant' })),
+      t.computedRoomNumber.toLowerCase().includes(searchQuery.toLowerCase())
+    ),
     ...rooms.filter(r =>
       r.number.toLowerCase().includes(searchQuery.toLowerCase()) ||
       r.type.toLowerCase().includes(searchQuery.toLowerCase()) ||

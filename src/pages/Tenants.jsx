@@ -871,8 +871,15 @@ export default function TenantsPage() {
             <div className="profile-info" style={{ paddingBottom: '4px' }}>
               <h3 style={{ fontSize: '24px', fontWeight: 800, margin: '0 0 4px 0', letterSpacing: '-0.02em', textTransform: 'capitalize' }}>{selectedTenant.name}</h3>
               <div className="profile-meta" style={{ display: 'flex', gap: '16px', color: 'var(--text-tertiary)', fontSize: '13px', fontWeight: 600 }}>
-                <span style={{ display: 'flex', alignItems: 'center', gap: '4px' }}><MapPin size={14} style={{ color: 'var(--accent-primary)' }}/> Room {selectedTenant.roomNumber}</span>
-                <span style={{ display: 'flex', alignItems: 'center', gap: '4px' }}><CalendarClock size={14} style={{ color: 'var(--accent-primary)' }}/> Joined {new Date(selectedTenant.joinDate).toLocaleDateString('en-IN', { day: 'numeric', month: 'short', year: 'numeric' })}</span>
+                {(() => {
+                    const actualRoom = rooms.find(r => (r._id || r.id)?.toString() === selectedTenant.roomId?.toString());
+                    return (
+                        <span style={{ display: 'flex', alignItems: 'center', gap: '4px', color: actualRoom ? 'var(--text-tertiary)' : 'var(--danger)' }}>
+                            <MapPin size={14} style={{ color: actualRoom ? 'var(--accent-primary)' : 'var(--danger)' }}/> {actualRoom ? `Room ${actualRoom.number}` : 'Unassigned Room'}
+                        </span>
+                    );
+                })()}
+                <span style={{ display: 'flex', alignItems: 'center', gap: '4px' }}><CalendarClock size={14} style={{ color: 'var(--accent-primary)' }}/> Joined {selectedTenant.joinDate ? new Date(selectedTenant.joinDate).toLocaleDateString('en-IN', { day: 'numeric', month: 'short', year: 'numeric' }) : 'Unknown'}</span>
               </div>
             </div>
           </div>

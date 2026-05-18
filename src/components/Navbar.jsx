@@ -89,7 +89,7 @@ export default function Navbar() {
                     <img src={r.avatar} alt="" className="search-result-avatar" />
                     <div className="search-result-info">
                       <span className="search-result-name">{r.name}</span>
-                      <span className="search-result-meta">Room {r.roomNumber} &bull; {r.phone}</span>
+                      <span className="search-result-meta">{r.computedRoomNumber === 'Unassigned' ? 'Unassigned Room' : `Room ${r.computedRoomNumber}`} &bull; {r.phone}</span>
                     </div>
                     {r.pendingDues > 0 && (
                       <span className="search-result-badge danger">₹{r.pendingDues.toLocaleString()}</span>
