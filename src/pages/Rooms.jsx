@@ -273,7 +273,7 @@ export default function RoomsPage() {
     e.preventDefault();
     const roomPayload = {
         number: newRoomData.number,
-        floor: Number(newRoomData.floor),
+        floor: newRoomData.floor, // Keep as string (e.g. "Ground Floor")
         type: newRoomData.type,
         rent: Number(newRoomData.rent)
     };
@@ -713,7 +713,7 @@ export default function RoomsPage() {
             </div>
             <div className="form-group">
               <label className="form-label">Floor</label>
-              <input type="number" className="form-input" value={newRoomData.floor} onChange={e => setNewRoomData({...newRoomData, floor: e.target.value})} required />
+              <input type="text" className="form-input" placeholder="e.g. Ground, 1st Floor" value={newRoomData.floor} onChange={e => setNewRoomData({...newRoomData, floor: e.target.value})} required />
             </div>
             <div className="form-group">
               <label className="form-label">Room Type</label>
