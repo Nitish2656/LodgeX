@@ -11,20 +11,6 @@ export default function TenantsPage() {
     pageAction, setPageAction, uploadFile, settings, searchQuery
   } = useStore();
 
-  useEffect(() => {
-    if (pageAction) {
-      if (pageAction === 'add') {
-        openAddModal();
-      } else if (typeof pageAction === 'object' && pageAction.type === 'add') {
-        openAddModal(pageAction.roomId);
-      } else if (typeof pageAction === 'object' && pageAction.type === 'OPEN_TENANT' && pageAction.id) {
-        const t = tenants.find(t => (t._id || t.id) === pageAction.id);
-        if (t) openProfile(t);
-      }
-      setPageAction(null); // Clear action
-    }
-  }, [pageAction, setPageAction, rooms, tenants]);
-
   const [filter, setFilter] = useState('all');
 
   const [selectedTenant, setSelectedTenant] = useState(null);
@@ -524,6 +510,20 @@ export default function TenantsPage() {
       setIsRefreshing(false);
     }
   };
+
+  useEffect(() => {
+    if (pageAction) {
+      if (pageAction === 'add') {
+        openAddModal();
+      } else if (typeof pageAction === 'object' && pageAction.type === 'add') {
+        openAddModal(pageAction.roomId);
+      } else if (typeof pageAction === 'object' && pageAction.type === 'OPEN_TENANT' && pageAction.id) {
+        const t = tenants.find(t => (t._id || t.id) === pageAction.id);
+        if (t) openProfile(t);
+      }
+      setPageAction(null); // Clear action
+    }
+  }, [pageAction, setPageAction, rooms, tenants]);
 
   return (
     <div className="page">
