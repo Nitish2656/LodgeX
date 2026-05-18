@@ -84,6 +84,12 @@ app.listen(PORT, () => {
 
     async function checkAndRunWeeklyBackup() {
         try {
+            const settings = await Settings.findOne({});
+            if (settings && settings.autoBackup === false) {
+                console.log('[Auto-Backup] Scheduled automatic cloud backup is disabled in settings. Skipping.');
+                return;
+            }
+
             const now = new Date();
             const lastAutoBackup = await Backup.findOne({ type: 'Automatic' }).sort({ date: -1 });
             
