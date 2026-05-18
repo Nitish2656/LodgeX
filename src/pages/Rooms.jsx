@@ -78,13 +78,7 @@ export default function RoomsPage() {
     const pending = payments.filter(p => (p.tenantId === tenantId || p._id === tenantId) && p.status === 'pending' && p.month);
     return [...new Set(pending.map(p => p.month))].join(', ');
   };
-  const getPendingMonthsLabel = (tenantId) => {
-    const pending = payments.filter(p => (p.tenantId === tenantId || p._id === tenantId) && p.status === 'pending' && p.month);
-    if (pending.length > 0) {
-      return [...new Set(pending.map(p => p.month.split(' ')[0]))].join(', ') + ' Pending';
-    }
-    return new Date().toLocaleDateString('en-IN', { month: 'short' }) + ' Pending';
-  };
+
 
   // Sync detailTenant with global tenants state
   useEffect(() => {
@@ -641,7 +635,7 @@ export default function RoomsPage() {
                     </div>
                     {tenant.pendingDues > 0 ? (
                       <div className="room-tenant-dues" style={{ background: 'var(--danger-bg)', color: 'var(--danger)', border: '1px solid rgba(248,113,113,0.3)', padding: '4px 8px', borderRadius: '6px', fontSize: '11px', fontWeight: 700, textAlign: 'right' }}>
-                        <div>{getPendingMonthsLabel(tenant._id || tenant.id)}</div>
+                        <div>Pending</div>
                         <div style={{ fontSize: '12px', marginTop: '1px' }}>₹{tenant.pendingDues.toLocaleString('en-IN')}</div>
                       </div>
                     ) : (
@@ -1048,7 +1042,7 @@ export default function RoomsPage() {
               </div>
               <div style={{ display: 'flex', flexDirection: 'column', gap: '8px', background: detailTenant.pendingDues > 0 ? 'rgba(239,68,68,0.05)' : 'rgba(52,211,153,0.05)', padding: '16px', borderRadius: '20px', margin: '-12px', border: detailTenant.pendingDues > 0 ? '1px solid rgba(239,68,68,0.15)' : '1px solid rgba(52,211,153,0.15)' }}>
                 <div style={{ fontSize: '12px', color: detailTenant.pendingDues > 0 ? 'rgba(239,68,68,0.8)' : 'rgba(52,211,153,0.8)', fontWeight: 800, textTransform: 'uppercase', display: 'flex', justifyContent: 'space-between', alignItems: 'center' }}>
-                  <span>{detailTenant.pendingDues > 0 ? getPendingMonthsLabel(detailTenant._id || detailTenant.id) : `${new Date().toLocaleDateString('en-IN', { month: 'short' })} Rent: Paid ✓`}</span>
+                  <span>{detailTenant.pendingDues > 0 ? 'Pending Dues' : `${new Date().toLocaleDateString('en-IN', { month: 'short' })} Rent: Paid ✓`}</span>
                   {detailTenant.pendingDues > 0 && <button style={{ background: '#ef4444', color: 'white', border: 'none', padding: '6px 14px', borderRadius: '10px', fontSize: '12px', fontWeight: 700, cursor: 'pointer', boxShadow: '0 4px 12px rgba(239,68,68,0.2)' }} onClick={() => openPayDues(detailTenant)}>Pay Now</button>}
                 </div>
                 <div style={{ fontSize: '28px', fontWeight: 800, color: detailTenant.pendingDues > 0 ? '#ef4444' : '#34d399' }}>
@@ -1141,102 +1135,70 @@ export default function RoomsPage() {
       {/* Pay Dues Modal */}
       <Modal isOpen={showPayDuesModal} onClose={() => setShowPayDuesModal(false)} title={`Collect Payment - ${payDuesTenantObj?.name || ''}`} maxWidth="500px">
         <form onSubmit={handlePayDuesSubmit}>
-          <div className="payment-modal-body" style={{ display: 'flex', flexDirection: 'column', gap: '24px', marginBottom: '24px' }}>
-            {/* Outstanding Summary */}
-            <div className="payment-summary-card" style={{ background: 'linear-gradient(135deg, rgba(99, 102, 241, 0.1) 0%, rgba(167, 139, 250, 0.1) 100%)', borderRadius: '20px', padding: '24px', border: '1px solid rgba(99, 102, 241, 0.2)', textAlign: 'center' }}>
-                <span style={{ fontSize: '12px', fontWeight: 700, color: 'var(--text-secondary)', textTransform: 'uppercase', letterSpacing: '1.5px' }}>Total Outstanding</span>
-                <div style={{ fontSize: '32px', fontWeight: 900, color: 'var(--danger)', marginTop: '4px' }}>₹{(payDuesTenantObj?.pendingDues || 0).toLocaleString('en-IN')}</div>
+          <div style={{ textAlign: 'center', padding: '20px', background: 'linear-gradient(135deg, rgba(239,68,68,0.05), rgba(239,68,68,0.02))', borderRadius: '20px', marginBottom: '16px', border: '1px solid rgba(239,68,68,0.08)' }}>
+            <div style={{ fontSize: '11px', fontWeight: 800, color: 'rgba(239,68,68,0.6)', textTransform: 'uppercase', letterSpacing: '0.12em', marginBottom: '8px' }}>Total Outstanding</div>
+            <div style={{ fontSize: '32px', fontWeight: 800, color: '#ef4444' }}>₹{payDuesTenantObj?.pendingDues?.toLocaleString('en-IN') || 0}</div>
+          </div>
+          
+          <div style={{ marginBottom: '20px' }}>
+            <div style={{ display: 'flex', alignItems: 'center', gap: '8px', marginBottom: '12px' }}>
+                <div style={{ width: '4px', height: '16px', background: 'var(--accent-primary)', borderRadius: '4px' }}></div>
+                <h4 style={{ margin: 0, fontSize: '14px', fontWeight: 700 }}>Dues Breakdown</h4>
             </div>
-
-            {/* Breakdown */}
-            <div className="payment-section">
-                <div style={{ display: 'flex', alignItems: 'center', gap: '8px', marginBottom: '12px' }}>
-                    <div style={{ width: '4px', height: '16px', background: 'var(--accent-primary)', borderRadius: '4px' }}></div>
-                    <h4 style={{ margin: 0, fontSize: '14px', fontWeight: 700 }}>Dues Breakdown</h4>
-                </div>
-                <div style={{ background: 'rgba(255,255,255,0.03)', borderRadius: '16px', border: '1px solid var(--border-primary)', overflow: 'hidden', display: 'flex', flexDirection: 'column' }}>
-                    {(() => {
-                        const tenantId = payDuesTenantObj?._id || payDuesTenantObj?.id;
-                        const pendingPayments = payments.filter(p => 
-                          (p.tenantId === tenantId || p._id === tenantId) && 
-                          p.status === 'pending' && 
-                          p.month
-                        );
-                        
-                        if (pendingPayments.length > 0) {
-                            return pendingPayments.map((p, idx) => (
-                                <div key={p._id || p.id} style={{ 
-                                    display: 'flex', 
-                                    justifyContent: 'space-between', 
-                                    padding: '14px 16px', 
-                                    borderBottom: idx < pendingPayments.length - 1 ? '1px solid var(--border-primary)' : 'none' 
-                                }}>
-                                    <div>
-                                        <div style={{ fontSize: '13px', fontWeight: 700, color: 'var(--text-primary)' }}>
-                                            {p.month}
-                                        </div>
-                                        <div style={{ fontSize: '11px', color: 'var(--text-tertiary)' }}>
-                                            {p.notes || 'Pending dues'}
-                                        </div>
-                                    </div>
-                                    <div style={{ fontWeight: 800, color: 'var(--danger)', fontSize: '14px' }}>
-                                        ₹{(p.dueAmount !== undefined ? p.dueAmount : p.totalAmount).toLocaleString('en-IN')}
-                                    </div>
+            <div style={{ background: 'rgba(255,255,255,0.03)', borderRadius: '16px', border: '1px solid var(--border-primary)', overflow: 'hidden', display: 'flex', flexDirection: 'column' }}>
+                {(() => {
+                    const tenantId = payDuesTenantObj?._id || payDuesTenantObj?.id;
+                    const pendingPayments = payments.filter(p => 
+                      (p.tenantId === tenantId || p._id === tenantId) && 
+                      p.status === 'pending' && 
+                      p.month
+                    );
+                    
+                    if (pendingPayments.length > 0) {
+                        return pendingPayments.map((p, idx) => (
+                            <div key={p._id || p.id} style={{ display: 'flex', justifyContent: 'space-between', padding: '12px 16px', borderBottom: idx < pendingPayments.length - 1 ? '1px solid var(--border-primary)' : 'none' }}>
+                                <div>
+                                    <div style={{ fontSize: '13px', fontWeight: 700, color: 'var(--text-primary)' }}>{p.month}</div>
+                                    <div style={{ fontSize: '11px', color: 'var(--text-tertiary)' }}>{p.notes || 'Pending dues'}</div>
                                 </div>
-                            ));
-                        }
-                        
-                        if (payDuesTenantObj?.pendingDues > 0) {
-                            return (
-                                <div style={{ display: 'flex', justifyContent: 'space-between', padding: '14px 16px' }}>
-                                    <div>
-                                        <div style={{ fontSize: '13px', fontWeight: 700, color: 'var(--text-primary)' }}>
-                                            {new Date().toLocaleDateString('en-IN', { month: 'long', year: 'numeric' })}
-                                        </div>
-                                        <div style={{ fontSize: '11px', color: 'var(--text-tertiary)' }}>Current outstanding</div>
-                                    </div>
-                                    <div style={{ fontWeight: 800, color: 'var(--danger)', fontSize: '14px' }}>
-                                        ₹{payDuesTenantObj.pendingDues.toLocaleString('en-IN')}
-                                    </div>
+                                <div style={{ fontWeight: 800, color: 'var(--danger)', fontSize: '14px' }}>
+                                    ₹{(p.dueAmount !== undefined ? p.dueAmount : p.totalAmount).toLocaleString('en-IN')}
                                 </div>
-                            );
-                        }
-
+                            </div>
+                        ));
+                    }
+                    
+                    if (payDuesTenantObj?.pendingDues > 0) {
                         return (
-                            <div style={{ padding: '20px', textAlign: 'center', color: 'var(--text-tertiary)', fontSize: '13px' }}>
-                                No pending dues found.
+                            <div style={{ display: 'flex', justifyContent: 'space-between', padding: '12px 16px' }}>
+                                <div>
+                                    <div style={{ fontSize: '13px', fontWeight: 700, color: 'var(--text-primary)' }}>{new Date().toLocaleDateString('en-IN', { month: 'long', year: 'numeric' })}</div>
+                                    <div style={{ fontSize: '11px', color: 'var(--text-tertiary)' }}>Current outstanding</div>
+                                </div>
+                                <div style={{ fontWeight: 800, color: 'var(--danger)', fontSize: '14px' }}>₹{payDuesTenantObj.pendingDues.toLocaleString('en-IN')}</div>
                             </div>
                         );
-                    })()}
-                </div>
+                    }
+
+                    return <div style={{ padding: '16px', textAlign: 'center', color: 'var(--text-tertiary)', fontSize: '13px' }}>No pending dues found.</div>;
+                })()}
             </div>
           </div>
-
-          <div className="payment-form-stack" style={{ display: 'flex', flexDirection: 'column', gap: '16px' }}>
+          <div style={{ display: 'flex', flexDirection: 'column', gap: '16px' }}>
             <div className="form-group">
               <label className="form-label" style={{ fontSize: '12px', fontWeight: 600 }}>Amount to Pay (₹)</label>
-              <input type="number" className="form-input" style={{ fontSize: '20px', fontWeight: 700, borderRadius: '12px', height: '52px' }} value={payDuesData.amount} onChange={e => setPayDuesData({...payDuesData, amount: e.target.value})} onWheel={(e) => e.target.blur()} autoFocus required max={payDuesTenantObj?.pendingDues} min="1" />
+              <input type="number" className="form-input" style={{ fontSize: '20px', fontWeight: 700, borderRadius: '12px', height: '52px' }} value={payDuesData.amount} onChange={e => setPayDuesData({...payDuesData, amount: e.target.value})} onWheel={(e) => e.target.blur()} required max={payDuesTenantObj?.pendingDues} min="1" />
             </div>
             <div className="form-group">
               <label className="form-label" style={{ fontSize: '12px', fontWeight: 600 }}>Payment Method</label>
               <select className="form-select" style={{ height: '48px', borderRadius: '12px', fontWeight: 600 }} value={payDuesData.method} onChange={e => setPayDuesData({...payDuesData, method: e.target.value})} required>
-                <option value="Cash">💵 Cash</option>
-                <option value="Google Pay">📱 Google Pay</option>
-                <option value="PhonePe">📱 PhonePe</option>
-                <option value="Paytm">📱 Paytm</option>
-                <option value="UPI">📱 Other UPI</option>
-                <option value="CRED">💳 CRED</option>
-                <option value="Amazon Pay">🛒 Amazon Pay</option>
-                <option value="Bank Transfer">🏦 Bank Transfer</option>
-                <option value="Card">💳 Debit/Credit Card</option>
+                <option value="Cash">💵 Cash</option><option value="Google Pay">📱 Google Pay</option><option value="PhonePe">📱 PhonePe</option><option value="Paytm">📱 Paytm</option><option value="UPI">📱 Other UPI</option><option value="CRED">💳 CRED</option><option value="Bank Transfer">🏦 Bank Transfer</option>
               </select>
             </div>
           </div>
-          <div className="form-actions" style={{ marginTop: '24px', borderTop: '1px solid var(--border-primary)', paddingTop: '24px' }}>
-            <button type="button" className="btn btn-ghost" style={{ flex: 1, height: '48px' }} onClick={() => setShowPayDuesModal(false)} disabled={isSubmittingPayment}>Cancel</button>
-            <button type="submit" className="btn btn-primary" disabled={isSubmittingPayment} style={{ flex: 2, height: '48px', fontWeight: 700, borderRadius: '12px', opacity: isSubmittingPayment ? 0.7 : 1, cursor: isSubmittingPayment ? 'not-allowed' : 'pointer' }}>
-              {isSubmittingPayment ? 'Processing...' : `Pay ₹${(Number(payDuesData.amount) || 0).toLocaleString('en-IN')}`}
-            </button>
+          <div className="form-actions" style={{ marginTop: '20px' }}>
+            <button type="button" className="btn btn-ghost" onClick={() => setShowPayDuesModal(false)}>Cancel</button>
+            <button type="submit" className="btn btn-primary" disabled={isSubmittingPayment}>{isSubmittingPayment ? 'Processing...' : '💰 Collect Payment'}</button>
           </div>
         </form>
       </Modal>

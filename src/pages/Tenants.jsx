@@ -105,13 +105,7 @@ export default function TenantsPage() {
     const uniqueMonths = [...new Set(pending.map(p => p.month))];
     return uniqueMonths.join(', ');
   };
-  const getPendingMonthsLabel = (tenantId) => {
-    const pending = payments.filter(p => (p.tenantId === tenantId || p._id === tenantId) && p.status === 'pending' && p.month);
-    if (pending.length > 0) {
-      return [...new Set(pending.map(p => p.month.split(' ')[0]))].join(', ') + ' Pending';
-    }
-    return new Date().toLocaleDateString('en-IN', { month: 'short' }) + ' Pending';
-  };
+
 
   const openProfile = async (tenant) => {
     setSelectedTenant(tenant);
@@ -907,7 +901,7 @@ export default function TenantsPage() {
                 </div>
                 <div style={{ display: 'flex', flexDirection: 'column', gap: '8px', background: selectedTenant.pendingDues > 0 ? 'rgba(239, 68, 68, 0.05)' : 'rgba(52, 211, 153, 0.05)', padding: '16px', borderRadius: '20px', margin: '-12px', border: selectedTenant.pendingDues > 0 ? '1px solid rgba(239, 68, 68, 0.15)' : '1px solid rgba(52, 211, 153, 0.15)' }}>
                     <div style={{ fontSize: '12px', color: selectedTenant.pendingDues > 0 ? 'rgba(239, 68, 68, 0.8)' : 'rgba(52, 211, 153, 0.8)', fontWeight: 800, textTransform: 'uppercase', letterSpacing: '0.05em', display: 'flex', alignItems: 'center', justifyContent: 'space-between' }}>
-                      <span>{selectedTenant.pendingDues > 0 ? getPendingMonthsLabel(selectedTenant._id || selectedTenant.id) : `${new Date().toLocaleDateString('en-IN', { month: 'short' })} Rent: Paid ✓`}</span>
+                      <span>{selectedTenant.pendingDues > 0 ? 'Pending Dues' : `${new Date().toLocaleDateString('en-IN', { month: 'short' })} Rent: Paid ✓`}</span>
                       {selectedTenant.pendingDues > 0 && (
                           <button style={{ background: '#ef4444', color: 'white', border: 'none', padding: '6px 14px', borderRadius: '10px', fontSize: '12px', fontWeight: 700, cursor: 'pointer', boxShadow: '0 4px 12px rgba(239, 68, 68, 0.2)' }} onClick={(e) => { e.stopPropagation(); openPayDues(selectedTenant); }}>Pay Now</button>
                       )}
