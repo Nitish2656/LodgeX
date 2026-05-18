@@ -249,7 +249,7 @@ export function StoreProvider({ children }) {
             'Content-Type': 'application/json',
             'Authorization': `Bearer ${token}`
         },
-        body: JSON.stringify({ currentPassword, newPassword })
+        body: JSON.stringify({ currentPassword, newPassword, email: currentUser?.email })
       });
       return response.ok;
     } catch (error) {
