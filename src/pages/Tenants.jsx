@@ -36,15 +36,6 @@ export default function TenantsPage() {
   const wizardProgressRef = useRef(null);
   const [stream, setStream] = useState(null);
 
-  useEffect(() => {
-    if (showAddModal && wizardProgressRef.current) {
-      const activeStep = wizardProgressRef.current.querySelector('.wizard-step.active');
-      if (activeStep) {
-        activeStep.scrollIntoView({ behavior: 'smooth', inline: 'center', block: 'nearest' });
-      }
-    }
-  }, [addStep, showAddModal]);
-
   const [payDuesTenantObj, setPayDuesTenantObj] = useState(null);
   const [payDuesData, setPayDuesData] = useState({ amount: '', method: 'Cash' });
   const [isSubmittingPayment, setIsSubmittingPayment] = useState(false);
@@ -64,6 +55,15 @@ export default function TenantsPage() {
     photoFile: null, photoPreview: null,
     tenantAadhaar: null, parentAadhaar: null
   });
+
+  useEffect(() => {
+    if (showAddModal && wizardProgressRef.current) {
+      const activeStep = wizardProgressRef.current.querySelector('.wizard-step.active');
+      if (activeStep) {
+        activeStep.scrollIntoView({ behavior: 'smooth', inline: 'center', block: 'nearest' });
+      }
+    }
+  }, [addStep, showAddModal]);
 
   const activeTenants = tenants.filter(t => t.status === 'active');
   const filtered = activeTenants.filter(t => {
