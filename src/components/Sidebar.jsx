@@ -110,15 +110,6 @@ export default function Sidebar() {
           </div>
         </nav>
 
-        {/* Logout */}
-        <div className="sidebar-footer">
-          <button className="sidebar-item logout-item" onClick={logout}>
-            <div className="sidebar-item-icon">
-              <LogOut size={20} />
-            </div>
-            <span className="sidebar-item-label">Logout</span>
-          </button>
-        </div>
       </aside>
     </>
   );
