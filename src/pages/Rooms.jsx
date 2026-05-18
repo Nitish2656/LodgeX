@@ -1,5 +1,5 @@
 import { useState, useRef, useEffect } from 'react';
-import { BedDouble, Search, Wrench, Users, DoorOpen, CalendarClock, MoreVertical, Edit2, Trash2, LogOut, IndianRupee, UserPlus, UploadCloud, Plus, CalendarPlus, ArrowRightLeft } from 'lucide-react';
+import { BedDouble, Search, Wrench, Users, DoorOpen, CalendarClock, MoreVertical, Edit2, Trash2, LogOut, IndianRupee, UserPlus, UploadCloud, Plus, CalendarPlus, ArrowRightLeft, Phone, MapPin, ShieldCheck, FileText, Download, History, Image } from 'lucide-react';
 import { useStore } from '../data/store';
 import Modal from '../components/Modal';
 import './Pages.css';
@@ -12,7 +12,7 @@ const statusConfig = {
 };
 
 export default function RoomsPage() {
-  const { rooms, tenants, updateTenant, deleteTenant, vacateRoom, addPayment, addTenant, addRoom, updateRoom, deleteRoom, toggleRoomMaintenance, navigateWithAction } = useStore();
+  const { rooms, tenants, payments, updateTenant, deleteTenant, vacateRoom, addPayment, addTenant, addRoom, updateRoom, deleteRoom, toggleRoomMaintenance, navigateWithAction, fetchTenantById, fetchPayments } = useStore();
   const [filter, setFilter] = useState('all');
   const [search, setSearch] = useState('');
 
@@ -30,6 +30,14 @@ export default function RoomsPage() {
   const [showRentModal, setShowRentModal] = useState(false);
   const [showShiftModal, setShowShiftModal] = useState(false);
   const [isEditingRoom, setIsEditingRoom] = useState(false);
+
+  // Tenant Detail Popup
+  const [showTenantDetail, setShowTenantDetail] = useState(false);
+  const [detailTenant, setDetailTenant] = useState(null);
+  const [showPayDuesModal, setShowPayDuesModal] = useState(false);
+  const [payDuesTenantObj, setPayDuesTenantObj] = useState(null);
+  const [payDuesData, setPayDuesData] = useState({ amount: '', method: 'Cash' });
+  const [isSubmittingPayment, setIsSubmittingPayment] = useState(false);
 
   // Forms
   const [editData, setEditData] = useState({});
@@ -53,6 +61,70 @@ export default function RoomsPage() {
   });
 
   const getTenant = (tenantId) => tenants.find(t => t.id === tenantId || t._id === tenantId);
+  const getTenantPayments = (tenantId) => payments.filter(p => (p.tenantId === tenantId || p._id === tenantId)).sort((a, b) => new Date(b.date) - new Date(a.date));
+  const getPendingMonths = (tenantId) => {
+    const pending = payments.filter(p => (p.tenantId === tenantId || p._id === tenantId) && p.status === 'pending' && p.month);
+    return [...new Set(pending.map(p => p.month))].join(', ');
+  };
+
+  // Sync detailTenant with global tenants state
+  useEffect(() => {
+    if (detailTenant) {
+      const updated = tenants.find(t => (t._id || t.id) === (detailTenant._id || detailTenant.id));
+      if (updated && updated.pendingDues !== detailTenant.pendingDues) setDetailTenant(prev => ({ ...prev, ...updated }));
+    }
+  }, [tenants]);
+
+  const handleRoomCardClick = async (room) => {
+    const tenant = room.tenantId ? getTenant(room.tenantId) : null;
+    if (tenant) {
+      setDetailTenant(tenant);
+      setShowTenantDetail(true);
+      const full = await fetchTenantById(tenant._id || tenant.id);
+      if (full) setDetailTenant(full);
+    } else {
+      openModal(room, 'assign');
+    }
+  };
+
+  const openPayDues = async (tenant) => {
+    const tenantId = tenant._id || tenant.id;
+    setPayDuesTenantObj(tenant);
+    setPayDuesData({ amount: tenant.pendingDues, method: 'Cash' });
+    setShowPayDuesModal(true);
+    const tenantPendingPayments = payments.filter(p => (p.tenantId === tenantId || p._id === tenantId) && p.status === 'pending');
+    if (tenantPendingPayments.length === 1) {
+      const singleP = tenantPendingPayments[0];
+      const currentDue = singleP.dueAmount !== undefined ? singleP.dueAmount : singleP.totalAmount;
+      if (currentDue !== tenant.pendingDues) {
+        try {
+          const API_URL = import.meta.env.VITE_API_URL || 'https://lodgex-backend.onrender.com/api';
+          await fetch(`${API_URL}/payments/${singleP._id || singleP.id}`, { method: 'PATCH', headers: { 'Content-Type': 'application/json' }, body: JSON.stringify({ dueAmount: tenant.pendingDues }) });
+          await fetchPayments();
+        } catch(e) { console.error('Failed to reconcile:', e); }
+      }
+    }
+  };
+
+  const handlePayDuesSubmit = async (e) => {
+    e.preventDefault();
+    if (isSubmittingPayment) return;
+    const amountPaid = Number(payDuesData.amount);
+    if (!amountPaid || amountPaid <= 0) return alert('Enter a valid amount');
+    if (amountPaid > payDuesTenantObj.pendingDues) return alert('Amount cannot exceed pending dues');
+    setIsSubmittingPayment(true);
+    const newDues = payDuesTenantObj.pendingDues - amountPaid;
+    try {
+      await addPayment({ tenantId: payDuesTenantObj._id || payDuesTenantObj.id, tenantName: payDuesTenantObj.name, roomId: payDuesTenantObj.roomId, roomNumber: payDuesTenantObj.roomNumber, totalAmount: payDuesTenantObj.pendingDues, paidAmount: amountPaid, dueAmount: newDues, method: payDuesData.method, status: 'completed', month: new Date().toLocaleDateString('en-IN', { month: 'short', year: 'numeric' }), notes: newDues > 0 ? `Partial payment (₹${newDues.toLocaleString('en-IN')} remaining)` : 'Full dues cleared' });
+      setPayDuesTenantObj(prev => prev ? { ...prev, pendingDues: newDues } : prev);
+      setShowPayDuesModal(false);
+    } catch(err) { alert('Payment failed.'); } finally { setIsSubmittingPayment(false); }
+  };
+
+  const handleViewDoc = (url, label) => {
+    if (!url || url.includes('dicebear')) return alert(`No ${label} document uploaded yet.`);
+    window.open(url, '_blank');
+  };
 
   useEffect(() => {
     const handleOutsideClick = (e) => {
@@ -94,7 +166,8 @@ export default function RoomsPage() {
         setShowPaymentModal(true);
       }
     } else if (modalType === 'assign') {
-      navigateWithAction('tenants', { type: 'add', roomId: room._id || room.id });
+      setAssignData({ name: '', phone: '', email: '', address: '', parentName: '', parentPhone: '', roomId: room._id || room.id, roomNumber: room.number, rent: room.rent, deposit: '', paidAmount: '', dueAmount: 0, method: 'Cash', photoFile: null, photoPreview: null, tenantAadhaar: null, parentAadhaar: null });
+      setShowAssignModal(true);
     } else if (modalType === 'deleteRoom') {
       setShowDeleteRoomModal(true);
     } else if (modalType === 'rentcharge') {
@@ -354,7 +427,7 @@ export default function RoomsPage() {
           const status = statusConfig[room.status];
           const tenant = room.tenantId ? getTenant(room.tenantId) : null;
           return (
-            <div key={room._id || room.id} className={`room-card animate-in stagger-${(idx % 8) + 1}`} style={{ cursor: tenant ? 'pointer' : 'default' }} onClick={() => { if (tenant) navigateWithAction('tenants', { type: 'profile', tenantId: tenant._id || tenant.id }); }}>
+            <div key={room._id || room.id} className={`room-card animate-in stagger-${(idx % 8) + 1}`} onClick={() => handleRoomCardClick(room)} style={{ cursor: 'pointer' }}>
               <div className="room-card-top">
                 <div className="room-number">
                   <BedDouble size={16} />
@@ -777,6 +850,121 @@ export default function RoomsPage() {
             <button type="submit" className="btn btn-primary" disabled={!shiftData.newRoomId}>
               <ArrowRightLeft size={16} /> Confirm Shift
             </button>
+          </div>
+        </form>
+      </Modal>
+
+      {/* Tenant Detail Popup */}
+      {detailTenant && (
+        <Modal isOpen={showTenantDetail} onClose={() => setShowTenantDetail(false)} title="" maxWidth="850px">
+          <div style={{ height: '120px', background: 'linear-gradient(135deg, rgba(99, 102, 241, 0.1), rgba(99, 102, 241, 0.02))', margin: '-24px -24px 0', borderTopLeftRadius: '24px', borderTopRightRadius: '24px', position: 'relative' }}>
+            <div style={{ position: 'absolute', top: '24px', right: '24px', display: 'flex', gap: '12px' }}>
+              <button className="btn btn-ghost" style={{ background: 'var(--bg-card)', boxShadow: '0 4px 12px rgba(0,0,0,0.05)' }} onClick={() => { setShowTenantDetail(false); const r = rooms.find(rm => (rm._id || rm.id).toString() === detailTenant.roomId?.toString()); if(r) openModal(r, 'edit'); }}>
+                <Edit2 size={14}/> Edit
+              </button>
+              <button className="btn btn-ghost" style={{ background: 'var(--bg-card)', color: 'var(--danger)', boxShadow: '0 4px 12px rgba(0,0,0,0.05)' }} onClick={() => { setShowTenantDetail(false); const r = rooms.find(rm => (rm._id || rm.id).toString() === detailTenant.roomId?.toString()); if(r) openModal(r, 'vacate'); }}>
+                <LogOut size={14}/> Vacate
+              </button>
+            </div>
+          </div>
+          <div style={{ padding: '0', marginTop: '-40px', marginBottom: '32px', display: 'flex', alignItems: 'flex-end', gap: '20px' }}>
+            <img src={detailTenant.avatar || `https://api.dicebear.com/9.x/initials/svg?seed=${detailTenant.name}&backgroundColor=6366f1`} alt="" style={{ width: '100px', height: '100px', borderRadius: '24px', border: '4px solid var(--bg-card)', objectFit: 'cover', boxShadow: '0 8px 24px rgba(99, 102, 241, 0.15)', background: 'var(--bg-card)' }} />
+            <div style={{ paddingBottom: '4px' }}>
+              <h3 style={{ fontSize: '24px', fontWeight: 800, margin: '0 0 4px 0', letterSpacing: '-0.02em', textTransform: 'capitalize' }}>{detailTenant.name}</h3>
+              <div style={{ display: 'flex', gap: '16px', color: 'var(--text-tertiary)', fontSize: '13px', fontWeight: 600, flexWrap: 'wrap' }}>
+                <span style={{ display: 'flex', alignItems: 'center', gap: '4px' }}><MapPin size={14} style={{ color: 'var(--accent-primary)' }}/> Room {detailTenant.roomNumber}</span>
+                <span style={{ display: 'flex', alignItems: 'center', gap: '4px' }}><CalendarClock size={14} style={{ color: 'var(--accent-primary)' }}/> Joined {new Date(detailTenant.joinDate).toLocaleDateString('en-IN', { day: 'numeric', month: 'short', year: 'numeric' })}</span>
+              </div>
+            </div>
+          </div>
+
+          <div style={{ display: 'grid', gridTemplateColumns: 'repeat(auto-fit, minmax(280px, 1fr))', gap: '20px', marginBottom: '32px' }}>
+            <div style={{ background: 'var(--bg-secondary)', padding: '20px', borderRadius: '20px', border: '1px solid var(--border-primary)' }}>
+              <div style={{ display: 'flex', alignItems: 'center', gap: '8px', marginBottom: '16px', color: 'var(--text-primary)', fontWeight: 700, fontSize: '15px' }}><Phone size={18} style={{ color: 'var(--accent-primary)' }} /> Personal Details</div>
+              <div style={{ display: 'flex', flexDirection: 'column', gap: '12px' }}>
+                <div style={{ display: 'flex', justifyContent: 'space-between' }}><span style={{ fontSize: '13px', color: 'var(--text-tertiary)', fontWeight: 600 }}>Phone</span><span style={{ fontSize: '14px', fontWeight: 600 }}>{detailTenant.phone}</span></div>
+                <div style={{ display: 'flex', justifyContent: 'space-between' }}><span style={{ fontSize: '13px', color: 'var(--text-tertiary)', fontWeight: 600 }}>Address</span><span style={{ fontSize: '14px', fontWeight: 600, textAlign: 'right', maxWidth: '180px' }}>{detailTenant.address || '-'}</span></div>
+              </div>
+            </div>
+            <div style={{ background: 'var(--bg-secondary)', padding: '20px', borderRadius: '20px', border: '1px solid var(--border-primary)' }}>
+              <div style={{ display: 'flex', alignItems: 'center', gap: '8px', marginBottom: '16px', color: 'var(--text-primary)', fontWeight: 700, fontSize: '15px' }}><ShieldCheck size={18} style={{ color: 'var(--success)' }} /> Guardian Details</div>
+              <div style={{ display: 'flex', flexDirection: 'column', gap: '12px' }}>
+                <div style={{ display: 'flex', justifyContent: 'space-between' }}><span style={{ fontSize: '13px', color: 'var(--text-tertiary)', fontWeight: 600 }}>Name</span><span style={{ fontSize: '14px', fontWeight: 600 }}>{detailTenant.parentName || '-'}</span></div>
+                <div style={{ display: 'flex', justifyContent: 'space-between' }}><span style={{ fontSize: '13px', color: 'var(--text-tertiary)', fontWeight: 600 }}>Contact</span><span style={{ fontSize: '14px', fontWeight: 600 }}>{detailTenant.parentPhone || '-'}</span></div>
+              </div>
+            </div>
+            <div style={{ background: 'var(--bg-secondary)', padding: '20px', borderRadius: '20px', border: '1px solid var(--border-primary)', gridColumn: '1 / -1', display: 'grid', gridTemplateColumns: 'repeat(auto-fit, minmax(200px, 1fr))', gap: '20px' }}>
+              <div style={{ display: 'flex', flexDirection: 'column', gap: '4px' }}>
+                <span style={{ fontSize: '12px', color: 'var(--text-tertiary)', fontWeight: 700, textTransform: 'uppercase' }}>Monthly Rent</span>
+                <span style={{ fontSize: '20px', fontWeight: 800 }}>₹{detailTenant.rent?.toLocaleString('en-IN') || '-'}</span>
+              </div>
+              <div style={{ display: 'flex', flexDirection: 'column', gap: '4px' }}>
+                <span style={{ fontSize: '12px', color: 'var(--text-tertiary)', fontWeight: 700, textTransform: 'uppercase' }}>Deposit</span>
+                <span style={{ fontSize: '20px', fontWeight: 800 }}>₹{detailTenant.deposit?.toLocaleString('en-IN') || '-'}</span>
+              </div>
+              <div style={{ display: 'flex', flexDirection: 'column', gap: '4px', background: detailTenant.pendingDues > 0 ? 'rgba(239,68,68,0.05)' : 'rgba(52,211,153,0.05)', padding: '12px', borderRadius: '16px', margin: '-12px', border: detailTenant.pendingDues > 0 ? '1px solid rgba(239,68,68,0.1)' : '1px solid rgba(52,211,153,0.1)' }}>
+                <span style={{ fontSize: '12px', color: detailTenant.pendingDues > 0 ? 'rgba(239,68,68,0.8)' : 'rgba(52,211,153,0.8)', fontWeight: 800, textTransform: 'uppercase', display: 'flex', justifyContent: 'space-between', alignItems: 'center' }}>
+                  Outstanding Dues
+                  {detailTenant.pendingDues > 0 && <button style={{ background: '#ef4444', color: 'white', border: 'none', padding: '4px 12px', borderRadius: '8px', fontSize: '11px', fontWeight: 700, cursor: 'pointer' }} onClick={() => openPayDues(detailTenant)}>Pay Now</button>}
+                </span>
+                <span style={{ fontSize: '24px', fontWeight: 800, color: detailTenant.pendingDues > 0 ? '#ef4444' : '#34d399' }}>₹{detailTenant.pendingDues?.toLocaleString('en-IN') || 0}</span>
+              </div>
+            </div>
+            <div style={{ background: 'var(--bg-secondary)', padding: '20px', borderRadius: '20px', border: '1px solid var(--border-primary)', gridColumn: '1 / -1' }}>
+              <div style={{ display: 'flex', alignItems: 'center', gap: '8px', marginBottom: '16px', color: 'var(--text-primary)', fontWeight: 700, fontSize: '15px' }}><FileText size={18} style={{ color: 'var(--warning)' }} /> Documents</div>
+              <div style={{ display: 'flex', gap: '12px', flexWrap: 'wrap' }}>
+                <div style={{ background: 'var(--bg-card)', border: '1px solid var(--border-primary)', padding: '12px 16px', borderRadius: '12px', display: 'flex', alignItems: 'center', gap: '12px', cursor: 'pointer', flex: '1 1 200px' }} onClick={() => handleViewDoc(detailTenant.idProof, 'Tenant Aadhaar')}><FileText size={20} style={{ color: 'var(--accent-primary)' }} /><span style={{ fontSize: '13px', fontWeight: 600, flex: 1 }}>Tenant Aadhaar</span><Download size={14} style={{ color: 'var(--text-tertiary)' }} /></div>
+                <div style={{ background: 'var(--bg-card)', border: '1px solid var(--border-primary)', padding: '12px 16px', borderRadius: '12px', display: 'flex', alignItems: 'center', gap: '12px', cursor: 'pointer', flex: '1 1 200px' }} onClick={() => handleViewDoc(detailTenant.parentIdProof, 'Parent Aadhaar')}><FileText size={20} style={{ color: 'var(--accent-primary)' }} /><span style={{ fontSize: '13px', fontWeight: 600, flex: 1 }}>Parent Aadhaar</span><Download size={14} style={{ color: 'var(--text-tertiary)' }} /></div>
+                <div style={{ background: 'var(--bg-card)', border: '1px solid var(--border-primary)', padding: '12px 16px', borderRadius: '12px', display: 'flex', alignItems: 'center', gap: '12px', cursor: 'pointer', flex: '1 1 200px' }} onClick={() => handleViewDoc(detailTenant.avatar, 'Tenant Photo')}><Image size={20} style={{ color: 'var(--accent-primary)' }} /><span style={{ fontSize: '13px', fontWeight: 600, flex: 1 }}>Tenant Photo</span><Download size={14} style={{ color: 'var(--text-tertiary)' }} /></div>
+              </div>
+            </div>
+          </div>
+
+          <div style={{ display: 'flex', alignItems: 'center', gap: '8px', marginBottom: '16px', color: 'var(--text-primary)', fontWeight: 700, fontSize: '15px' }}><History size={18} style={{ color: 'var(--accent-primary)' }} /> Payment History</div>
+          <div style={{ background: 'var(--bg-secondary)', border: '1px solid var(--border-primary)', borderRadius: '20px', overflow: 'hidden' }}>
+            <table className="data-table" style={{ border: 'none', margin: 0, width: '100%' }}>
+              <thead style={{ background: 'transparent' }}><tr><th style={{ paddingLeft: '24px', borderBottom: '1px solid var(--border-primary)' }}>Date</th><th style={{ borderBottom: '1px solid var(--border-primary)' }}>Amount Paid</th><th style={{ borderBottom: '1px solid var(--border-primary)' }}>Method</th><th style={{ paddingRight: '24px', borderBottom: '1px solid var(--border-primary)' }}>Status</th></tr></thead>
+              <tbody>
+                {getTenantPayments(detailTenant._id || detailTenant.id).length > 0 ? (
+                  getTenantPayments(detailTenant._id || detailTenant.id).map((p, idx, arr) => (
+                    <tr key={p._id || p.id}>
+                      <td style={{ paddingLeft: '24px', borderBottom: idx === arr.length - 1 ? 'none' : '1px solid var(--border-primary)' }}><div style={{ display: 'flex', flexDirection: 'column', gap: '2px' }}><span style={{ fontSize: '13px', fontWeight: '500' }}>{new Date(p.date).toLocaleDateString('en-IN', { day: 'numeric', month: 'short', year: 'numeric' })}</span></div></td>
+                      <td style={{ borderBottom: idx === arr.length - 1 ? 'none' : '1px solid var(--border-primary)' }} className="text-bold text-success">+₹{p.paidAmount.toLocaleString('en-IN')}</td>
+                      <td style={{ borderBottom: idx === arr.length - 1 ? 'none' : '1px solid var(--border-primary)' }}><span style={{ background: 'var(--bg-card)', padding: '4px 10px', borderRadius: '8px', fontSize: '12px', fontWeight: 600 }}>{p.method}</span></td>
+                      <td style={{ paddingRight: '24px', borderBottom: idx === arr.length - 1 ? 'none' : '1px solid var(--border-primary)' }}><span className={`status-pill ${p.status}`}>{p.status}</span></td>
+                    </tr>
+                  ))
+                ) : (
+                  <tr><td colSpan="4" style={{textAlign: 'center', padding: '32px', color: 'var(--text-tertiary)', fontWeight: 600, borderBottom: 'none'}}>No payments recorded yet.</td></tr>
+                )}
+              </tbody>
+            </table>
+          </div>
+        </Modal>
+      )}
+
+      {/* Pay Dues Modal */}
+      <Modal isOpen={showPayDuesModal} onClose={() => setShowPayDuesModal(false)} title={`Collect Payment - ${payDuesTenantObj?.name || ''}`} maxWidth="500px">
+        <form onSubmit={handlePayDuesSubmit}>
+          <div style={{ textAlign: 'center', padding: '20px', background: 'linear-gradient(135deg, rgba(239,68,68,0.05), rgba(239,68,68,0.02))', borderRadius: '20px', marginBottom: '20px', border: '1px solid rgba(239,68,68,0.08)' }}>
+            <div style={{ fontSize: '11px', fontWeight: 800, color: 'rgba(239,68,68,0.6)', textTransform: 'uppercase', letterSpacing: '0.12em', marginBottom: '8px' }}>Total Outstanding</div>
+            <div style={{ fontSize: '32px', fontWeight: 800, color: '#ef4444' }}>₹{payDuesTenantObj?.pendingDues?.toLocaleString('en-IN') || 0}</div>
+          </div>
+          <div style={{ display: 'flex', flexDirection: 'column', gap: '16px' }}>
+            <div className="form-group">
+              <label className="form-label" style={{ fontSize: '12px', fontWeight: 600 }}>Amount to Pay (₹)</label>
+              <input type="number" className="form-input" style={{ fontSize: '20px', fontWeight: 700, borderRadius: '12px', height: '52px' }} value={payDuesData.amount} onChange={e => setPayDuesData({...payDuesData, amount: e.target.value})} onWheel={(e) => e.target.blur()} required max={payDuesTenantObj?.pendingDues} min="1" />
+            </div>
+            <div className="form-group">
+              <label className="form-label" style={{ fontSize: '12px', fontWeight: 600 }}>Payment Method</label>
+              <select className="form-select" style={{ height: '48px', borderRadius: '12px', fontWeight: 600 }} value={payDuesData.method} onChange={e => setPayDuesData({...payDuesData, method: e.target.value})} required>
+                <option value="Cash">💵 Cash</option><option value="Google Pay">📱 Google Pay</option><option value="PhonePe">📱 PhonePe</option><option value="Paytm">📱 Paytm</option><option value="UPI">📱 Other UPI</option><option value="CRED">💳 CRED</option><option value="Bank Transfer">🏦 Bank Transfer</option>
+              </select>
+            </div>
+          </div>
+          <div className="form-actions" style={{ marginTop: '20px' }}>
+            <button type="button" className="btn btn-ghost" onClick={() => setShowPayDuesModal(false)}>Cancel</button>
+            <button type="submit" className="btn btn-primary" disabled={isSubmittingPayment}>{isSubmittingPayment ? 'Processing...' : '💰 Collect Payment'}</button>
           </div>
         </form>
       </Modal>
