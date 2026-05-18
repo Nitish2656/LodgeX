@@ -1273,20 +1273,60 @@ export default function TenantsPage() {
                     <div style={{ width: '4px', height: '16px', background: 'var(--accent-primary)', borderRadius: '4px' }}></div>
                     <h4 style={{ margin: 0, fontSize: '14px', fontWeight: 700 }}>Dues Breakdown</h4>
                 </div>
-                <div style={{ background: 'rgba(255,255,255,0.03)', borderRadius: '16px', border: '1px solid var(--border-primary)', overflow: 'hidden' }}>
-                    {payDuesTenantObj?.pendingDues > 0 ? (
-                        <div style={{ display: 'flex', justifyContent: 'space-between', padding: '12px 16px' }}>
-                            <div>
-                                <div style={{ fontSize: '13px', fontWeight: 600 }}>
-                                    {new Date().toLocaleDateString('en-IN', { month: 'long', year: 'numeric' })}
+                <div style={{ background: 'rgba(255,255,255,0.03)', borderRadius: '16px', border: '1px solid var(--border-primary)', overflow: 'hidden', display: 'flex', flexDirection: 'column' }}>
+                    {(() => {
+                        const tenantId = payDuesTenantObj?._id || payDuesTenantObj?.id;
+                        const pendingPayments = payments.filter(p => 
+                          (p.tenantId === tenantId || p._id === tenantId) && 
+                          p.status === 'pending' && 
+                          p.month
+                        );
+                        
+                        if (pendingPayments.length > 0) {
+                            return pendingPayments.map((p, idx) => (
+                                <div key={p._id || p.id} style={{ 
+                                    display: 'flex', 
+                                    justifyContent: 'space-between', 
+                                    padding: '14px 16px', 
+                                    borderBottom: idx < pendingPayments.length - 1 ? '1px solid var(--border-primary)' : 'none' 
+                                }}>
+                                    <div>
+                                        <div style={{ fontSize: '13px', fontWeight: 700, color: 'var(--text-primary)' }}>
+                                            {p.month}
+                                        </div>
+                                        <div style={{ fontSize: '11px', color: 'var(--text-tertiary)' }}>
+                                            {p.notes || 'Pending dues'}
+                                        </div>
+                                    </div>
+                                    <div style={{ fontWeight: 800, color: 'var(--danger)', fontSize: '14px' }}>
+                                        ₹{(p.dueAmount || p.totalAmount).toLocaleString('en-IN')}
+                                    </div>
                                 </div>
-                                <div style={{ fontSize: '11px', color: 'var(--text-tertiary)' }}>Current outstanding</div>
+                            ));
+                        }
+                        
+                        if (payDuesTenantObj?.pendingDues > 0) {
+                            return (
+                                <div style={{ display: 'flex', justifyContent: 'space-between', padding: '14px 16px' }}>
+                                    <div>
+                                        <div style={{ fontSize: '13px', fontWeight: 700, color: 'var(--text-primary)' }}>
+                                            {new Date().toLocaleDateString('en-IN', { month: 'long', year: 'numeric' })}
+                                        </div>
+                                        <div style={{ fontSize: '11px', color: 'var(--text-tertiary)' }}>Current outstanding</div>
+                                    </div>
+                                    <div style={{ fontWeight: 800, color: 'var(--danger)', fontSize: '14px' }}>
+                                        ₹{payDuesTenantObj.pendingDues.toLocaleString('en-IN')}
+                                    </div>
+                                </div>
+                            );
+                        }
+
+                        return (
+                            <div style={{ padding: '20px', textAlign: 'center', color: 'var(--text-tertiary)', fontSize: '13px' }}>
+                                No pending dues found.
                             </div>
-                            <div style={{ fontWeight: 700, color: 'var(--danger)' }}>₹{payDuesTenantObj.pendingDues.toLocaleString('en-IN')}</div>
-                        </div>
-                    ) : (
-                        <div style={{ padding: '16px', textAlign: 'center', color: 'var(--text-tertiary)', fontSize: '13px' }}>No pending dues found.</div>
-                    )}
+                        );
+                    })()}
                 </div>
             </div>
 
