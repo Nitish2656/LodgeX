@@ -75,7 +75,13 @@ export default function TenantsPage() {
                         t.roomNumber.toString().includes(search) ||
                         t.phone.includes(search);
     return matchFilter && matchSearch;
-  }).sort((a, b) => new Date(b.joinDate) - new Date(a.joinDate));
+  }).sort((a, b) => {
+    const aHasDues = (a.pendingDues || 0) > 0;
+    const bHasDues = (b.pendingDues || 0) > 0;
+    if (aHasDues && !bHasDues) return -1;
+    if (!aHasDues && bHasDues) return 1;
+    return new Date(b.joinDate) - new Date(a.joinDate);
+  });
 
   const archivedTenants = tenants.filter(t => t.status === 'archived');
   const availableRooms = rooms.filter(r => r.status === 'available' || (isEditing && (r._id || r.id).toString() === addData.roomId?.toString()));
