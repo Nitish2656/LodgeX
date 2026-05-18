@@ -105,6 +105,13 @@ export default function TenantsPage() {
     const uniqueMonths = [...new Set(pending.map(p => p.month))];
     return uniqueMonths.join(', ');
   };
+  const getPendingMonthsLabel = (tenantId) => {
+    const pending = payments.filter(p => (p.tenantId === tenantId || p._id === tenantId) && p.status === 'pending' && p.month);
+    if (pending.length > 0) {
+      return [...new Set(pending.map(p => p.month.split(' ')[0]))].join(', ') + ' Pending';
+    }
+    return new Date().toLocaleDateString('en-IN', { month: 'short' }) + ' Pending';
+  };
 
   const openProfile = async (tenant) => {
     setSelectedTenant(tenant);
@@ -898,14 +905,25 @@ export default function TenantsPage() {
                     <span style={{ fontSize: '12px', color: 'var(--text-tertiary)', fontWeight: 700, textTransform: 'uppercase', letterSpacing: '0.05em', display: 'flex', alignItems: 'center', gap: '6px' }}><IndianRupee size={14} style={{ color: 'var(--info)' }}/> Deposit</span>
                     <span style={{ fontSize: '20px', fontWeight: 800, color: 'var(--text-primary)' }}>₹{selectedTenant.deposit?.toLocaleString('en-IN') || '-'}</span>
                 </div>
-                <div style={{ display: 'flex', flexDirection: 'column', gap: '4px', background: selectedTenant.pendingDues > 0 ? 'rgba(239, 68, 68, 0.05)' : 'rgba(52, 211, 153, 0.05)', padding: '12px', borderRadius: '16px', margin: '-12px', border: selectedTenant.pendingDues > 0 ? '1px solid rgba(239, 68, 68, 0.1)' : '1px solid rgba(52, 211, 153, 0.1)' }}>
-                    <span style={{ fontSize: '12px', color: selectedTenant.pendingDues > 0 ? 'rgba(239, 68, 68, 0.8)' : 'rgba(52, 211, 153, 0.8)', fontWeight: 800, textTransform: 'uppercase', letterSpacing: '0.05em', display: 'flex', alignItems: 'center', justifyContent: 'space-between' }}>
-                      {new Date().toLocaleDateString('en-IN', { month: 'short' })} Rent: {selectedTenant.pendingDues > 0 ? 'Pending' : 'Paid ✓'}
+                <div style={{ display: 'flex', flexDirection: 'column', gap: '8px', background: selectedTenant.pendingDues > 0 ? 'rgba(239, 68, 68, 0.05)' : 'rgba(52, 211, 153, 0.05)', padding: '16px', borderRadius: '20px', margin: '-12px', border: selectedTenant.pendingDues > 0 ? '1px solid rgba(239, 68, 68, 0.15)' : '1px solid rgba(52, 211, 153, 0.15)' }}>
+                    <div style={{ fontSize: '12px', color: selectedTenant.pendingDues > 0 ? 'rgba(239, 68, 68, 0.8)' : 'rgba(52, 211, 153, 0.8)', fontWeight: 800, textTransform: 'uppercase', letterSpacing: '0.05em', display: 'flex', alignItems: 'center', justifyContent: 'space-between' }}>
+                      <span>{selectedTenant.pendingDues > 0 ? getPendingMonthsLabel(selectedTenant._id || selectedTenant.id) : `${new Date().toLocaleDateString('en-IN', { month: 'short' })} Rent: Paid ✓`}</span>
                       {selectedTenant.pendingDues > 0 && (
-                          <button style={{ background: '#ef4444', color: 'white', border: 'none', padding: '4px 12px', borderRadius: '8px', fontSize: '11px', fontWeight: 700, cursor: 'pointer' }} onClick={(e) => { e.stopPropagation(); openPayDues(selectedTenant); }}>Pay Now</button>
+                          <button style={{ background: '#ef4444', color: 'white', border: 'none', padding: '6px 14px', borderRadius: '10px', fontSize: '12px', fontWeight: 700, cursor: 'pointer', boxShadow: '0 4px 12px rgba(239, 68, 68, 0.2)' }} onClick={(e) => { e.stopPropagation(); openPayDues(selectedTenant); }}>Pay Now</button>
                       )}
-                    </span>
-                    <span style={{ fontSize: '24px', fontWeight: 800, color: selectedTenant.pendingDues > 0 ? '#ef4444' : '#34d399' }}>{selectedTenant.pendingDues > 0 ? `₹${selectedTenant.pendingDues.toLocaleString('en-IN')} Due` : 'No Pending Dues'}</span>
+                    </div>
+                    <div style={{ fontSize: '28px', fontWeight: 800, color: selectedTenant.pendingDues > 0 ? '#ef4444' : '#34d399' }}>{selectedTenant.pendingDues > 0 ? `₹${selectedTenant.pendingDues.toLocaleString('en-IN')} Due` : 'No Pending Dues'}</div>
+                    {selectedTenant.pendingDues > 0 && payments.filter(p => (p.tenantId === (selectedTenant._id || selectedTenant.id) || p._id === (selectedTenant._id || selectedTenant.id)) && p.status === 'pending').length > 0 && (
+                      <div style={{ marginTop: '8px', paddingTop: '12px', borderTop: '1px solid rgba(239, 68, 68, 0.15)', display: 'flex', flexDirection: 'column', gap: '6px' }}>
+                        <div style={{ fontSize: '11px', fontWeight: 700, color: 'rgba(239, 68, 68, 0.7)', textTransform: 'uppercase', letterSpacing: '0.05em' }}>Dues Breakdown</div>
+                        {payments.filter(p => (p.tenantId === (selectedTenant._id || selectedTenant.id) || p._id === (selectedTenant._id || selectedTenant.id)) && p.status === 'pending').map((p) => (
+                          <div key={p._id || p.id} style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', fontSize: '13px', fontWeight: 600, color: 'var(--text-primary)', background: 'rgba(255, 255, 255, 0.5)', padding: '6px 12px', borderRadius: '8px', border: '1px solid rgba(239, 68, 68, 0.1)' }}>
+                            <span style={{ display: 'flex', alignItems: 'center', gap: '6px' }}>📅 {p.month || 'Advance/Other'}</span>
+                            <span style={{ color: '#ef4444', fontWeight: 700 }}>₹{(p.dueAmount !== undefined ? p.dueAmount : p.totalAmount).toLocaleString('en-IN')}</span>
+                          </div>
+                        ))}
+                      </div>
+                    )}
                 </div>
             </div>
 

@@ -78,6 +78,13 @@ export default function RoomsPage() {
     const pending = payments.filter(p => (p.tenantId === tenantId || p._id === tenantId) && p.status === 'pending' && p.month);
     return [...new Set(pending.map(p => p.month))].join(', ');
   };
+  const getPendingMonthsLabel = (tenantId) => {
+    const pending = payments.filter(p => (p.tenantId === tenantId || p._id === tenantId) && p.status === 'pending' && p.month);
+    if (pending.length > 0) {
+      return [...new Set(pending.map(p => p.month.split(' ')[0]))].join(', ') + ' Pending';
+    }
+    return new Date().toLocaleDateString('en-IN', { month: 'short' }) + ' Pending';
+  };
 
   // Sync detailTenant with global tenants state
   useEffect(() => {
@@ -634,7 +641,7 @@ export default function RoomsPage() {
                     </div>
                     {tenant.pendingDues > 0 ? (
                       <div className="room-tenant-dues" style={{ background: 'var(--danger-bg)', color: 'var(--danger)', border: '1px solid rgba(248,113,113,0.3)', padding: '4px 8px', borderRadius: '6px', fontSize: '11px', fontWeight: 700, textAlign: 'right' }}>
-                        <div>{new Date().toLocaleDateString('en-IN', { month: 'short' })} Pending</div>
+                        <div>{getPendingMonthsLabel(tenant._id || tenant.id)}</div>
                         <div style={{ fontSize: '12px', marginTop: '1px' }}>₹{tenant.pendingDues.toLocaleString('en-IN')}</div>
                       </div>
                     ) : (
@@ -1039,12 +1046,25 @@ export default function RoomsPage() {
                 <span style={{ fontSize: '12px', color: 'var(--text-tertiary)', fontWeight: 700, textTransform: 'uppercase' }}>Deposit</span>
                 <span style={{ fontSize: '20px', fontWeight: 800 }}>₹{detailTenant.deposit?.toLocaleString('en-IN') || '-'}</span>
               </div>
-              <div style={{ display: 'flex', flexDirection: 'column', gap: '4px', background: detailTenant.pendingDues > 0 ? 'rgba(239,68,68,0.05)' : 'rgba(52,211,153,0.05)', padding: '12px', borderRadius: '16px', margin: '-12px', border: detailTenant.pendingDues > 0 ? '1px solid rgba(239,68,68,0.1)' : '1px solid rgba(52,211,153,0.1)' }}>
-                <span style={{ fontSize: '12px', color: detailTenant.pendingDues > 0 ? 'rgba(239,68,68,0.8)' : 'rgba(52,211,153,0.8)', fontWeight: 800, textTransform: 'uppercase', display: 'flex', justifyContent: 'space-between', alignItems: 'center' }}>
-                  {new Date().toLocaleDateString('en-IN', { month: 'short' })} Rent: {detailTenant.pendingDues > 0 ? 'Pending' : 'Paid ✓'}
-                  {detailTenant.pendingDues > 0 && <button style={{ background: '#ef4444', color: 'white', border: 'none', padding: '4px 12px', borderRadius: '8px', fontSize: '11px', fontWeight: 700, cursor: 'pointer' }} onClick={() => openPayDues(detailTenant)}>Pay Now</button>}
-                </span>
-                <span style={{ fontSize: '24px', fontWeight: 800, color: detailTenant.pendingDues > 0 ? '#ef4444' : '#34d399' }}>{detailTenant.pendingDues > 0 ? `₹${detailTenant.pendingDues.toLocaleString('en-IN')} Due` : 'No Pending Dues'}</span>
+              <div style={{ display: 'flex', flexDirection: 'column', gap: '8px', background: detailTenant.pendingDues > 0 ? 'rgba(239,68,68,0.05)' : 'rgba(52,211,153,0.05)', padding: '16px', borderRadius: '20px', margin: '-12px', border: detailTenant.pendingDues > 0 ? '1px solid rgba(239,68,68,0.15)' : '1px solid rgba(52,211,153,0.15)' }}>
+                <div style={{ fontSize: '12px', color: detailTenant.pendingDues > 0 ? 'rgba(239,68,68,0.8)' : 'rgba(52,211,153,0.8)', fontWeight: 800, textTransform: 'uppercase', display: 'flex', justifyContent: 'space-between', alignItems: 'center' }}>
+                  <span>{detailTenant.pendingDues > 0 ? getPendingMonthsLabel(detailTenant._id || detailTenant.id) : `${new Date().toLocaleDateString('en-IN', { month: 'short' })} Rent: Paid ✓`}</span>
+                  {detailTenant.pendingDues > 0 && <button style={{ background: '#ef4444', color: 'white', border: 'none', padding: '6px 14px', borderRadius: '10px', fontSize: '12px', fontWeight: 700, cursor: 'pointer', boxShadow: '0 4px 12px rgba(239,68,68,0.2)' }} onClick={() => openPayDues(detailTenant)}>Pay Now</button>}
+                </div>
+                <div style={{ fontSize: '28px', fontWeight: 800, color: detailTenant.pendingDues > 0 ? '#ef4444' : '#34d399' }}>
+                  {detailTenant.pendingDues > 0 ? `₹${detailTenant.pendingDues.toLocaleString('en-IN')} Due` : 'No Pending Dues'}
+                </div>
+                {detailTenant.pendingDues > 0 && payments.filter(p => (p.tenantId === (detailTenant._id || detailTenant.id) || p._id === (detailTenant._id || detailTenant.id)) && p.status === 'pending').length > 0 && (
+                  <div style={{ marginTop: '8px', paddingTop: '12px', borderTop: '1px solid rgba(239,68,68,0.15)', display: 'flex', flexDirection: 'column', gap: '6px' }}>
+                    <div style={{ fontSize: '11px', fontWeight: 700, color: 'rgba(239,68,68,0.7)', textTransform: 'uppercase', letterSpacing: '0.05em' }}>Dues Breakdown</div>
+                    {payments.filter(p => (p.tenantId === (detailTenant._id || detailTenant.id) || p._id === (detailTenant._id || detailTenant.id)) && p.status === 'pending').map((p) => (
+                      <div key={p._id || p.id} style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', fontSize: '13px', fontWeight: 600, color: 'var(--text-primary)', background: 'rgba(255,255,255,0.5)', padding: '6px 12px', borderRadius: '8px', border: '1px solid rgba(239,68,68,0.1)' }}>
+                        <span style={{ display: 'flex', alignItems: 'center', gap: '6px' }}>📅 {p.month || 'Advance/Other'}</span>
+                        <span style={{ color: '#ef4444', fontWeight: 700 }}>₹{(p.dueAmount !== undefined ? p.dueAmount : p.totalAmount).toLocaleString('en-IN')}</span>
+                      </div>
+                    ))}
+                  </div>
+                )}
               </div>
             </div>
             <div style={{ background: 'var(--bg-secondary)', padding: '20px', borderRadius: '20px', border: '1px solid var(--border-primary)', gridColumn: '1 / -1' }}>
