@@ -319,23 +319,6 @@ export default function RoomsPage() {
         </div>
       </div>
 
-      <div className="mini-stats animate-in">
-        {[
-          { icon: BedDouble, label: 'Total', value: rooms.length, color: '#6366f1' },
-          { icon: Users, label: 'Occupied', value: rooms.filter(r => r.status === 'occupied').length, color: '#34d399' },
-          { icon: DoorOpen, label: 'Available', value: rooms.filter(r => r.status === 'available').length, color: '#60a5fa' },
-          { icon: CalendarClock, label: 'Reserved', value: rooms.filter(r => r.status === 'reserved').length, color: '#fbbf24' },
-          { icon: Wrench, label: 'Maintenance', value: rooms.filter(r => r.status === 'maintenance').length, color: '#f87171' },
-        ].map((s, i) => (
-          <div key={i} className="mini-stat-card" style={{ '--accent': s.color }}>
-            <s.icon size={18} style={{ color: s.color }} />
-            <div>
-              <div className="mini-stat-value">{s.value}</div>
-              <div className="mini-stat-label">{s.label}</div>
-            </div>
-          </div>
-        ))}
-      </div>
 
       <div className="page-toolbar animate-in">
         <div className="toolbar-left">
