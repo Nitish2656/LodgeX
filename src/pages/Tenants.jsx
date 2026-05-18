@@ -17,13 +17,10 @@ export default function TenantsPage() {
         openAddModal();
       } else if (typeof pageAction === 'object' && pageAction.type === 'add') {
         openAddModal(pageAction.roomId);
-      } else if (typeof pageAction === 'object' && pageAction.type === 'profile') {
-        const target = tenants.find(t => (t._id || t.id) === pageAction.tenantId);
-        if (target) openProfile(target);
       }
       setPageAction(null); // Clear action
     }
-  }, [pageAction, setPageAction, rooms, tenants]);
+  }, [pageAction, setPageAction, rooms]);
   const [search, setSearch] = useState('');
   const [filter, setFilter] = useState('all');
 
@@ -47,7 +44,17 @@ export default function TenantsPage() {
   const [cameraTarget, setCameraTarget] = useState({ isCoTenant: false, index: 0 });
   const [viewDocUrl, setViewDocUrl] = useState(null);
   const videoRef = useRef(null);
+  const wizardProgressRef = useRef(null);
   const [stream, setStream] = useState(null);
+
+  useEffect(() => {
+    if (showAddModal && wizardProgressRef.current) {
+      const activeStep = wizardProgressRef.current.querySelector('.wizard-step.active');
+      if (activeStep) {
+        activeStep.scrollIntoView({ behavior: 'smooth', inline: 'center', block: 'nearest' });
+      }
+    }
+  }, [addStep, showAddModal]);
 
   const [payDuesTenantObj, setPayDuesTenantObj] = useState(null);
   const [payDuesData, setPayDuesData] = useState({ amount: '', method: 'Cash' });
@@ -1005,8 +1012,8 @@ export default function TenantsPage() {
       )}
 
       {/* Add/Edit Tenant Modal */}
-      <Modal isOpen={showAddModal} onClose={() => setShowAddModal(false)} title={isEditing ? "Edit Tenant Details" : "Add New Tenant"} maxWidth="850px">
-        <div className="wizard-progress">
+      <Modal isOpen={showAddModal} onClose={() => setShowAddModal(false)} title={isEditing ? "Edit Tenant Details" : "Register New Tenant"} maxWidth="850px">
+        <div className="wizard-progress" ref={wizardProgressRef}>
           <div className={`wizard-step ${addStep === 1 ? 'active' : ''} ${addStep > 1 ? 'completed' : ''}`} data-step="1">Room Selection</div>
           <div className="wizard-line" />
           <div className={`wizard-step ${addStep === 2 ? 'active' : ''} ${addStep > 2 ? 'completed' : ''}`} data-step="2">Primary Tenant</div>

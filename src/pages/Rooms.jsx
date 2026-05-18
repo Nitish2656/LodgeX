@@ -52,6 +52,7 @@ export default function RoomsPage() {
   const [cameraTarget, setCameraTarget] = useState({ isCoTenant: false, index: 0 });
   const [viewDocUrl, setViewDocUrl] = useState(null);
   const videoRef = useRef(null);
+  const wizardProgressRef = useRef(null);
   const [stream, setStream] = useState(null);
 
   const [newRoomData, setNewRoomData] = useState({ number: '', floor: '', type: 'Single', rent: '' });
@@ -237,6 +238,15 @@ export default function RoomsPage() {
     document.addEventListener('click', handleOutsideClick);
     return () => document.removeEventListener('click', handleOutsideClick);
   }, []);
+
+  useEffect(() => {
+    if (showAssignModal && wizardProgressRef.current) {
+      const activeStep = wizardProgressRef.current.querySelector('.wizard-step.active');
+      if (activeStep) {
+        activeStep.scrollIntoView({ behavior: 'smooth', inline: 'center', block: 'nearest' });
+      }
+    }
+  }, [addStep, showAssignModal]);
 
   const openModal = (room, modalType) => {
     setSelectedRoom(room);
@@ -740,7 +750,7 @@ export default function RoomsPage() {
 
       {/* Assign Tenant Modal (Multi-step) */}
       <Modal isOpen={showAssignModal} onClose={() => setShowAssignModal(false)} title={isEditingTenant ? "Edit Tenant Details" : "Assign Tenant to Room"} maxWidth="850px">
-        <div className="wizard-progress">
+        <div className="wizard-progress" ref={wizardProgressRef}>
           <div className={`wizard-step ${addStep === 1 ? 'active' : ''} ${addStep > 1 ? 'completed' : ''}`} data-step="1">Room Selection</div>
           <div className="wizard-line" />
           <div className={`wizard-step ${addStep === 2 ? 'active' : ''} ${addStep > 2 ? 'completed' : ''}`} data-step="2">Primary Tenant</div>
