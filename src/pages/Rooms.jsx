@@ -18,7 +18,6 @@ export default function RoomsPage() {
 
   const [activeMenuId, setActiveMenuId] = useState(null);
   const [selectedRoom, setSelectedRoom] = useState(null);
-  const [showRoomModal, setShowRoomModal] = useState(false);
   
   // Modals
   const [showEditModal, setShowEditModal] = useState(false);
@@ -95,8 +94,7 @@ export default function RoomsPage() {
         setShowPaymentModal(true);
       }
     } else if (modalType === 'assign') {
-      setAssignData({ roomId: room._id || room.id, roomNumber: room.number, rent: room.rent, name: '', phone: '', address: '', parentName: '', parentPhone: '', deposit: '', paidAmount: '', dueAmount: 0, method: 'Cash', photoFile: null, photoPreview: null, tenantAadhaar: null, parentAadhaar: null });
-      setShowAssignModal(true);
+      navigateWithAction('tenants', { type: 'add', roomId: room._id || room.id });
     } else if (modalType === 'deleteRoom') {
       setShowDeleteRoomModal(true);
     } else if (modalType === 'rentcharge') {
@@ -356,7 +354,7 @@ export default function RoomsPage() {
           const status = statusConfig[room.status];
           const tenant = room.tenantId ? getTenant(room.tenantId) : null;
           return (
-            <div key={room._id || room.id} className={`room-card animate-in stagger-${(idx % 8) + 1}`} style={{ cursor: 'pointer' }} onClick={() => { setSelectedRoom(room); setShowRoomModal(true); }}>
+            <div key={room._id || room.id} className={`room-card animate-in stagger-${(idx % 8) + 1}`}>
               <div className="room-card-top">
                 <div className="room-number">
                   <BedDouble size={16} />
@@ -408,7 +406,7 @@ export default function RoomsPage() {
                           </>
                         ) : (
                           <>
-                            <button className="action-menu-item" onClick={(e) => { e.stopPropagation(); openModal(room, 'assign'); }}><UserPlus size={14} /> Add Tenant</button>
+                            <button className="action-menu-item" onClick={() => openModal(room, 'assign')}><UserPlus size={14} /> Assign Tenant</button>
                             <button className="action-menu-item" onClick={() => openModal(room, 'editRoom')}><Edit2 size={14} /> Edit Room Details</button>
                             <button className="action-menu-item danger" onClick={() => openModal(room, 'deleteRoom')}><Trash2 size={14} /> Delete Room</button>
                           </>
@@ -453,124 +451,6 @@ export default function RoomsPage() {
         })}
       </div>
       {filtered.length === 0 && <div className="page-empty">No rooms match your filters</div>}
-
-      {/* ── Room Click Modal: Vacant → Add Tenant / Occupied → Tenant Detail ── */}
-      {showRoomModal && selectedRoom && (() => {
-        const clickedTenant = selectedRoom.tenantId ? getTenant(selectedRoom.tenantId) : null;
-        if (!clickedTenant) {
-          // VACANT — show Add Tenant form
-          return (
-            <Modal isOpen={showRoomModal} onClose={() => setShowRoomModal(false)} title={`Add Tenant — Room ${selectedRoom.number}`} maxWidth="700px">
-              <form onSubmit={async (e) => {
-                e.preventDefault();
-                const avatar = assignData.photoPreview || `https://api.dicebear.com/9.x/initials/svg?seed=${assignData.name}&backgroundColor=6366f1`;
-                const newTenant = await addTenant({ name: assignData.name, phone: assignData.phone, address: assignData.address, parentName: assignData.parentName, parentPhone: assignData.parentPhone, roomId: selectedRoom._id || selectedRoom.id, roomNumber: selectedRoom.number, rent: selectedRoom.rent, deposit: assignData.deposit, pendingDues: assignData.dueAmount || 0, avatar });
-                if (newTenant && (Number(assignData.paidAmount) > 0 || Number(assignData.dueAmount) > 0)) {
-                  await addPayment({ tenantId: newTenant._id || newTenant.id, tenantName: newTenant.name, roomId: newTenant.roomId, roomNumber: newTenant.roomNumber, totalAmount: assignData.deposit, paidAmount: Number(assignData.paidAmount), dueAmount: Number(assignData.dueAmount) || 0, method: assignData.method || 'Cash', status: Number(assignData.dueAmount) > 0 ? 'pending' : 'completed', month: new Date().toLocaleDateString('en-IN', { month: 'short', year: 'numeric' }), notes: 'Advance/Deposit on allocation' });
-                }
-                setShowRoomModal(false);
-                setAssignData({});
-              }}>
-                <h3 className="profile-section-title" style={{ marginTop: 0 }}>Tenant Details</h3>
-                <div className="form-grid">
-                  <div className="form-group"><label className="form-label">Name *</label><input type="text" className="form-input" value={assignData.name || ''} onChange={e => setAssignData({...assignData, name: e.target.value})} required /></div>
-                  <div className="form-group"><label className="form-label">Contact *</label><input type="tel" className="form-input" value={assignData.phone || ''} onChange={e => setAssignData({...assignData, phone: e.target.value})} required /></div>
-                  <div className="form-group full"><label className="form-label">Address *</label><input type="text" className="form-input" value={assignData.address || ''} onChange={e => setAssignData({...assignData, address: e.target.value})} required /></div>
-                  <div className="form-group">
-                    <label className="form-label">Tenant Photo</label>
-                    <div className={`file-upload-box ${assignData.photoFile ? 'uploaded' : ''}`}>
-                      <UploadCloud size={20} style={{color: assignData.photoFile ? 'var(--success)' : 'inherit'}}/>
-                      <span style={{flex:1, whiteSpace:'nowrap', overflow:'hidden', textOverflow:'ellipsis', color: assignData.photoFile ? 'var(--success)' : 'inherit'}}>{assignData.photoFile ? assignData.photoFile.name : 'Upload Photo'}</span>
-                      {assignData.photoPreview && <img src={assignData.photoPreview} alt="" style={{width:'24px',height:'24px',borderRadius:'50%',objectFit:'cover'}}/>}
-                      <input type="file" accept="image/*" onChange={e => { const f=e.target.files[0]; if(f) setAssignData({...assignData, photoFile:f, photoPreview:URL.createObjectURL(f)}); }} />
-                    </div>
-                  </div>
-                  <div className="form-group">
-                    <label className="form-label">Tenant Aadhaar</label>
-                    <div className={`file-upload-box ${assignData.tenantAadhaar ? 'uploaded' : ''}`}>
-                      <UploadCloud size={20} style={{color: assignData.tenantAadhaar ? 'var(--success)' : 'inherit'}}/>
-                      <span style={{flex:1, whiteSpace:'nowrap', overflow:'hidden', textOverflow:'ellipsis', color: assignData.tenantAadhaar ? 'var(--success)' : 'inherit'}}>{assignData.tenantAadhaar ? assignData.tenantAadhaar.name : 'Upload Aadhaar'}</span>
-                      <input type="file" accept="image/*,.pdf" onChange={e => setAssignData({...assignData, tenantAadhaar: e.target.files[0]})} />
-                    </div>
-                  </div>
-                </div>
-                <h3 className="profile-section-title" style={{ marginTop: '20px' }}>Guardian Details</h3>
-                <div className="form-grid">
-                  <div className="form-group"><label className="form-label">Parent Name *</label><input type="text" className="form-input" value={assignData.parentName || ''} onChange={e => setAssignData({...assignData, parentName: e.target.value})} required /></div>
-                  <div className="form-group"><label className="form-label">Parent Contact *</label><input type="tel" className="form-input" value={assignData.parentPhone || ''} onChange={e => setAssignData({...assignData, parentPhone: e.target.value})} required /></div>
-                  <div className="form-group full">
-                    <label className="form-label">Parent Aadhaar</label>
-                    <div className={`file-upload-box ${assignData.parentAadhaar ? 'uploaded' : ''}`}>
-                      <UploadCloud size={20} style={{color: assignData.parentAadhaar ? 'var(--success)' : 'inherit'}}/>
-                      <span style={{flex:1, whiteSpace:'nowrap', overflow:'hidden', textOverflow:'ellipsis', color: assignData.parentAadhaar ? 'var(--success)' : 'inherit'}}>{assignData.parentAadhaar ? assignData.parentAadhaar.name : 'Upload Parent Aadhaar'}</span>
-                      <input type="file" accept="image/*,.pdf" onChange={e => setAssignData({...assignData, parentAadhaar: e.target.files[0]})} />
-                    </div>
-                  </div>
-                </div>
-                <h3 className="profile-section-title" style={{ marginTop: '20px' }}>Advance &amp; Payment</h3>
-                <div className="form-grid">
-                  <div className="form-group"><label className="form-label">Monthly Rent (₹)</label><input type="number" className="form-input" value={assignData.rent ?? selectedRoom.rent} onWheel={e=>e.target.blur()} onChange={e => setAssignData({...assignData, rent: parseNum(e.target.value)})} /></div>
-                  <div className="form-group"><label className="form-label">Deposit Total (₹)</label><input type="number" className="form-input" value={assignData.deposit ?? ''} onWheel={e=>e.target.blur()} onChange={e => { const v=parseNum(e.target.value); setAssignData({...assignData, deposit:v, dueAmount: Math.max(0,(v||0)-(Number(assignData.paidAmount)||0))}); }} required /></div>
-                  <div className="form-group"><label className="form-label">Paid Amount (₹)</label><input type="number" className="form-input" value={assignData.paidAmount ?? ''} onWheel={e=>e.target.blur()} onChange={e => { const v=parseNum(e.target.value); setAssignData({...assignData, paidAmount:v, dueAmount: Math.max(0,(Number(assignData.deposit)||0)-(v||0))}); }} required /></div>
-                  <div className="form-group"><label className="form-label">Due Amount (₹)</label><input type="number" className="form-input" readOnly value={assignData.dueAmount ?? 0} style={{opacity:0.7}} /></div>
-                  <div className="form-group"><label className="form-label">Method</label><select className="form-select" value={assignData.method||'Cash'} onChange={e=>setAssignData({...assignData,method:e.target.value})}><option>Cash</option><option>UPI</option><option>Google Pay</option><option>PhonePe</option><option>Bank Transfer</option></select></div>
-                </div>
-                <div className="form-actions" style={{marginTop:'24px'}}>
-                  <button type="button" className="btn btn-ghost" onClick={() => setShowRoomModal(false)}>Cancel</button>
-                  <button type="submit" className="btn btn-primary"><UserPlus size={16}/> Allocate &amp; Save</button>
-                </div>
-              </form>
-            </Modal>
-          );
-        }
-        // OCCUPIED — show tenant detail
-        return (
-          <Modal isOpen={showRoomModal} onClose={() => setShowRoomModal(false)} title="" maxWidth="800px">
-            <div style={{ height:'110px', background:'linear-gradient(135deg, rgba(99,102,241,0.12),rgba(99,102,241,0.02))', margin:'-24px -24px 0', borderTopLeftRadius:'24px', borderTopRightRadius:'24px', position:'relative' }}>
-              <div style={{ position:'absolute', top:'18px', right:'20px', display:'flex', gap:'10px' }}>
-                <button className="btn btn-ghost" style={{ background:'var(--bg-card)' }} onClick={(e) => { e.stopPropagation(); setShowRoomModal(false); openModal(selectedRoom, 'edit'); }}><Edit2 size={14}/> Edit</button>
-                <button className="btn btn-ghost" style={{ background:'var(--bg-card)' }} onClick={(e) => { e.stopPropagation(); setShowRoomModal(false); openModal(selectedRoom, 'shift'); }}><ArrowRightLeft size={14}/> Shift</button>
-                <button className="btn btn-ghost" style={{ background:'var(--bg-card)', color:'var(--warning)' }} onClick={(e) => { e.stopPropagation(); setShowRoomModal(false); openModal(selectedRoom, 'vacate'); }}><LogOut size={14}/> Vacate</button>
-                <button className="btn btn-ghost" style={{ background:'var(--bg-card)', color:'var(--danger)' }} onClick={(e) => { e.stopPropagation(); setShowRoomModal(false); openModal(selectedRoom, 'delete'); }}><Trash2 size={14}/> Delete</button>
-              </div>
-            </div>
-            <div style={{ display:'flex', alignItems:'flex-end', gap:'16px', marginTop:'-40px', marginBottom:'24px' }}>
-              <img src={clickedTenant.avatar || `https://api.dicebear.com/9.x/initials/svg?seed=${clickedTenant.name}&backgroundColor=6366f1`} alt="" style={{ width:'90px', height:'90px', borderRadius:'20px', border:'4px solid var(--bg-card)', objectFit:'cover', boxShadow:'0 8px 24px rgba(99,102,241,0.15)', background:'var(--bg-card)' }} />
-              <div style={{paddingBottom:'4px'}}>
-                <h3 style={{ fontSize:'22px', fontWeight:800, margin:'0 0 4px 0', textTransform:'capitalize' }}>{clickedTenant.name}</h3>
-                <div style={{ display:'flex', gap:'14px', color:'var(--text-tertiary)', fontSize:'13px', fontWeight:600 }}>
-                  <span>🛏 Room {clickedTenant.roomNumber}</span>
-                  <span>📅 Joined {new Date(clickedTenant.joinDate).toLocaleDateString('en-IN', { day:'numeric', month:'short', year:'numeric' })}</span>
-                </div>
-              </div>
-            </div>
-            <div style={{ display:'grid', gridTemplateColumns:'repeat(auto-fit,minmax(280px,1fr))', gap:'16px', marginBottom:'20px' }}>
-              <div style={{ background:'var(--bg-secondary)', padding:'18px', borderRadius:'18px', border:'1px solid var(--border-primary)' }}>
-                <div style={{ fontWeight:700, fontSize:'14px', marginBottom:'12px', display:'flex', alignItems:'center', gap:'8px' }}><Users size={16} style={{color:'var(--accent-primary)'}}/> Personal</div>
-                <div style={{ display:'flex', flexDirection:'column', gap:'10px' }}>
-                  <div style={{ display:'flex', justifyContent:'space-between' }}><span style={{ fontSize:'12px', color:'var(--text-tertiary)', fontWeight:600 }}>Phone</span><span style={{ fontSize:'13px', fontWeight:600 }}>{clickedTenant.phone}</span></div>
-                  <div style={{ display:'flex', justifyContent:'space-between' }}><span style={{ fontSize:'12px', color:'var(--text-tertiary)', fontWeight:600 }}>Address</span><span style={{ fontSize:'13px', fontWeight:600, textAlign:'right', maxWidth:'180px' }}>{clickedTenant.address || '-'}</span></div>
-                </div>
-              </div>
-              <div style={{ background:'var(--bg-secondary)', padding:'18px', borderRadius:'18px', border:'1px solid var(--border-primary)' }}>
-                <div style={{ fontWeight:700, fontSize:'14px', marginBottom:'12px', display:'flex', alignItems:'center', gap:'8px' }}><Users size={16} style={{color:'var(--success)'}}/> Guardian</div>
-                <div style={{ display:'flex', flexDirection:'column', gap:'10px' }}>
-                  <div style={{ display:'flex', justifyContent:'space-between' }}><span style={{ fontSize:'12px', color:'var(--text-tertiary)', fontWeight:600 }}>Name</span><span style={{ fontSize:'13px', fontWeight:600 }}>{clickedTenant.parentName || '-'}</span></div>
-                  <div style={{ display:'flex', justifyContent:'space-between' }}><span style={{ fontSize:'12px', color:'var(--text-tertiary)', fontWeight:600 }}>Contact</span><span style={{ fontSize:'13px', fontWeight:600 }}>{clickedTenant.parentPhone || '-'}</span></div>
-                </div>
-              </div>
-              <div style={{ background:'var(--bg-secondary)', padding:'18px', borderRadius:'18px', border:'1px solid var(--border-primary)', gridColumn:'1 / -1', display:'grid', gridTemplateColumns:'repeat(auto-fit,minmax(150px,1fr))', gap:'16px' }}>
-                <div><div style={{ fontSize:'11px', color:'var(--text-tertiary)', fontWeight:700, textTransform:'uppercase', letterSpacing:'0.05em' }}>Monthly Rent</div><div style={{ fontSize:'20px', fontWeight:800, marginTop:'4px' }}>₹{clickedTenant.rent?.toLocaleString('en-IN') || '-'}</div></div>
-                <div><div style={{ fontSize:'11px', color:'var(--text-tertiary)', fontWeight:700, textTransform:'uppercase', letterSpacing:'0.05em' }}>Deposit</div><div style={{ fontSize:'20px', fontWeight:800, marginTop:'4px' }}>₹{clickedTenant.deposit?.toLocaleString('en-IN') || '-'}</div></div>
-                <div style={{ background: clickedTenant.pendingDues>0?'rgba(239,68,68,0.06)':'rgba(52,211,153,0.06)', padding:'10px', borderRadius:'12px', border: clickedTenant.pendingDues>0?'1px solid rgba(239,68,68,0.15)':'1px solid rgba(52,211,153,0.15)' }}>
-                  <div style={{ fontSize:'11px', color:clickedTenant.pendingDues>0?'#ef4444':'#34d399', fontWeight:700, textTransform:'uppercase', letterSpacing:'0.05em', display:'flex', justifyContent:'space-between', alignItems:'center' }}>Outstanding {clickedTenant.pendingDues>0 && <button style={{ background:'#ef4444', color:'white', border:'none', padding:'3px 10px', borderRadius:'6px', fontSize:'11px', fontWeight:700, cursor:'pointer' }} onClick={() => { setShowRoomModal(false); openModal(selectedRoom, 'payment'); }}>Pay Now</button>}</div>
-                  <div style={{ fontSize:'22px', fontWeight:800, marginTop:'4px', color:clickedTenant.pendingDues>0?'#ef4444':'#34d399' }}>₹{(clickedTenant.pendingDues||0).toLocaleString('en-IN')}</div>
-                </div>
-              </div>
-            </div>
-          </Modal>
-        );
-      })()}
 
       {/* Edit Tenant Modal */}
       <Modal isOpen={showEditModal} onClose={() => setShowEditModal(false)} title="Edit Tenant Details">

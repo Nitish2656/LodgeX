@@ -8,6 +8,7 @@ export default function BottomNav() {
   const navItems = [
     { id: 'dashboard', icon: Home, label: 'Home' },
     { id: 'rooms', icon: BedDouble, label: 'Rooms' },
+    { id: 'tenants', icon: Users, label: 'Tenants' },
     { id: 'payments', icon: CreditCard, label: 'Payments' }
   ];
 

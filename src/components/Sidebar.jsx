@@ -10,6 +10,7 @@ import './Sidebar.css';
 const menuItems = [
   { id: 'dashboard', label: 'Dashboard', icon: LayoutDashboard },
   { id: 'rooms', label: 'Rooms', icon: BedDouble },
+  { id: 'tenants', label: 'Tenants', icon: Users },
   { id: 'payments', label: 'Payments', icon: CreditCard },
   { id: 'electricity', label: 'Electricity', icon: Zap },
   { id: 'expenses', label: 'Expenses', icon: Receipt },
