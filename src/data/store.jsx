@@ -846,9 +846,10 @@ export function StoreProvider({ children }) {
       t.computedRoomNumber.toLowerCase().includes(searchQuery.toLowerCase())
     ),
     ...rooms.filter(r =>
-      r.number.toLowerCase().includes(searchQuery.toLowerCase()) ||
-      r.type.toLowerCase().includes(searchQuery.toLowerCase()) ||
-      r.status.toLowerCase().includes(searchQuery.toLowerCase())
+      r.status !== 'occupied' &&
+      (r.number.toLowerCase().includes(searchQuery.toLowerCase()) ||
+       r.type.toLowerCase().includes(searchQuery.toLowerCase()) ||
+       r.status.toLowerCase().includes(searchQuery.toLowerCase()))
     ).map(r => ({ ...r, resultType: 'room', type: 'room' })),
   ] : [], [searchQuery, activeTenants, rooms]);
 
