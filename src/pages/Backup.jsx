@@ -30,7 +30,8 @@ export default function BackupPage() {
   const handleBackup = async () => {
     setBacking(true);
     try {
-      const response = await fetch(`http://${window.location.hostname}:5001/api/backup/export`);
+      const baseUrl = import.meta.env.VITE_API_URL || 'http://localhost:5001/api';
+      const response = await fetch(`${baseUrl}/backup/export`);
       if (!response.ok) throw new Error('Backup failed');
       
       const blob = await response.blob();
@@ -70,23 +71,25 @@ export default function BackupPage() {
     const reader = new FileReader();
     reader.onload = async (event) => {
       try {
-        const data = JSON.parse(event.target.result);
-        if (!data.rooms || !data.tenants) {
+        const fileContent = JSON.parse(event.target.result);
+        const actualData = fileContent.data || fileContent; // Support both flat and nested export format
+        if (!actualData.rooms || !actualData.tenants) {
           throw new Error('Invalid backup file format');
         }
 
         if (window.confirm('Restoring will overwrite current data. Are you sure?')) {
           setRestoring(true);
           try {
-            const response = await fetch(`http://${window.location.hostname}:5001/api/backup/import`, {
+            const baseUrl = import.meta.env.VITE_API_URL || 'http://localhost:5001/api';
+            const response = await fetch(`${baseUrl}/backup/import`, {
               method: 'POST',
               headers: { 'Content-Type': 'application/json' },
-              body: JSON.stringify(data)
+              body: JSON.stringify(actualData)
             });
 
             if (!response.ok) throw new Error('Backend restoration failed');
 
-            restoreStore(data);
+            restoreStore(actualData);
             alert('Data restored successfully!');
           } catch (err) {
             alert('Restore failed: ' + err.message);
