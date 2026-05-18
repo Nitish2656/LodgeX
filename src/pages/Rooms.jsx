@@ -6,7 +6,7 @@ import './Pages.css';
 
 const statusConfig = {
   occupied: { label: 'Occupied', color: 'var(--success)', bg: 'var(--success-bg)' },
-  available: { label: 'Available', color: 'var(--info)', bg: 'var(--info-bg)' },
+  available: { label: 'Vacant', color: '#ef4444', bg: 'rgba(239, 68, 68, 0.1)' },
   reserved: { label: 'Reserved', color: 'var(--warning)', bg: 'var(--warning-bg)' },
   maintenance: { label: 'Maintenance', color: 'var(--danger)', bg: 'var(--danger-bg)' },
 };
@@ -46,6 +46,10 @@ export default function RoomsPage() {
     const roomType = r.type || '';
     const matchSearch = roomNumber.toString().includes(search) || roomType.toLowerCase().includes(search.toLowerCase());
     return matchFilter && matchSearch;
+  }).sort((a, b) => {
+    if (a.status === 'available' && b.status !== 'available') return -1;
+    if (a.status !== 'available' && b.status === 'available') return 1;
+    return 0;
   });
 
   const getTenant = (tenantId) => tenants.find(t => t.id === tenantId || t._id === tenantId);
@@ -357,7 +361,32 @@ export default function RoomsPage() {
                   <span>{room.number}</span>
                 </div>
                 <div className="toolbar-right">
-                  <span className="room-status-badge" style={{ background: status.bg, color: status.color }}>
+                  <span className="room-status-badge" style={{ 
+                    background: status.bg, 
+                    color: status.color,
+                    display: 'inline-flex',
+                    alignItems: 'center',
+                    gap: '6px'
+                  }}>
+                    {room.status === 'available' && (
+                      <>
+                        <style>{`
+                          @keyframes blink-dot {
+                            0% { opacity: 0.4; }
+                            50% { opacity: 1; }
+                            100% { opacity: 0.4; }
+                          }
+                        `}</style>
+                        <span style={{
+                          width: '8px',
+                          height: '8px',
+                          backgroundColor: '#ef4444',
+                          borderRadius: '50%',
+                          animation: 'blink-dot 1.2s infinite ease-in-out',
+                          boxShadow: '0 0 6px #ef4444'
+                        }} />
+                      </>
+                    )}
                     {status.label}
                   </span>
                   
