@@ -44,6 +44,8 @@ export default function RoomsPage() {
   const [paymentData, setPaymentData] = useState({});
   const [assignData, setAssignData] = useState({ name: '', phone: '', address: '', parentName: '', parentPhone: '', joinDate: new Date().toISOString().split('T')[0], coTenants: [], roomId: '', roomNumber: '', rent: '', deposit: '', paidAmount: '', dueAmount: 0, method: 'Cash', photoFile: null, photoPreview: null, tenantAadhaar: null, parentAadhaar: null });
   const [addStep, setAddStep] = useState(1);
+  const [isEditingTenant, setIsEditingTenant] = useState(false);
+  const [editTenantId, setEditTenantId] = useState(null);
   const [isSaving, setIsSaving] = useState(false);
   const [photoSourceTarget, setPhotoSourceTarget] = useState(null);
   const [showCamera, setShowCamera] = useState(false);
@@ -242,8 +244,26 @@ export default function RoomsPage() {
     if (modalType === 'edit') {
       const tenant = getTenant(room.tenantId);
       if (tenant) {
-        setEditData({ ...tenant });
-        setShowEditModal(true);
+        setIsEditingTenant(true);
+        setEditTenantId(tenant._id || tenant.id);
+        const tenantRent = tenant.rent || room.rent || '';
+        setAssignData({
+          ...tenant,
+          joinDate: tenant.joinDate ? tenant.joinDate.split('T')[0] : new Date().toISOString().split('T')[0],
+          roomId: room._id || room.id,
+          roomNumber: room.number,
+          rent: tenantRent,
+          deposit: tenant.deposit || '',
+          paidAmount: 0,
+          dueAmount: tenant.pendingDues || 0,
+          photoPreview: tenant.avatar,
+          coTenants: (tenant.coTenants || []).map(ct => ({
+            ...ct,
+            photoPreview: ct.avatar
+          }))
+        });
+        setAddStep(1);
+        setShowAssignModal(true);
       }
     } else if (modalType === 'delete') {
       setShowDeleteModal(true);
@@ -266,6 +286,8 @@ export default function RoomsPage() {
         setShowPaymentModal(true);
       }
     } else if (modalType === 'assign') {
+      setIsEditingTenant(false);
+      setEditTenantId(null);
       setAssignData({ name: '', phone: '', address: '', parentName: '', parentPhone: '', joinDate: new Date().toISOString().split('T')[0], coTenants: [], roomId: room._id || room.id, roomNumber: room.number, rent: room.rent, deposit: '', paidAmount: '', dueAmount: 0, method: 'Cash', photoFile: null, photoPreview: null, tenantAadhaar: null, parentAadhaar: null });
       setAddStep(1);
       setShowAssignModal(true);
@@ -425,9 +447,16 @@ export default function RoomsPage() {
 
       const tenantData = { name: assignData.name, phone: assignData.phone, address: assignData.address, parentName: assignData.parentName, parentPhone: assignData.parentPhone, idProof: tenantAadhaarUrl || assignData.idProof, parentIdProof: parentAadhaarUrl || assignData.parentIdProof, coTenants: mappedCoTenants, roomId: assignData.roomId, roomNumber: room.number, rent: Number(assignData.rent) || room.rent, deposit: Number(assignData.deposit) || 0, pendingDues: Number(assignData.dueAmount) || 0, avatar: avatar, joinDate: new Date(assignData.joinDate).toISOString(), status: 'active', vacateDate: null };
 
-      const newTenant = await addTenant(tenantData);
-      if (newTenant && ((Number(assignData.paidAmount) || 0) > 0 || (Number(assignData.dueAmount) || 0) > 0)) {
-        addPayment({ tenantId: newTenant._id || newTenant.id, tenantName: newTenant.name, roomId: newTenant.roomId, roomNumber: newTenant.roomNumber, totalAmount: Number(assignData.deposit) || 0, paidAmount: Number(assignData.paidAmount) || 0, dueAmount: Number(assignData.dueAmount) || 0, method: assignData.method, status: (Number(assignData.dueAmount) || 0) > 0 ? 'pending' : 'completed', month: new Date().toLocaleDateString('en-IN', { month: 'short', year: 'numeric' }), notes: 'Advance/Deposit on allocation' });
+      if (isEditingTenant) {
+        await updateTenant(editTenantId, tenantData);
+        if ((Number(assignData.paidAmount) || 0) > 0) {
+          addPayment({ tenantId: editTenantId, tenantName: tenantData.name, roomId: tenantData.roomId, roomNumber: tenantData.roomNumber, totalAmount: 0, paidAmount: Number(assignData.paidAmount) || 0, dueAmount: tenantData.pendingDues, method: assignData.method, status: 'completed', month: new Date().toLocaleDateString('en-IN', { month: 'short', year: 'numeric' }), notes: 'Payment on update' });
+        }
+      } else {
+        const newTenant = await addTenant(tenantData);
+        if (newTenant && ((Number(assignData.paidAmount) || 0) > 0 || (Number(assignData.dueAmount) || 0) > 0)) {
+          addPayment({ tenantId: newTenant._id || newTenant.id, tenantName: newTenant.name, roomId: newTenant.roomId, roomNumber: newTenant.roomNumber, totalAmount: Number(assignData.deposit) || 0, paidAmount: Number(assignData.paidAmount) || 0, dueAmount: Number(assignData.dueAmount) || 0, method: assignData.method, status: (Number(assignData.dueAmount) || 0) > 0 ? 'pending' : 'completed', month: new Date().toLocaleDateString('en-IN', { month: 'short', year: 'numeric' }), notes: 'Advance/Deposit on allocation' });
+        }
       }
     } catch (error) { console.error("Error saving tenant:", error); alert("Failed to save tenant. Please try again."); } finally { setIsSaving(false); }
     setShowAssignModal(false);
@@ -608,53 +637,7 @@ export default function RoomsPage() {
       </div>
       {filtered.length === 0 && <div className="page-empty">No rooms match your filters</div>}
 
-      {/* Edit Tenant Modal */}
-      <Modal isOpen={showEditModal} onClose={() => setShowEditModal(false)} title="Edit Tenant Details">
-        <form onSubmit={handleEditSubmit}>
-          <div className="form-grid">
-            <div className="form-group">
-              <label className="form-label">Name</label>
-              <input type="text" className="form-input" value={editData.name || ''} onChange={e => setEditData({...editData, name: e.target.value})} required />
-            </div>
-            <div className="form-group">
-              <label className="form-label">Phone</label>
-              <input type="tel" className="form-input" value={editData.phone || ''} onChange={e => setEditData({...editData, phone: e.target.value})} required />
-            </div>
-            <div className="form-group">
-              <label className="form-label">Email</label>
-              <input type="email" className="form-input" value={editData.email || ''} onChange={e => setEditData({...editData, email: e.target.value})} />
-            </div>
-            <div className="form-group">
-              <label className="form-label">Room Number</label>
-              <select className="form-select" value={editData.roomId || ''} onChange={e => {
-                  const r = rooms.find(room => (room._id || room.id).toString() === e.target.value.toString());
-                  setEditData({...editData, roomId: r._id || r.id, roomNumber: r.number});
-              }}>
-                <option value={editData.roomId}>{editData.roomNumber} (Current)</option>
-                {rooms.filter(r => r.status === 'available').map(r => (
-                  <option key={r._id || r.id} value={r._id || r.id}>{r.number} ({r.type})</option>
-                ))}
-              </select>
-            </div>
-            <div className="form-group">
-              <label className="form-label">Rent (₹)</label>
-              <input type="number" className="form-input" value={editData.rent ?? ''} onChange={e => setEditData({...editData, rent: parseNum(e.target.value)})} />
-            </div>
-            <div className="form-group">
-              <label className="form-label">Pending Dues (₹)</label>
-              <input type="number" className="form-input" value={editData.pendingDues ?? ''} onChange={e => setEditData({...editData, pendingDues: parseNum(e.target.value)})} />
-            </div>
-            <div className="form-group full">
-              <label className="form-label">Notes</label>
-              <textarea className="form-textarea" value={editData.notes || ''} onChange={e => setEditData({...editData, notes: e.target.value})}></textarea>
-            </div>
-          </div>
-          <div className="form-actions">
-            <button type="button" className="btn btn-ghost" onClick={() => setShowEditModal(false)}>Cancel</button>
-            <button type="submit" className="btn btn-primary">Save Changes</button>
-          </div>
-        </form>
-      </Modal>
+
 
       {/* Delete Tenant Modal */}
       <Modal isOpen={showDeleteModal} onClose={() => setShowDeleteModal(false)} title="Delete Tenant" maxWidth="400px">
@@ -757,7 +740,7 @@ export default function RoomsPage() {
 
 
       {/* Assign Tenant Modal (Multi-step) */}
-      <Modal isOpen={showAssignModal} onClose={() => setShowAssignModal(false)} title="Assign Tenant to Room" maxWidth="850px">
+      <Modal isOpen={showAssignModal} onClose={() => setShowAssignModal(false)} title={isEditingTenant ? "Edit Tenant Details" : "Assign Tenant to Room"} maxWidth="850px">
         <div className="wizard-progress">
           <div className={`wizard-step ${addStep === 1 ? 'active' : ''} ${addStep > 1 ? 'completed' : ''}`} data-step="1">Room Selection</div>
           <div className="wizard-line" />
@@ -906,7 +889,7 @@ export default function RoomsPage() {
             {addStep > 1 ? ( <button type="button" className="btn btn-ghost" onClick={() => setAddStep(s => s - 1)}>Back</button> ) : ( <button type="button" className="btn btn-ghost" onClick={() => setShowAssignModal(false)}>Cancel</button> )}
             {(addStep < 3) ? ( <button type="button" className="btn btn-primary" onClick={handleNextStep}>Next Step</button> ) : (
               <button type="button" className={`btn btn-primary ${isSaving ? 'loading' : ''}`} onClick={async () => { await handleAddSubmit(); }} disabled={isSaving}>
-                {isSaving ? ( <><div className="btn-spinner" style={{ marginRight: '8px' }}></div>Saving...</> ) : ( <><UserPlus size={14} style={{marginRight: '8px'}}/>Allocate Room & Save</> )}
+                {isSaving ? ( <><div className="btn-spinner" style={{ marginRight: '8px' }}></div>Saving...</> ) : ( <><UserPlus size={14} style={{marginRight: '8px'}}/>{isEditingTenant ? 'Save Changes' : 'Allocate Room & Save'}</> )}
               </button>
             )}
           </div>
