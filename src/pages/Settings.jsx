@@ -167,8 +167,8 @@ export default function SettingsPage() {
               <div className="settings-toggles-bento">
                 <div className="modern-toggle-tile" onClick={() => setAutoBackup(!autoBackup)}>
                   <div className="toggle-tile-info">
-                    <h4>Daily Cloud Backup</h4>
-                    <p>Automatic data synchronization</p>
+                    <h4>Weekly Cloud Backup</h4>
+                    <p>Automatic weekly synchronization</p>
                   </div>
                   <div className={`tile-switch ${autoBackup ? 'active' : ''}`}>
                     <div className="tile-knob" />
