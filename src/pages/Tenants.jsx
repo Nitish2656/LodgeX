@@ -900,12 +900,12 @@ export default function TenantsPage() {
                 </div>
                 <div style={{ display: 'flex', flexDirection: 'column', gap: '4px', background: selectedTenant.pendingDues > 0 ? 'rgba(239, 68, 68, 0.05)' : 'rgba(52, 211, 153, 0.05)', padding: '12px', borderRadius: '16px', margin: '-12px', border: selectedTenant.pendingDues > 0 ? '1px solid rgba(239, 68, 68, 0.1)' : '1px solid rgba(52, 211, 153, 0.1)' }}>
                     <span style={{ fontSize: '12px', color: selectedTenant.pendingDues > 0 ? 'rgba(239, 68, 68, 0.8)' : 'rgba(52, 211, 153, 0.8)', fontWeight: 800, textTransform: 'uppercase', letterSpacing: '0.05em', display: 'flex', alignItems: 'center', justifyContent: 'space-between' }}>
-                      Outstanding Dues
+                      {new Date().toLocaleDateString('en-IN', { month: 'short' })} Rent: {selectedTenant.pendingDues > 0 ? 'Pending' : 'Paid ✓'}
                       {selectedTenant.pendingDues > 0 && (
                           <button style={{ background: '#ef4444', color: 'white', border: 'none', padding: '4px 12px', borderRadius: '8px', fontSize: '11px', fontWeight: 700, cursor: 'pointer' }} onClick={(e) => { e.stopPropagation(); openPayDues(selectedTenant); }}>Pay Now</button>
                       )}
                     </span>
-                    <span style={{ fontSize: '24px', fontWeight: 800, color: selectedTenant.pendingDues > 0 ? '#ef4444' : '#34d399' }}>₹{selectedTenant.pendingDues?.toLocaleString('en-IN') || 0}</span>
+                    <span style={{ fontSize: '24px', fontWeight: 800, color: selectedTenant.pendingDues > 0 ? '#ef4444' : '#34d399' }}>{selectedTenant.pendingDues > 0 ? `₹${selectedTenant.pendingDues.toLocaleString('en-IN')} Due` : 'No Pending Dues'}</span>
                 </div>
             </div>
 

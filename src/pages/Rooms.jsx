@@ -632,10 +632,16 @@ export default function RoomsPage() {
                       <div className="room-tenant-phone">{tenant.phone}</div>
                       {tenant.parentName && <div className="room-tenant-phone" style={{fontSize: '10px', color: 'var(--text-tertiary)', marginTop: '2px'}}>Guardian: {tenant.parentName}</div>}
                     </div>
-                    {tenant.pendingDues > 0 && (
-                        <div className="room-tenant-dues">
-                            ₹{tenant.pendingDues.toLocaleString()} Due
-                        </div>
+                    {tenant.pendingDues > 0 ? (
+                      <div className="room-tenant-dues" style={{ background: 'var(--danger-bg)', color: 'var(--danger)', border: '1px solid rgba(248,113,113,0.3)', padding: '4px 8px', borderRadius: '6px', fontSize: '11px', fontWeight: 700, textAlign: 'right' }}>
+                        <div>{new Date().toLocaleDateString('en-IN', { month: 'short' })} Pending</div>
+                        <div style={{ fontSize: '12px', marginTop: '1px' }}>₹{tenant.pendingDues.toLocaleString('en-IN')}</div>
+                      </div>
+                    ) : (
+                      <div className="room-tenant-dues" style={{ background: 'rgba(16, 185, 129, 0.1)', color: '#10b981', border: '1px solid rgba(16, 185, 129, 0.2)', padding: '4px 8px', borderRadius: '6px', fontSize: '11px', fontWeight: 700, textAlign: 'right', display: 'flex', alignItems: 'center', gap: '4px' }}>
+                        <span>{new Date().toLocaleDateString('en-IN', { month: 'short' })} Paid</span>
+                        <span style={{ fontSize: '12px' }}>✓</span>
+                      </div>
                     )}
                   </div>
                 )}
@@ -1035,10 +1041,10 @@ export default function RoomsPage() {
               </div>
               <div style={{ display: 'flex', flexDirection: 'column', gap: '4px', background: detailTenant.pendingDues > 0 ? 'rgba(239,68,68,0.05)' : 'rgba(52,211,153,0.05)', padding: '12px', borderRadius: '16px', margin: '-12px', border: detailTenant.pendingDues > 0 ? '1px solid rgba(239,68,68,0.1)' : '1px solid rgba(52,211,153,0.1)' }}>
                 <span style={{ fontSize: '12px', color: detailTenant.pendingDues > 0 ? 'rgba(239,68,68,0.8)' : 'rgba(52,211,153,0.8)', fontWeight: 800, textTransform: 'uppercase', display: 'flex', justifyContent: 'space-between', alignItems: 'center' }}>
-                  Outstanding Dues
+                  {new Date().toLocaleDateString('en-IN', { month: 'short' })} Rent: {detailTenant.pendingDues > 0 ? 'Pending' : 'Paid ✓'}
                   {detailTenant.pendingDues > 0 && <button style={{ background: '#ef4444', color: 'white', border: 'none', padding: '4px 12px', borderRadius: '8px', fontSize: '11px', fontWeight: 700, cursor: 'pointer' }} onClick={() => openPayDues(detailTenant)}>Pay Now</button>}
                 </span>
-                <span style={{ fontSize: '24px', fontWeight: 800, color: detailTenant.pendingDues > 0 ? '#ef4444' : '#34d399' }}>₹{detailTenant.pendingDues?.toLocaleString('en-IN') || 0}</span>
+                <span style={{ fontSize: '24px', fontWeight: 800, color: detailTenant.pendingDues > 0 ? '#ef4444' : '#34d399' }}>{detailTenant.pendingDues > 0 ? `₹${detailTenant.pendingDues.toLocaleString('en-IN')} Due` : 'No Pending Dues'}</span>
               </div>
             </div>
             <div style={{ background: 'var(--bg-secondary)', padding: '20px', borderRadius: '20px', border: '1px solid var(--border-primary)', gridColumn: '1 / -1' }}>
