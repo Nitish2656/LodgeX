@@ -168,13 +168,6 @@ export default function TenantsPage() {
             month: new Date().toLocaleDateString('en-IN', { month: 'short', year: 'numeric' }),
             notes: newDues > 0 ? `Partial payment (₹${newDues.toLocaleString('en-IN')} remaining)` : 'Full dues cleared'
         });
-
-        // WhatsApp Alert Integration!
-        if (settings && settings.emailNotifs) {
-            const text = `Hello ${payDuesTenantObj.name},\n\nPayment Receipt from LodgeX:\n\n*Amount Paid: ₹${amountPaid.toLocaleString('en-IN')}*\n*Payment Method: ${payDuesData.method}*\n*Remaining Dues: ₹${newDues.toLocaleString('en-IN')}*\n*Date: ${new Date().toLocaleDateString('en-IN')}*\n\nThank you for the payment!`;
-            const url = `https://wa.me/91${payDuesTenantObj.phone}?text=${encodeURIComponent(text)}`;
-            window.open(url, '_blank');
-        }
         
         // Update local state immediately so UI reflects the change if modal reopened
         setPayDuesTenantObj(prev => prev ? { ...prev, pendingDues: newDues } : prev);
@@ -445,29 +438,20 @@ export default function TenantsPage() {
       }, 500);
     } else {
       const newTenant = await addTenant(tenantData);
-      if (newTenant) {
-        // WhatsApp Alert Integration!
-        if (settings && settings.emailNotifs) {
-            const welcomeText = `Hello ${newTenant.name},\n\nWelcome to LodgeX!\n\nYour room allocation is complete:\n*Room Number: ${newTenant.roomNumber}*\n*Monthly Rent: ₹${newTenant.rent.toLocaleString('en-IN')}*\n*Security Deposit: ₹${(Number(addData.deposit) || 0).toLocaleString('en-IN')}*\n\nThank you for choosing us!`;
-            const waUrl = `https://wa.me/91${newTenant.phone}?text=${encodeURIComponent(welcomeText)}`;
-            window.open(waUrl, '_blank');
-        }
-
-        if (((Number(addData.paidAmount) || 0) > 0 || (Number(addData.dueAmount) || 0) > 0)) {
-          addPayment({
-            tenantId: newTenant._id || newTenant.id,
-            tenantName: newTenant.name,
-            roomId: newTenant.roomId,
-            roomNumber: newTenant.roomNumber,
-            totalAmount: Number(addData.deposit) || 0,
-            paidAmount: Number(addData.paidAmount) || 0,
-            dueAmount: Number(addData.dueAmount) || 0,
-            method: addData.method,
-            status: (Number(addData.dueAmount) || 0) > 0 ? 'pending' : 'completed',
-            month: new Date().toLocaleDateString('en-IN', { month: 'short', year: 'numeric' }),
-            notes: 'Advance/Deposit on allocation'
-          });
-        }
+      if (newTenant && ((Number(addData.paidAmount) || 0) > 0 || (Number(addData.dueAmount) || 0) > 0)) {
+        addPayment({
+          tenantId: newTenant._id || newTenant.id,
+          tenantName: newTenant.name,
+          roomId: newTenant.roomId,
+          roomNumber: newTenant.roomNumber,
+          totalAmount: Number(addData.deposit) || 0,
+          paidAmount: Number(addData.paidAmount) || 0,
+          dueAmount: Number(addData.dueAmount) || 0,
+          method: addData.method,
+          status: (Number(addData.dueAmount) || 0) > 0 ? 'pending' : 'completed',
+          month: new Date().toLocaleDateString('en-IN', { month: 'short', year: 'numeric' }),
+          notes: 'Advance/Deposit on allocation'
+        });
       }
     }
     } catch (error) {
