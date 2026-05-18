@@ -27,25 +27,51 @@ async function compileBackupData() {
     };
 }
 
-// Helper to perform database restoration from compile format
-async function restoreFromData(data) {
+// Helper to perform database restoration from compile format with selective options
+async function restoreFromData(data, restoreOptions = {}) {
     const { rooms, tenants, payments, expenses, electricity, settings } = data;
 
-    // Clear existing data
-    await Room.deleteMany({});
-    await Tenant.deleteMany({});
-    await Payment.deleteMany({});
-    await Expense.deleteMany({});
-    await Electricity.deleteMany({});
-    await Settings.deleteMany({});
+    // Default to restoring everything if no options specified
+    const opts = {
+        rooms: true,
+        tenants: true,
+        payments: true,
+        expenses: true,
+        electricity: true,
+        settings: true,
+        ...restoreOptions
+    };
 
-    // Insert new data
-    if (rooms && rooms.length) await Room.insertMany(rooms);
-    if (tenants && tenants.length) await Tenant.insertMany(tenants);
-    if (payments && payments.length) await Payment.insertMany(payments);
-    if (expenses && expenses.length) await Expense.insertMany(expenses);
-    if (electricity && electricity.length) await Electricity.insertMany(electricity);
-    if (settings) await Settings.create(settings);
+    // Conditionally clear and insert data based on selected options
+    if (opts.rooms) {
+        await Room.deleteMany({});
+        if (rooms && rooms.length) await Room.insertMany(rooms);
+    }
+    
+    if (opts.tenants) {
+        await Tenant.deleteMany({});
+        if (tenants && tenants.length) await Tenant.insertMany(tenants);
+    }
+    
+    if (opts.payments) {
+        await Payment.deleteMany({});
+        if (payments && payments.length) await Payment.insertMany(payments);
+    }
+    
+    if (opts.expenses) {
+        await Expense.deleteMany({});
+        if (expenses && expenses.length) await Expense.insertMany(expenses);
+    }
+    
+    if (opts.electricity) {
+        await Electricity.deleteMany({});
+        if (electricity && electricity.length) await Electricity.insertMany(electricity);
+    }
+    
+    if (opts.settings) {
+        await Settings.deleteMany({});
+        if (settings) await Settings.create(settings);
+    }
 }
 
 // 1. Export backup directly as downloadable JSON file
@@ -68,7 +94,12 @@ router.get('/export', async (req, res) => {
 // 2. Import backup from uploaded JSON file
 router.post('/import', async (req, res) => {
     try {
-        await restoreFromData(req.body);
+        const { data, restoreOptions, rooms } = req.body;
+        // Support both flat format (direct body) and nested format ({ data, restoreOptions })
+        const backupData = rooms ? req.body : data;
+        const opts = restoreOptions || (rooms ? {} : req.body.restoreOptions);
+        
+        await restoreFromData(backupData, opts);
         res.json({ message: 'Data restored successfully' });
     } catch (error) {
         res.status(500).json({ message: 'Restore failed', error: error.message });
@@ -142,7 +173,8 @@ router.post('/restore/:id', async (req, res) => {
         const backup = await Backup.findById(req.params.id);
         if (!backup) return res.status(404).json({ message: 'Backup not found' });
 
-        await restoreFromData(backup.data);
+        const { restoreOptions } = req.body;
+        await restoreFromData(backup.data, restoreOptions);
         res.json({ message: 'Data restored successfully' });
     } catch (error) {
         res.status(500).json({ message: 'Restore failed', error: error.message });
