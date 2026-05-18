@@ -220,7 +220,7 @@ export default function BackupPage() {
           gap: 6px;
           padding: 6px 12px;
           border-radius: 6px;
-          font-weight: 500;
+          font-weight: 700 !important;
           font-size: 0.85rem;
           border: 1px solid var(--border-color);
           background: var(--card-bg);
@@ -228,6 +228,8 @@ export default function BackupPage() {
           cursor: pointer;
           transition: all 0.2s ease;
           white-space: nowrap;
+          width: auto !important;
+          height: auto !important;
         }
         .table-action-btn.flex-btn:hover {
           background: var(--hover-bg);
@@ -460,14 +462,14 @@ export default function BackupPage() {
                     </td>
                     <td data-label="Action">
                       <div className="table-actions-container">
-                        <button className="table-action-btn flex-btn" onClick={() => handleDownloadBackup(b._id, b.type)} title="Download JSON file">
-                          <Download size={14} /> Download
-                        </button>
                         <button className="table-action-btn flex-btn success" onClick={() => handleOpenCloudRestore(b._id)} title="Restore database selectively">
                           <RotateCcw size={14} /> Restore
                         </button>
                         <button className="table-action-btn flex-btn danger" onClick={() => handleDeleteBackup(b._id)} title="Delete from cloud">
                           <Trash2 size={14} /> Delete
+                        </button>
+                        <button className="table-action-btn flex-btn" style={{ padding: '8px', borderRadius: '50%', aspectRatio: '1/1' }} onClick={() => handleDownloadBackup(b._id, b.type)} title="Download JSON file">
+                          <Download size={14} />
                         </button>
                       </div>
                     </td>
