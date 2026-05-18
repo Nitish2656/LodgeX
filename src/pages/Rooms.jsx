@@ -539,7 +539,7 @@ export default function RoomsPage() {
           const status = statusConfig[room.status];
           const tenant = room.tenantId ? getTenant(room.tenantId) : null;
           return (
-            <div key={room._id || room.id} className={`room-card animate-in stagger-${(idx % 8) + 1} ${activeMenuId === (room._id || room.id) ? 'has-active-menu' : ''}`} onClick={() => handleRoomCardClick(room)} style={{ cursor: 'pointer' }}>
+            <div key={room._id || room.id} className={`room-card animate-in stagger-${(idx % 8) + 1}`} onClick={() => handleRoomCardClick(room)} style={{ cursor: 'pointer' }}>
               <div className="room-card-top">
                 <div className="room-number">
                   <BedDouble size={16} />
@@ -583,9 +583,9 @@ export default function RoomsPage() {
                       <div className="action-menu" onClick={(e) => e.stopPropagation()}>
                         {tenant ? (
                           <>
+                            <button className="action-menu-item" onClick={() => openModal(room, 'edit')}><Edit2 size={14} /> Edit Tenant</button>
                             <button className="action-menu-item" onClick={() => openModal(room, 'shift')}><ArrowRightLeft size={14} /> Shift Room</button>
                             <button className="action-menu-item" onClick={() => openModal(room, 'editRoom')}><Edit2 size={14} /> Edit Room Details</button>
-                            <button className="action-menu-item" onClick={() => openModal(room, 'vacate')}><LogOut size={14} /> Vacate Room</button>
                             <button className="action-menu-item danger" onClick={() => openModal(room, 'delete')}><Trash2 size={14} /> Delete Tenant</button>
                           </>
                         ) : (
