@@ -1045,7 +1045,7 @@ export default function TenantsPage() {
               
               <div className="form-group">
                 <label className="form-label">Monthly Rent (₹)</label>
-                <input type="number" className="form-input" value={addData.rent} onChange={e => {
+                <input type="number" className="form-input" value={addData.rent} onWheel={(e) => e.target.blur()} onChange={e => {
                     const monthly = parseNum(e.target.value);
                     const booked = Number(addData.paidAmount) || 0;
                     setAddData({...addData, rent: monthly, dueAmount: Math.max(0, (Number(monthly) || 0) - booked)});
@@ -1054,7 +1054,7 @@ export default function TenantsPage() {
 
               <div className="form-group">
                 <label className="form-label">Amount Paid Upfront (₹)</label>
-                <input type="number" className="form-input" value={addData.paidAmount} onChange={e => {
+                <input type="number" className="form-input" value={addData.paidAmount} onWheel={(e) => e.target.blur()} onChange={e => {
                     const booked = parseNum(e.target.value);
                     const monthly = Number(addData.rent) || 0;
                     setAddData({...addData, paidAmount: booked, deposit: booked, dueAmount: Math.max(0, monthly - (Number(booked) || 0))});
@@ -1357,7 +1357,7 @@ export default function TenantsPage() {
             <div className="payment-form-stack" style={{ display: 'flex', flexDirection: 'column', gap: '16px' }}>
                 <div className="form-group">
                     <label className="form-label" style={{ fontSize: '12px', fontWeight: 600 }}>Amount to Pay (₹)</label>
-                    <input type="number" className="form-input" style={{ fontSize: '20px', fontWeight: 700, borderRadius: '12px', height: '52px' }} value={payDuesData.amount} onChange={e => setPayDuesData({...payDuesData, amount: e.target.value})} autoFocus required max={payDuesTenantObj?.pendingDues} min="1" />
+                    <input type="number" className="form-input" style={{ fontSize: '20px', fontWeight: 700, borderRadius: '12px', height: '52px' }} value={payDuesData.amount} onChange={e => setPayDuesData({...payDuesData, amount: e.target.value})} onWheel={(e) => e.target.blur()} autoFocus required max={payDuesTenantObj?.pendingDues} min="1" />
                 </div>
                 <div className="form-group">
                     <label className="form-label" style={{ fontSize: '12px', fontWeight: 600 }}>Payment Method</label>
