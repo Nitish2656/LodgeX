@@ -1,38 +1,47 @@
 import { useState, useEffect, useRef } from 'react';
-import { Database, Download, Upload, CheckCircle, Clock, HardDrive, Shield } from 'lucide-react';
+import { Database, Download, Upload, CheckCircle, Clock, HardDrive, Shield, Trash2, RotateCcw } from 'lucide-react';
 import { useStore } from '../data/store';
 import './Pages.css';
 
-// Simulated history, but we'll make it persistent for this session
-const INITIAL_HISTORY = [
-  { id: 1, date: '2026-05-09 14:30', size: '12.4 MB', type: 'Automatic', status: 'completed' },
-  { id: 2, date: '2026-05-08 14:30', size: '12.2 MB', type: 'Automatic', status: 'completed' },
-  { id: 3, date: '2026-05-07 14:30', size: '12.1 MB', type: 'Automatic', status: 'completed' },
-];
-
 export default function BackupPage() {
-  const { 
-    rooms, tenants, payments, expenses, electricity, settings, 
-    restoreStore, pageAction, setPageAction 
-  } = useStore();
+  const { restoreStore } = useStore();
   const fileInputRef = useRef(null);
   const [backing, setBacking] = useState(false);
   const [restoring, setRestoring] = useState(false);
-  const [history, setHistory] = useState(() => {
-    const saved = localStorage.getItem('lodgex_backup_history');
-    return saved ? JSON.parse(saved) : INITIAL_HISTORY;
-  });
+  const [history, setHistory] = useState([]);
+  const [loadingHistory, setLoadingHistory] = useState(false);
+
+  const fetchHistory = async () => {
+    setLoadingHistory(true);
+    try {
+      const baseUrl = import.meta.env.VITE_API_URL || 'http://localhost:5001/api';
+      const response = await fetch(`${baseUrl}/backup/history`);
+      if (response.ok) {
+        const data = await response.json();
+        setHistory(data);
+      }
+    } catch (error) {
+      console.error('Failed to fetch backup history:', error);
+    } finally {
+      setLoadingHistory(false);
+    }
+  };
 
   useEffect(() => {
-    localStorage.setItem('lodgex_backup_history', JSON.stringify(history));
-  }, [history]);
+    fetchHistory();
+  }, []);
 
   const handleBackup = async () => {
     setBacking(true);
     try {
       const baseUrl = import.meta.env.VITE_API_URL || 'http://localhost:5001/api';
+      
+      // 1. Save backup to DB history
+      await fetch(`${baseUrl}/backup/save-backup`, { method: 'POST' });
+      
+      // 2. Export/Download a local JSON copy for the user
       const response = await fetch(`${baseUrl}/backup/export`);
-      if (!response.ok) throw new Error('Backup failed');
+      if (!response.ok) throw new Error('Backup export failed');
       
       const blob = await response.blob();
       const url = window.URL.createObjectURL(blob);
@@ -44,15 +53,8 @@ export default function BackupPage() {
       document.body.removeChild(a);
       window.URL.revokeObjectURL(url);
 
-      const newEntry = {
-        id: Date.now(),
-        date: new Date().toLocaleString(),
-        size: (blob.size / 1024).toFixed(1) + ' KB',
-        type: 'Manual',
-        status: 'completed'
-      };
-      setHistory(prev => [newEntry, ...prev]);
-      alert('Database backup created successfully!');
+      alert('Database backup created successfully & saved to cloud history!');
+      fetchHistory();
     } catch (err) {
       alert('Error creating backup: ' + err.message);
     } finally {
@@ -72,12 +74,12 @@ export default function BackupPage() {
     reader.onload = async (event) => {
       try {
         const fileContent = JSON.parse(event.target.result);
-        const actualData = fileContent.data || fileContent; // Support both flat and nested export format
+        const actualData = fileContent.data || fileContent; // Support both flat and nested formats
         if (!actualData.rooms || !actualData.tenants) {
           throw new Error('Invalid backup file format');
         }
 
-        if (window.confirm('Restoring will overwrite current data. Are you sure?')) {
+        if (window.confirm('Restoring will overwrite current database. Are you sure?')) {
           setRestoring(true);
           try {
             const baseUrl = import.meta.env.VITE_API_URL || 'http://localhost:5001/api';
@@ -91,6 +93,7 @@ export default function BackupPage() {
 
             restoreStore(actualData);
             alert('Data restored successfully!');
+            window.location.reload();
           } catch (err) {
             alert('Restore failed: ' + err.message);
           } finally {
@@ -103,6 +106,63 @@ export default function BackupPage() {
     };
     reader.readAsText(file);
     e.target.value = ''; // Reset input
+  };
+
+  const handleDownloadBackup = async (id, type) => {
+    try {
+      const baseUrl = import.meta.env.VITE_API_URL || 'http://localhost:5001/api';
+      const response = await fetch(`${baseUrl}/backup/download/${id}`);
+      if (!response.ok) throw new Error('Failed to download backup');
+      
+      const blob = await response.blob();
+      const url = window.URL.createObjectURL(blob);
+      const a = document.createElement('a');
+      a.href = url;
+      a.download = `lodge_backup_${type.toLowerCase()}_${id}.json`;
+      document.body.appendChild(a);
+      a.click();
+      document.body.removeChild(a);
+      window.URL.revokeObjectURL(url);
+    } catch (err) {
+      alert('Error downloading backup: ' + err.message);
+    }
+  };
+
+  const handleRestoreFromHistory = async (id) => {
+    if (window.confirm('Restoring will overwrite all current live data. Are you sure?')) {
+      setRestoring(true);
+      try {
+        const baseUrl = import.meta.env.VITE_API_URL || 'http://localhost:5001/api';
+        const response = await fetch(`${baseUrl}/backup/restore/${id}`, {
+          method: 'POST'
+        });
+
+        if (!response.ok) throw new Error('Restoration failed');
+
+        alert('Data restored successfully!');
+        window.location.reload(); // Reload to sync state cleanly
+      } catch (err) {
+        alert('Restore failed: ' + err.message);
+      } finally {
+        setRestoring(false);
+      }
+    }
+  };
+
+  const handleDeleteBackup = async (id) => {
+    if (window.confirm('Are you sure you want to delete this backup from cloud history?')) {
+      try {
+        const baseUrl = import.meta.env.VITE_API_URL || 'http://localhost:5001/api';
+        const response = await fetch(`${baseUrl}/backup/${id}`, {
+          method: 'DELETE'
+        });
+        if (response.ok) {
+          fetchHistory();
+        }
+      } catch (error) {
+        alert('Failed to delete backup: ' + error.message);
+      }
+    }
   };
 
   return (
@@ -156,17 +216,17 @@ export default function BackupPage() {
           <div className="backup-action-icon" style={{ background: 'rgba(251,191,36,0.12)', color: '#fbbf24' }}>
             <Shield size={28} />
           </div>
-          <h3>Auto Backup</h3>
-          <p>Automatic daily backups are enabled. Last backup was today at 14:30.</p>
+          <h3>Weekly Auto Backup</h3>
+          <p>Automatic weekly cloud backups are enabled. Your data is backed up every Sunday at 12:00 AM.</p>
           <div className="backup-status-indicator">
             <CheckCircle size={16} style={{ color: 'var(--success)' }} />
-            <span>Active — Daily at 2:30 PM</span>
+            <span>Active — Sundays at 12:00 AM</span>
           </div>
         </div>
       </div>
 
       <div className="backup-history animate-in">
-        <h3 className="section-title">Backup History</h3>
+        <h3 className="section-title">Cloud Backup History</h3>
         <div className="table-wrapper">
           <table className="data-table">
             <thead>
@@ -179,23 +239,49 @@ export default function BackupPage() {
               </tr>
             </thead>
             <tbody>
-              {history.map(b => (
-                <tr key={b.id}>
-                  <td className="text-bold">{b.date}</td>
-                  <td>{b.size}</td>
-                  <td><span className="category-badge">{b.type}</span></td>
-                  <td>
-                    <span className="status-pill completed">
-                      <CheckCircle size={12} /> {b.status}
-                    </span>
-                  </td>
-                  <td>
-                    <button className="table-action-btn">
-                      <Download size={14} /> Download
-                    </button>
+              {loadingHistory ? (
+                <tr>
+                  <td colSpan="5" style={{ textAlign: 'center', padding: '2rem', color: 'var(--text-muted)' }}>
+                    Loading backup history...
                   </td>
                 </tr>
-              ))}
+              ) : history.length === 0 ? (
+                <tr>
+                  <td colSpan="5" style={{ textAlign: 'center', padding: '2rem', color: 'var(--text-muted)' }}>
+                    No automated weekly backups taken yet.
+                  </td>
+                </tr>
+              ) : (
+                history.map(b => (
+                  <tr key={b._id}>
+                    <td className="text-bold">{new Date(b.date).toLocaleString('en-IN', { dateStyle: 'medium', timeStyle: 'short' })}</td>
+                    <td>{b.size}</td>
+                    <td>
+                      <span className={`category-badge ${b.type.toLowerCase() === 'automatic' ? 'info' : 'warning'}`}>
+                        {b.type}
+                      </span>
+                    </td>
+                    <td>
+                      <span className="status-pill completed">
+                        <CheckCircle size={12} /> Completed
+                      </span>
+                    </td>
+                    <td>
+                      <div style={{ display: 'flex', gap: '8px' }}>
+                        <button className="table-action-btn" onClick={() => handleDownloadBackup(b._id, b.type)} title="Download JSON file">
+                          <Download size={14} /> Download
+                        </button>
+                        <button className="table-action-btn success" style={{ color: 'var(--success)' }} onClick={() => handleRestoreFromHistory(b._id)} title="Restore database to this point">
+                          <RotateCcw size={14} /> Restore
+                        </button>
+                        <button className="table-action-btn danger" style={{ color: 'var(--danger)' }} onClick={() => handleDeleteBackup(b._id)} title="Delete from cloud">
+                          <Trash2 size={14} /> Delete
+                        </button>
+                      </div>
+                    </td>
+                  </tr>
+                ))
+              )}
             </tbody>
           </table>
         </div>

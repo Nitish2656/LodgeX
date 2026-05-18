@@ -72,4 +72,78 @@ app.listen(PORT, () => {
             console.error('[Keep-Alive Ping] Error:', error.message);
         }
     }, 840000);
+
+    // Weekly Auto-Backup scheduler
+    const Backup = require('./models/Backup');
+    const Room = require('./models/Room');
+    const Tenant = require('./models/Tenant');
+    const Payment = require('./models/Payment');
+    const Expense = require('./models/Expense');
+    const Electricity = require('./models/Electricity');
+    const Settings = require('./models/Settings');
+
+    async function checkAndRunWeeklyBackup() {
+        try {
+            const now = new Date();
+            const lastAutoBackup = await Backup.findOne({ type: 'Automatic' }).sort({ date: -1 });
+            
+            let shouldBackup = false;
+            if (!lastAutoBackup) {
+                // Seed the very first automatic backup on startup if none exist
+                shouldBackup = true;
+            } else {
+                const diffTime = Math.abs(now - lastAutoBackup.date);
+                const diffDays = Math.ceil(diffTime / (1000 * 60 * 60 * 24));
+                // Sunday at midnight (hour 0), and at least 6 days since the last auto backup
+                if (now.getDay() === 0 && now.getHours() === 0 && diffDays >= 6) {
+                    shouldBackup = true;
+                }
+            }
+
+            if (shouldBackup) {
+                console.log('[Auto-Backup] Running scheduled weekly automatic backup...');
+                const rooms = await Room.find({});
+                const tenants = await Tenant.find({});
+                const payments = await Payment.find({});
+                const expenses = await Expense.find({});
+                const electricity = await Electricity.find({});
+                const settings = await Settings.findOne({});
+
+                const backupData = {
+                    rooms,
+                    tenants,
+                    payments,
+                    expenses,
+                    electricity,
+                    settings
+                };
+
+                const sizeStr = (Buffer.byteLength(JSON.stringify(backupData)) / 1024).toFixed(1) + ' KB';
+
+                await Backup.create({
+                    size: sizeStr,
+                    type: 'Automatic',
+                    data: backupData
+                });
+
+                // Keep only top 10 backups to prevent database size inflation
+                const backupsCount = await Backup.countDocuments({ type: 'Automatic' });
+                if (backupsCount > 10) {
+                    const oldestBackups = await Backup.find({ type: 'Automatic' }, { _id: 1 }).sort({ date: 1 }).limit(backupsCount - 10);
+                    const idsToDelete = oldestBackups.map(b => b._id);
+                    await Backup.deleteMany({ _id: { $in: idsToDelete } });
+                }
+
+                console.log('[Auto-Backup] Weekly automatic backup successfully saved to MongoDB Atlas cloud!');
+            }
+        } catch (err) {
+            console.error('[Auto-Backup] Error in automated backup scheduler:', err.message);
+        }
+    }
+
+    // Run check 5 seconds after startup
+    setTimeout(checkAndRunWeeklyBackup, 5000);
+
+    // Run check every 1 hour (3600000 ms)
+    setInterval(checkAndRunWeeklyBackup, 3600000);
 });
