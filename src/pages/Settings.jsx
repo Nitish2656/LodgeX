@@ -75,7 +75,7 @@ export default function SettingsPage() {
                 <input 
                   className="settings-row-input"
                   type="password" 
-                  placeholder="Required" 
+                  placeholder="••••••••" 
                   value={passwords.current}
                   onChange={e => setPasswords({...passwords, current: e.target.value})}
                 />
@@ -89,7 +89,7 @@ export default function SettingsPage() {
                 <input 
                   className="settings-row-input"
                   type="password" 
-                  placeholder="Required" 
+                  placeholder="••••••••" 
                   value={passwords.new}
                   onChange={e => setPasswords({...passwords, new: e.target.value})}
                 />
@@ -103,17 +103,21 @@ export default function SettingsPage() {
                 <input 
                   className="settings-row-input"
                   type="password" 
-                  placeholder="Required" 
+                  placeholder="••••••••" 
                   value={passwords.confirm}
                   onChange={e => setPasswords({...passwords, confirm: e.target.value})}
                 />
               </div>
             </div>
 
+            <div className="settings-row" onClick={handleUpdatePassword}>
+              <div className="settings-row-content center">
+                <span className="settings-row-label" style={{color: 'var(--accent-primary)'}}>
+                  {passSaved ? 'Updated successfully' : 'Update Password'}
+                </span>
+              </div>
+            </div>
           </div>
-          <button className="settings-action-btn" onClick={handleUpdatePassword}>
-            {passSaved ? 'Updated successfully' : 'Update Password'}
-          </button>
         </div>
 
         <div className="settings-section">
@@ -168,10 +172,14 @@ export default function SettingsPage() {
               </div>
             </div>
 
+            <div className="settings-row" onClick={handleSavePreferences}>
+              <div className="settings-row-content center">
+                <span className="settings-row-label" style={{color: 'var(--accent-primary)'}}>
+                  {saved ? 'Preferences Saved' : 'Save Preferences'}
+                </span>
+              </div>
+            </div>
           </div>
-          <button className="settings-action-btn" onClick={handleSavePreferences}>
-            {saved ? 'Preferences Saved' : 'Save Preferences'}
-          </button>
         </div>
 
         <div className="settings-section">
