@@ -5,12 +5,19 @@ import './Modal.css';
 
 export default function Modal({ isOpen, onClose, title, children, maxWidth = '500px' }) {
   const [render, setRender] = useState(isOpen);
+  const [isClickable, setIsClickable] = useState(false);
 
   useEffect(() => {
     if (isOpen) {
       setRender(true);
       document.body.style.overflow = 'hidden';
+      const timer = setTimeout(() => setIsClickable(true), 250);
+      return () => { 
+        clearTimeout(timer);
+        document.body.style.overflow = 'unset'; 
+      };
     } else {
+      setIsClickable(false);
       document.body.style.overflow = 'unset';
     }
     return () => { document.body.style.overflow = 'unset'; };
@@ -26,7 +33,7 @@ export default function Modal({ isOpen, onClose, title, children, maxWidth = '50
     <div 
       className={`modal-overlay ${isOpen ? 'open' : 'closed'}`} 
       onAnimationEnd={onAnimationEnd}
-      onClick={onClose}
+      onClick={(e) => { if (isClickable) onClose(e); }}
     >
       <div 
         className="modal-container" 
