@@ -89,11 +89,16 @@ export default function Navbar() {
                     <img src={r.avatar} alt="" className="search-result-avatar" />
                     <div className="search-result-info">
                       <span className="search-result-name">{r.name}</span>
-                      <span className="search-result-meta">{r.computedRoomNumber === 'Unassigned' ? 'Unassigned Room' : `Room ${r.computedRoomNumber} • Occupied`} &bull; {r.phone}</span>
+                      <span className="search-result-meta">{r.computedRoomNumber === 'Unassigned' ? 'Unassigned Room' : `Room ${r.computedRoomNumber}`} &bull; {r.phone}</span>
                     </div>
-                    {r.pendingDues > 0 && (
-                      <span className="search-result-badge danger">₹{r.pendingDues.toLocaleString()}</span>
-                    )}
+                    <div style={{ display: 'flex', alignItems: 'center', gap: '8px' }}>
+                      {r.pendingDues > 0 && (
+                        <span className="search-result-badge danger" title="Pending Dues">₹{r.pendingDues.toLocaleString()}</span>
+                      )}
+                      {r.computedRoomNumber !== 'Unassigned' && (
+                        <span className="search-result-badge" style={{ background: 'rgba(239, 68, 68, 0.1)', color: '#ef4444', fontWeight: 800, padding: '4px 10px', borderRadius: '8px', fontSize: '10px', border: '1px solid rgba(239, 68, 68, 0.2)', textTransform: 'uppercase', letterSpacing: '0.05em' }}>Occupied</span>
+                      )}
+                    </div>
                   </>
                 ) : (
                   <>
@@ -102,9 +107,13 @@ export default function Navbar() {
                     </div>
                     <div className="search-result-info">
                       <span className="search-result-name">Room {r.number}</span>
-                      <span className="search-result-meta">{r.roomType || r.type} &bull; {r.status}</span>
+                      <span className="search-result-meta">{r.roomType || r.type}</span>
                     </div>
-                    {r.tenantId && <span className="search-result-badge">Occupied</span>}
+                    {r.status === 'occupied' || r.tenantId ? (
+                      <span className="search-result-badge" style={{ background: 'rgba(239, 68, 68, 0.1)', color: '#ef4444', fontWeight: 800, padding: '4px 10px', borderRadius: '8px', fontSize: '10px', border: '1px solid rgba(239, 68, 68, 0.2)', textTransform: 'uppercase', letterSpacing: '0.05em' }}>Occupied</span>
+                    ) : (
+                      <span className="search-result-badge" style={{ background: 'rgba(52, 211, 153, 0.1)', color: '#10b981', fontWeight: 800, padding: '4px 10px', borderRadius: '8px', fontSize: '10px', border: '1px solid rgba(52, 211, 153, 0.2)', textTransform: 'uppercase', letterSpacing: '0.05em' }}>Vacant</span>
+                    )}
                   </>
                 )}
               </button>
