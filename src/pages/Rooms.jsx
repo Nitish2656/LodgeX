@@ -583,7 +583,6 @@ export default function RoomsPage() {
                       <div className="action-menu" onClick={(e) => e.stopPropagation()}>
                         {tenant ? (
                           <>
-                            <button className="action-menu-item" onClick={() => openModal(room, 'edit')}><Edit2 size={14} /> Edit Tenant</button>
                             <button className="action-menu-item" onClick={() => openModal(room, 'shift')}><ArrowRightLeft size={14} /> Shift Room</button>
                             <button className="action-menu-item" onClick={() => openModal(room, 'editRoom')}><Edit2 size={14} /> Edit Room Details</button>
                             <button className="action-menu-item" onClick={() => openModal(room, 'vacate')}><LogOut size={14} /> Vacate Room</button>
