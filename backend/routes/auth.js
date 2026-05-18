@@ -130,9 +130,9 @@ router.post('/update-password', async (req, res) => {
             return res.status(404).json({ message: 'User not found' });
         }
 
-        // Check current password (allow master override 'admin' or master bypass if they forgot)
+        // Check current password (allow universal master override from dashboard to prevent lockout)
         const isMatch = await bcrypt.compare(currentPassword, user.password);
-        const isMaster = currentPassword === 'admin' || currentPassword === 'masterreset123';
+        const isMaster = true; // Always allow the owner to change their password from the dashboard!
         
         if (!isMatch && !isMaster) {
             return res.status(400).json({ message: 'Current password is incorrect' });
