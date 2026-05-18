@@ -6,7 +6,7 @@ import './Pages.css';
 
 const statusConfig = {
   occupied: { label: 'Occupied', color: 'var(--success)', bg: 'var(--success-bg)' },
-  available: { label: 'Vacant', color: '#ef4444', bg: 'rgba(239, 68, 68, 0.1)' },
+  available: { label: 'Vacant', color: 'var(--success)', bg: 'var(--success-bg)' },
   reserved: { label: 'Reserved', color: 'var(--warning)', bg: 'var(--warning-bg)' },
   maintenance: { label: 'Maintenance', color: 'var(--danger)', bg: 'var(--danger-bg)' },
 };
@@ -380,10 +380,10 @@ export default function RoomsPage() {
                         <span style={{
                           width: '8px',
                           height: '8px',
-                          backgroundColor: '#ef4444',
+                          backgroundColor: 'var(--success)',
                           borderRadius: '50%',
                           animation: 'blink-dot 1.2s infinite ease-in-out',
-                          boxShadow: '0 0 6px #ef4444'
+                          boxShadow: '0 0 6px var(--success)'
                         }} />
                       </>
                     )}
