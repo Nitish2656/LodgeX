@@ -1,5 +1,5 @@
 import { useState, useEffect } from 'react';
-import { Shield, Lock, Key, CheckCircle, Zap, Cloud, MessageSquare, Bell, LogOut } from 'lucide-react';
+import { Shield, Lock, Key, CheckCircle, Zap, Cloud, MessageSquare, Bell, LogOut, Eye, EyeOff } from 'lucide-react';
 import { useStore } from '../data/store';
 import './Pages.css';
 
@@ -12,6 +12,7 @@ export default function SettingsPage() {
   const [dueReminders, setDueReminders] = useState(true);
   const [saved, setSaved] = useState(false);
   const [passwords, setPasswords] = useState({ current: '', new: '', confirm: '' });
+  const [showPass, setShowPass] = useState({ current: false, new: false, confirm: false });
   const [passSaved, setPassSaved] = useState(false);
 
   useEffect(() => {
@@ -72,13 +73,18 @@ export default function SettingsPage() {
               <div className="settings-row-icon" style={{background: 'var(--accent-primary)'}}><Lock size={16}/></div>
               <div className="settings-row-content">
                 <span className="settings-row-label">Current Password</span>
-                <input 
-                  className="settings-row-input"
-                  type="password" 
-                  placeholder="••••••••" 
-                  value={passwords.current}
-                  onChange={e => setPasswords({...passwords, current: e.target.value})}
-                />
+                <div style={{ display: 'flex', alignItems: 'center', flex: 1, justifyContent: 'flex-end' }}>
+                  <input 
+                    className="settings-row-input"
+                    type={showPass.current ? "text" : "password"} 
+                    placeholder="••••••••" 
+                    value={passwords.current}
+                    onChange={e => setPasswords({...passwords, current: e.target.value})}
+                  />
+                  <button type="button" className="pass-toggle-btn" onClick={() => setShowPass({...showPass, current: !showPass.current})}>
+                    {showPass.current ? <EyeOff size={16} /> : <Eye size={16} />}
+                  </button>
+                </div>
               </div>
             </div>
 
@@ -86,13 +92,18 @@ export default function SettingsPage() {
               <div className="settings-row-icon" style={{background: '#8b5cf6'}}><Key size={16}/></div>
               <div className="settings-row-content">
                 <span className="settings-row-label">New Password</span>
-                <input 
-                  className="settings-row-input"
-                  type="password" 
-                  placeholder="••••••••" 
-                  value={passwords.new}
-                  onChange={e => setPasswords({...passwords, new: e.target.value})}
-                />
+                <div style={{ display: 'flex', alignItems: 'center', flex: 1, justifyContent: 'flex-end' }}>
+                  <input 
+                    className="settings-row-input"
+                    type={showPass.new ? "text" : "password"} 
+                    placeholder="••••••••" 
+                    value={passwords.new}
+                    onChange={e => setPasswords({...passwords, new: e.target.value})}
+                  />
+                  <button type="button" className="pass-toggle-btn" onClick={() => setShowPass({...showPass, new: !showPass.new})}>
+                    {showPass.new ? <EyeOff size={16} /> : <Eye size={16} />}
+                  </button>
+                </div>
               </div>
             </div>
 
@@ -100,24 +111,25 @@ export default function SettingsPage() {
               <div className="settings-row-icon" style={{background: '#10b981'}}><CheckCircle size={16}/></div>
               <div className="settings-row-content">
                 <span className="settings-row-label">Confirm Password</span>
-                <input 
-                  className="settings-row-input"
-                  type="password" 
-                  placeholder="••••••••" 
-                  value={passwords.confirm}
-                  onChange={e => setPasswords({...passwords, confirm: e.target.value})}
-                />
+                <div style={{ display: 'flex', alignItems: 'center', flex: 1, justifyContent: 'flex-end' }}>
+                  <input 
+                    className="settings-row-input"
+                    type={showPass.confirm ? "text" : "password"} 
+                    placeholder="••••••••" 
+                    value={passwords.confirm}
+                    onChange={e => setPasswords({...passwords, confirm: e.target.value})}
+                  />
+                  <button type="button" className="pass-toggle-btn" onClick={() => setShowPass({...showPass, confirm: !showPass.confirm})}>
+                    {showPass.confirm ? <EyeOff size={16} /> : <Eye size={16} />}
+                  </button>
+                </div>
               </div>
             </div>
 
-            <div className="settings-row" onClick={handleUpdatePassword}>
-              <div className="settings-row-content center">
-                <span className="settings-row-label" style={{color: 'var(--accent-primary)'}}>
-                  {passSaved ? 'Updated successfully' : 'Update Password'}
-                </span>
-              </div>
-            </div>
           </div>
+          <button className="settings-premium-btn" onClick={handleUpdatePassword}>
+            {passSaved ? <><CheckCircle size={18} /> Updated successfully</> : 'Update Password'}
+          </button>
         </div>
 
         <div className="settings-section">
@@ -172,14 +184,10 @@ export default function SettingsPage() {
               </div>
             </div>
 
-            <div className="settings-row" onClick={handleSavePreferences}>
-              <div className="settings-row-content center">
-                <span className="settings-row-label" style={{color: 'var(--accent-primary)'}}>
-                  {saved ? 'Preferences Saved' : 'Save Preferences'}
-                </span>
-              </div>
-            </div>
           </div>
+          <button className="settings-premium-btn" onClick={handleSavePreferences}>
+            {saved ? <><CheckCircle size={18} /> Preferences Saved</> : 'Save Preferences'}
+          </button>
         </div>
 
         <div className="settings-section">
