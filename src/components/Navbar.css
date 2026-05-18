@@ -493,8 +493,12 @@
 
   .notif-panel {
     position: fixed;
+    top: 65px;
     left: 16px;
     right: 16px;
     width: auto;
+    max-height: calc(100vh - 90px);
+    display: flex;
+    flex-direction: column;
   }
 }
