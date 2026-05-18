@@ -12,9 +12,8 @@ const statusConfig = {
 };
 
 export default function RoomsPage() {
-  const { rooms, tenants, payments, updateTenant, deleteTenant, vacateRoom, addPayment, addTenant, addRoom, updateRoom, deleteRoom, toggleRoomMaintenance, navigateWithAction, fetchTenantById, fetchPayments, uploadFile } = useStore();
+  const { rooms, tenants, payments, updateTenant, deleteTenant, vacateRoom, addPayment, addTenant, addRoom, updateRoom, deleteRoom, toggleRoomMaintenance, navigateWithAction, fetchTenantById, fetchPayments, uploadFile, searchQuery, pageAction, setPageAction } = useStore();
   const [filter, setFilter] = useState('all');
-  const [search, setSearch] = useState('');
 
   const [activeMenuId, setActiveMenuId] = useState(null);
   const [selectedRoom, setSelectedRoom] = useState(null);
@@ -64,7 +63,7 @@ export default function RoomsPage() {
     const matchFilter = filter === 'all' || status === filter;
     const roomNumber = r.number || '';
     const roomType = r.type || '';
-    const matchSearch = roomNumber.toString().includes(search) || roomType.toLowerCase().includes(search.toLowerCase());
+    const matchSearch = searchQuery ? (roomNumber.toString().includes(searchQuery) || roomType.toLowerCase().includes(searchQuery.toLowerCase())) : true;
     return matchFilter && matchSearch;
   }).sort((a, b) => {
     if (a.status === 'available' && b.status !== 'available') return -1;
@@ -78,7 +77,13 @@ export default function RoomsPage() {
     const pending = payments.filter(p => (p.tenantId === tenantId || p._id === tenantId) && p.status === 'pending' && p.month);
     return [...new Set(pending.map(p => p.month))].join(', ');
   };
-
+  const getPendingMonthsLabel = (tenantId) => {
+    const pending = payments.filter(p => (p.tenantId === tenantId || p._id === tenantId) && p.status === 'pending' && p.month);
+    if (pending.length > 0) {
+      return [...new Set(pending.map(p => p.month.split(' ')[0]))].join(', ') + ' Pending';
+    }
+    return new Date().toLocaleDateString('en-IN', { month: 'short' }) + ' Pending';
+  };
 
   // Sync detailTenant with global tenants state
   useEffect(() => {
@@ -93,12 +98,21 @@ export default function RoomsPage() {
     if (tenant) {
       setDetailTenant(tenant);
       setShowTenantDetail(true);
-      const full = await fetchTenantById(tenant._id || tenant.id);
-      if (full) setDetailTenant(full);
+      await fetchPayments();
     } else {
       openModal(room, 'assign');
     }
   };
+
+  useEffect(() => {
+    if (pageAction?.type === 'OPEN_ROOM' && pageAction?.id) {
+      const room = rooms.find(r => r._id === pageAction.id || r.id === pageAction.id);
+      if (room) {
+        handleRoomCardClick(room);
+        setPageAction(null);
+      }
+    }
+  }, [pageAction, rooms, setPageAction]);
 
   const openPayDues = async (tenant) => {
     const tenantId = tenant._id || tenant.id;
@@ -522,10 +536,12 @@ export default function RoomsPage() {
 
       <div className="page-toolbar animate-in">
         <div className="toolbar-left">
-          <div className="toolbar-search">
-            <Search size={16} />
-            <input type="text" placeholder="Search room number or type..." value={search} onChange={(e) => setSearch(e.target.value)} />
+          <div className="page-title" style={{ fontSize: '20px', fontWeight: 700, color: 'var(--text-primary)', display: 'flex', alignItems: 'center', gap: '8px' }}>
+            <BedDouble size={20} />
+            <span className="mobile-title">Rooms</span>
           </div>
+        </div>
+        <div className="toolbar-right">
           <div className="toolbar-filters">
             {['all', 'occupied', 'available'].map(f => (
               <button key={f} className={`filter-btn ${filter === f ? 'active' : ''}`} onClick={() => setFilter(f)}>
@@ -533,8 +549,6 @@ export default function RoomsPage() {
               </button>
             ))}
           </div>
-        </div>
-        <div className="toolbar-right">
             <button className="page-header-btn primary" onClick={() => {
                 setIsEditingRoom(false);
                 setNewRoomData({ number: '', floor: '', type: 'Single', rent: '' });
@@ -635,7 +649,7 @@ export default function RoomsPage() {
                     </div>
                     {tenant.pendingDues > 0 ? (
                       <div className="room-tenant-dues" style={{ background: 'var(--danger-bg)', color: 'var(--danger)', border: '1px solid rgba(248,113,113,0.3)', padding: '4px 8px', borderRadius: '6px', fontSize: '11px', fontWeight: 700, textAlign: 'right' }}>
-                        <div>Pending</div>
+                        <div>{getPendingMonthsLabel(tenant._id || tenant.id)}</div>
                         <div style={{ fontSize: '12px', marginTop: '1px' }}>₹{tenant.pendingDues.toLocaleString('en-IN')}</div>
                       </div>
                     ) : (
@@ -1042,7 +1056,7 @@ export default function RoomsPage() {
               </div>
               <div style={{ display: 'flex', flexDirection: 'column', gap: '8px', background: detailTenant.pendingDues > 0 ? 'rgba(239,68,68,0.05)' : 'rgba(52,211,153,0.05)', padding: '16px', borderRadius: '20px', margin: '-12px', border: detailTenant.pendingDues > 0 ? '1px solid rgba(239,68,68,0.15)' : '1px solid rgba(52,211,153,0.15)' }}>
                 <div style={{ fontSize: '12px', color: detailTenant.pendingDues > 0 ? 'rgba(239,68,68,0.8)' : 'rgba(52,211,153,0.8)', fontWeight: 800, textTransform: 'uppercase', display: 'flex', justifyContent: 'space-between', alignItems: 'center' }}>
-                  <span>{detailTenant.pendingDues > 0 ? 'Pending Dues' : `${new Date().toLocaleDateString('en-IN', { month: 'short' })} Rent: Paid ✓`}</span>
+                  <span>{detailTenant.pendingDues > 0 ? getPendingMonthsLabel(detailTenant._id || detailTenant.id) : `${new Date().toLocaleDateString('en-IN', { month: 'short' })} Rent: Paid ✓`}</span>
                   {detailTenant.pendingDues > 0 && <button style={{ background: '#ef4444', color: 'white', border: 'none', padding: '6px 14px', borderRadius: '10px', fontSize: '12px', fontWeight: 700, cursor: 'pointer', boxShadow: '0 4px 12px rgba(239,68,68,0.2)' }} onClick={() => openPayDues(detailTenant)}>Pay Now</button>}
                 </div>
                 <div style={{ fontSize: '28px', fontWeight: 800, color: detailTenant.pendingDues > 0 ? '#ef4444' : '#34d399' }}>
@@ -1135,54 +1149,9 @@ export default function RoomsPage() {
       {/* Pay Dues Modal */}
       <Modal isOpen={showPayDuesModal} onClose={() => setShowPayDuesModal(false)} title={`Collect Payment - ${payDuesTenantObj?.name || ''}`} maxWidth="500px">
         <form onSubmit={handlePayDuesSubmit}>
-          <div style={{ textAlign: 'center', padding: '20px', background: 'linear-gradient(135deg, rgba(239,68,68,0.05), rgba(239,68,68,0.02))', borderRadius: '20px', marginBottom: '16px', border: '1px solid rgba(239,68,68,0.08)' }}>
+          <div style={{ textAlign: 'center', padding: '20px', background: 'linear-gradient(135deg, rgba(239,68,68,0.05), rgba(239,68,68,0.02))', borderRadius: '20px', marginBottom: '20px', border: '1px solid rgba(239,68,68,0.08)' }}>
             <div style={{ fontSize: '11px', fontWeight: 800, color: 'rgba(239,68,68,0.6)', textTransform: 'uppercase', letterSpacing: '0.12em', marginBottom: '8px' }}>Total Outstanding</div>
             <div style={{ fontSize: '32px', fontWeight: 800, color: '#ef4444' }}>₹{payDuesTenantObj?.pendingDues?.toLocaleString('en-IN') || 0}</div>
-          </div>
-          
-          <div style={{ marginBottom: '20px' }}>
-            <div style={{ display: 'flex', alignItems: 'center', gap: '8px', marginBottom: '12px' }}>
-                <div style={{ width: '4px', height: '16px', background: 'var(--accent-primary)', borderRadius: '4px' }}></div>
-                <h4 style={{ margin: 0, fontSize: '14px', fontWeight: 700 }}>Dues Breakdown</h4>
-            </div>
-            <div style={{ background: 'rgba(255,255,255,0.03)', borderRadius: '16px', border: '1px solid var(--border-primary)', overflow: 'hidden', display: 'flex', flexDirection: 'column' }}>
-                {(() => {
-                    const tenantId = payDuesTenantObj?._id || payDuesTenantObj?.id;
-                    const pendingPayments = payments.filter(p => 
-                      (p.tenantId === tenantId || p._id === tenantId) && 
-                      p.status === 'pending' && 
-                      p.month
-                    );
-                    
-                    if (pendingPayments.length > 0) {
-                        return pendingPayments.map((p, idx) => (
-                            <div key={p._id || p.id} style={{ display: 'flex', justifyContent: 'space-between', padding: '12px 16px', borderBottom: idx < pendingPayments.length - 1 ? '1px solid var(--border-primary)' : 'none' }}>
-                                <div>
-                                    <div style={{ fontSize: '13px', fontWeight: 700, color: 'var(--text-primary)' }}>{p.month}</div>
-                                    <div style={{ fontSize: '11px', color: 'var(--text-tertiary)' }}>{p.notes || 'Pending dues'}</div>
-                                </div>
-                                <div style={{ fontWeight: 800, color: 'var(--danger)', fontSize: '14px' }}>
-                                    ₹{(p.dueAmount !== undefined ? p.dueAmount : p.totalAmount).toLocaleString('en-IN')}
-                                </div>
-                            </div>
-                        ));
-                    }
-                    
-                    if (payDuesTenantObj?.pendingDues > 0) {
-                        return (
-                            <div style={{ display: 'flex', justifyContent: 'space-between', padding: '12px 16px' }}>
-                                <div>
-                                    <div style={{ fontSize: '13px', fontWeight: 700, color: 'var(--text-primary)' }}>{new Date().toLocaleDateString('en-IN', { month: 'long', year: 'numeric' })}</div>
-                                    <div style={{ fontSize: '11px', color: 'var(--text-tertiary)' }}>Current outstanding</div>
-                                </div>
-                                <div style={{ fontWeight: 800, color: 'var(--danger)', fontSize: '14px' }}>₹{payDuesTenantObj.pendingDues.toLocaleString('en-IN')}</div>
-                            </div>
-                        );
-                    }
-
-                    return <div style={{ padding: '16px', textAlign: 'center', color: 'var(--text-tertiary)', fontSize: '13px' }}>No pending dues found.</div>;
-                })()}
-            </div>
           </div>
           <div style={{ display: 'flex', flexDirection: 'column', gap: '16px' }}>
             <div className="form-group">

@@ -8,7 +8,7 @@ export default function TenantsPage() {
   const { 
     tenants, rooms, payments, updateTenant, deleteTenant, 
     addTenant, addPayment, fetchTenants, fetchRooms, fetchTenantById, fetchPayments,
-    pageAction, setPageAction, uploadFile, settings 
+    pageAction, setPageAction, uploadFile, settings, searchQuery
   } = useStore();
 
   useEffect(() => {
@@ -17,11 +17,14 @@ export default function TenantsPage() {
         openAddModal();
       } else if (typeof pageAction === 'object' && pageAction.type === 'add') {
         openAddModal(pageAction.roomId);
+      } else if (typeof pageAction === 'object' && pageAction.type === 'OPEN_TENANT' && pageAction.id) {
+        const t = tenants.find(t => (t._id || t.id) === pageAction.id);
+        if (t) openProfile(t);
       }
       setPageAction(null); // Clear action
     }
-  }, [pageAction, setPageAction, rooms]);
-  const [search, setSearch] = useState('');
+  }, [pageAction, setPageAction, rooms, tenants]);
+
   const [filter, setFilter] = useState('all');
 
   const [selectedTenant, setSelectedTenant] = useState(null);
@@ -81,9 +84,9 @@ export default function TenantsPage() {
     const matchFilter = filter === 'all' || 
                         (filter === 'dues' && t.pendingDues > 0) ||
                         (filter === 'nodues' && t.pendingDues === 0);
-    const matchSearch = t.name.toLowerCase().includes(search.toLowerCase()) ||
-                        t.roomNumber.toString().includes(search) ||
-                        t.phone.includes(search);
+    const matchSearch = searchQuery ? (t.name.toLowerCase().includes(searchQuery.toLowerCase()) ||
+                        (t.roomNumber && t.roomNumber.toString().includes(searchQuery)) ||
+                        (t.phone && t.phone.includes(searchQuery))) : true;
     return matchFilter && matchSearch;
   }).sort((a, b) => {
     const aHasDues = (a.pendingDues || 0) > 0;
@@ -105,7 +108,13 @@ export default function TenantsPage() {
     const uniqueMonths = [...new Set(pending.map(p => p.month))];
     return uniqueMonths.join(', ');
   };
-
+  const getPendingMonthsLabel = (tenantId) => {
+    const pending = payments.filter(p => (p.tenantId === tenantId || p._id === tenantId) && p.status === 'pending' && p.month);
+    if (pending.length > 0) {
+      return [...new Set(pending.map(p => p.month.split(' ')[0]))].join(', ') + ' Pending';
+    }
+    return new Date().toLocaleDateString('en-IN', { month: 'short' }) + ' Pending';
+  };
 
   const openProfile = async (tenant) => {
     setSelectedTenant(tenant);
@@ -546,9 +555,11 @@ export default function TenantsPage() {
       </div>
 
       <div className="page-toolbar animate-in">
-        <div className="toolbar-search">
-          <Search size={16} />
-          <input type="text" placeholder="Search by name, phone, room..." value={search} onChange={(e) => setSearch(e.target.value)} />
+        <div className="toolbar-left">
+          <div className="page-title" style={{ fontSize: '20px', fontWeight: 700, color: 'var(--text-primary)', display: 'flex', alignItems: 'center', gap: '8px' }}>
+            <Users size={20} />
+            <span className="mobile-title">Tenants</span>
+          </div>
         </div>
         <div className="toolbar-filters">
           <button className={`filter-btn ${filter === 'all' ? 'active' : ''}`} onClick={() => setFilter('all')}>All</button>
@@ -901,7 +912,7 @@ export default function TenantsPage() {
                 </div>
                 <div style={{ display: 'flex', flexDirection: 'column', gap: '8px', background: selectedTenant.pendingDues > 0 ? 'rgba(239, 68, 68, 0.05)' : 'rgba(52, 211, 153, 0.05)', padding: '16px', borderRadius: '20px', margin: '-12px', border: selectedTenant.pendingDues > 0 ? '1px solid rgba(239, 68, 68, 0.15)' : '1px solid rgba(52, 211, 153, 0.15)' }}>
                     <div style={{ fontSize: '12px', color: selectedTenant.pendingDues > 0 ? 'rgba(239, 68, 68, 0.8)' : 'rgba(52, 211, 153, 0.8)', fontWeight: 800, textTransform: 'uppercase', letterSpacing: '0.05em', display: 'flex', alignItems: 'center', justifyContent: 'space-between' }}>
-                      <span>{selectedTenant.pendingDues > 0 ? 'Pending Dues' : `${new Date().toLocaleDateString('en-IN', { month: 'short' })} Rent: Paid ✓`}</span>
+                      <span>{selectedTenant.pendingDues > 0 ? getPendingMonthsLabel(selectedTenant._id || selectedTenant.id) : `${new Date().toLocaleDateString('en-IN', { month: 'short' })} Rent: Paid ✓`}</span>
                       {selectedTenant.pendingDues > 0 && (
                           <button style={{ background: '#ef4444', color: 'white', border: 'none', padding: '6px 14px', borderRadius: '10px', fontSize: '12px', fontWeight: 700, cursor: 'pointer', boxShadow: '0 4px 12px rgba(239, 68, 68, 0.2)' }} onClick={(e) => { e.stopPropagation(); openPayDues(selectedTenant); }}>Pay Now</button>
                       )}

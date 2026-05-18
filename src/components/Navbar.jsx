@@ -7,7 +7,7 @@ export default function Navbar() {
   const {
     searchQuery, setSearchQuery, searchResults, setActivePage,
     notifications, unreadNotifications, markNotificationRead, markAllNotificationsRead,
-    theme, toggleTheme, logout
+    theme, toggleTheme, logout, navigateWithAction
   } = useStore();
   const [searchFocused, setSearchFocused] = useState(false);
   const [showNotifPanel, setShowNotifPanel] = useState(false);
@@ -30,8 +30,11 @@ export default function Navbar() {
   }, []);
 
   const handleResultClick = (result) => {
-    if (result.type === 'tenant') setActivePage('tenants');
-    else if (result.type === 'room') setActivePage('rooms');
+    if (result.type === 'tenant') {
+      navigateWithAction('tenants', { type: 'OPEN_TENANT', id: result._id || result.id });
+    } else if (result.type === 'room') {
+      navigateWithAction('rooms', { type: 'OPEN_ROOM', id: result._id || result.id });
+    }
     setSearchQuery('');
     setSearchFocused(false);
   };
