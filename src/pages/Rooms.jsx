@@ -1,5 +1,5 @@
 import { useState, useRef, useEffect } from 'react';
-import { BedDouble, Search, Wrench, Users, DoorOpen, CalendarClock, MoreVertical, Edit2, Trash2, LogOut, IndianRupee, UserPlus, UploadCloud, Plus, CalendarPlus, ArrowRightLeft, Phone, MapPin, ShieldCheck, FileText, Download, History, Image } from 'lucide-react';
+import { BedDouble, Search, Wrench, Users, DoorOpen, CalendarClock, MoreVertical, Edit2, Trash2, LogOut, IndianRupee, UserPlus, UploadCloud, Plus, CalendarPlus, ArrowRightLeft, Phone, MapPin, ShieldCheck, FileText, Download, History, Image, Camera } from 'lucide-react';
 import { useStore } from '../data/store';
 import Modal from '../components/Modal';
 import './Pages.css';
@@ -12,7 +12,7 @@ const statusConfig = {
 };
 
 export default function RoomsPage() {
-  const { rooms, tenants, payments, updateTenant, deleteTenant, vacateRoom, addPayment, addTenant, addRoom, updateRoom, deleteRoom, toggleRoomMaintenance, navigateWithAction, fetchTenantById, fetchPayments } = useStore();
+  const { rooms, tenants, payments, updateTenant, deleteTenant, vacateRoom, addPayment, addTenant, addRoom, updateRoom, deleteRoom, toggleRoomMaintenance, navigateWithAction, fetchTenantById, fetchPayments, uploadFile } = useStore();
   const [filter, setFilter] = useState('all');
   const [search, setSearch] = useState('');
 
@@ -42,7 +42,16 @@ export default function RoomsPage() {
   // Forms
   const [editData, setEditData] = useState({});
   const [paymentData, setPaymentData] = useState({});
-  const [assignData, setAssignData] = useState({});
+  const [assignData, setAssignData] = useState({ name: '', phone: '', address: '', parentName: '', parentPhone: '', joinDate: new Date().toISOString().split('T')[0], coTenants: [], roomId: '', roomNumber: '', rent: '', deposit: '', paidAmount: '', dueAmount: 0, method: 'Cash', photoFile: null, photoPreview: null, tenantAadhaar: null, parentAadhaar: null });
+  const [addStep, setAddStep] = useState(1);
+  const [isSaving, setIsSaving] = useState(false);
+  const [photoSourceTarget, setPhotoSourceTarget] = useState(null);
+  const [showCamera, setShowCamera] = useState(false);
+  const [cameraTarget, setCameraTarget] = useState({ isCoTenant: false, index: 0 });
+  const [viewDocUrl, setViewDocUrl] = useState(null);
+  const videoRef = useRef(null);
+  const [stream, setStream] = useState(null);
+
   const [newRoomData, setNewRoomData] = useState({ number: '', floor: '', type: 'Single', rent: '' });
   const [rentData, setRentData] = useState({ tenantId: '', roomId: '', rentAmount: 0, month: '', paidAmount: '', dueAmount: '', method: 'Cash' });
   const [shiftData, setShiftData] = useState({ tenantId: '', oldRoomId: '', newRoomId: '', tenantName: '' });
@@ -122,9 +131,100 @@ export default function RoomsPage() {
   };
 
   const handleViewDoc = (url, label) => {
-    if (!url || url.includes('dicebear')) return alert(`No ${label} document uploaded yet.`);
-    window.open(url, '_blank');
+    if (!url || url.includes('dicebear') || url === 'Aadhaar Card') return alert(`No ${label} document uploaded yet.`);
+    if (url.startsWith('data:') || url.startsWith('http') || url.startsWith('/api/files')) {
+      setViewDocUrl({ url, title: label });
+    } else {
+      window.open(url, '_blank');
+    }
   };
+
+  const compressImage = (file, maxWidth = 800) => {
+    return new Promise((resolve) => {
+      if (!file || !file.type.startsWith('image/')) return resolve(file);
+      const reader = new FileReader();
+      reader.readAsDataURL(file);
+      reader.onload = (event) => {
+        const img = new window.Image();
+        img.src = event.target.result;
+        img.onload = () => {
+          const canvas = document.createElement('canvas');
+          let width = img.width;
+          let height = img.height;
+          if (width > maxWidth) { height = (maxWidth / width) * height; width = maxWidth; }
+          canvas.width = width; canvas.height = height;
+          const ctx = canvas.getContext('2d');
+          ctx.drawImage(img, 0, 0, width, height);
+          canvas.toBlob((blob) => resolve(new File([blob], file.name, { type: 'image/jpeg' })), 'image/jpeg', 0.7);
+        };
+      };
+    });
+  };
+
+  const handlePhotoUpload = async (e, isCoTenant = false, index = 0) => {
+    let file = e.target.files[0];
+    if (file) {
+      if (file.type.startsWith('image/')) file = await compressImage(file);
+      const preview = URL.createObjectURL(file);
+      if (isCoTenant) {
+        setAssignData(prev => { const newCo = [...prev.coTenants]; newCo[index] = { ...newCo[index], photoFile: file, photoPreview: preview }; return { ...prev, coTenants: newCo }; });
+      } else {
+        setAssignData(prev => ({...prev, photoFile: file, photoPreview: preview}));
+      }
+    }
+  };
+
+  const handleDocumentUpload = async (file, field, isCoTenant = false, index = 0) => {
+    if (!file) return;
+    let finalFile = file;
+    if (file.type.startsWith('image/')) finalFile = await compressImage(file, 1000); 
+    if (isCoTenant) {
+        setAssignData(prev => { const newCo = [...prev.coTenants]; newCo[index] = { ...newCo[index], [field]: finalFile }; return { ...prev, coTenants: newCo }; });
+    } else {
+        setAssignData(prev => ({ ...prev, [field]: finalFile }));
+    }
+  };
+
+  const openCamera = (isCoTenant = false, index = 0) => {
+    setCameraTarget({ isCoTenant, index });
+    setShowCamera(true);
+    navigator.mediaDevices.getUserMedia({ video: true }).then(s => { setStream(s); if (videoRef.current) videoRef.current.srcObject = s; }).catch(err => {
+        setShowCamera(false); alert('Could not access camera. Please use "Upload from Device" as an alternative.');
+    });
+  };
+
+  const closeCamera = () => { if (stream) stream.getTracks().forEach(t => t.stop()); setStream(null); setShowCamera(false); };
+
+  const capturePhoto = () => {
+    if (!videoRef.current) return;
+    const canvas = document.createElement('canvas');
+    canvas.width = videoRef.current.videoWidth; canvas.height = videoRef.current.videoHeight;
+    canvas.getContext('2d').drawImage(videoRef.current, 0, 0);
+    canvas.toBlob(async (blob) => {
+      let file = await compressImage(new File([blob], 'live_capture.jpg', { type: 'image/jpeg' }));
+      const preview = URL.createObjectURL(file);
+      if (cameraTarget.isCoTenant) {
+        const newCo = [...assignData.coTenants];
+        newCo[cameraTarget.index].photoFile = file; newCo[cameraTarget.index].photoPreview = preview;
+        setAssignData({ ...assignData, coTenants: newCo });
+      } else {
+        setAssignData(prev => ({...prev, photoFile: file, photoPreview: preview}));
+      }
+      closeCamera();
+    }, 'image/jpeg', 0.7);
+  };
+
+  const validateStep = () => {
+    if (addStep === 1) { if (!assignData.roomId) { alert('Please select a room'); return false; } }
+    else if (addStep === 2) {
+      if (!assignData.name || !assignData.phone || !assignData.address || !assignData.parentName || !assignData.parentPhone) {
+        alert('Please fill all required fields for the primary tenant (*)'); return false;
+      }
+    }
+    return true;
+  };
+
+  const handleNextStep = () => { if (validateStep()) setAddStep(s => s + 1); };
 
   useEffect(() => {
     const handleOutsideClick = (e) => {
@@ -166,7 +266,8 @@ export default function RoomsPage() {
         setShowPaymentModal(true);
       }
     } else if (modalType === 'assign') {
-      setAssignData({ name: '', phone: '', email: '', address: '', parentName: '', parentPhone: '', roomId: room._id || room.id, roomNumber: room.number, rent: room.rent, deposit: '', paidAmount: '', dueAmount: 0, method: 'Cash', photoFile: null, photoPreview: null, tenantAadhaar: null, parentAadhaar: null });
+      setAssignData({ name: '', phone: '', address: '', parentName: '', parentPhone: '', joinDate: new Date().toISOString().split('T')[0], coTenants: [], roomId: room._id || room.id, roomNumber: room.number, rent: room.rent, deposit: '', paidAmount: '', dueAmount: 0, method: 'Cash', photoFile: null, photoPreview: null, tenantAadhaar: null, parentAadhaar: null });
+      setAddStep(1);
       setShowAssignModal(true);
     } else if (modalType === 'deleteRoom') {
       setShowDeleteRoomModal(true);
@@ -300,45 +401,35 @@ export default function RoomsPage() {
     }
   };
 
-  const handleAssignSubmit = async (e) => {
-    e.preventDefault();
+  const selectedRoomObj = rooms.find(r => (r._id || r.id)?.toString() === assignData.roomId?.toString());
+  const maxOccupancy = selectedRoomObj?.type === 'Single' ? 3 : selectedRoomObj?.type === 'Double' ? 5 : 6;
+  const canAddRoommate = assignData.coTenants.length < (maxOccupancy - 1);
+  const isLastStep = addStep === 3;
+
+  const handleAddSubmit = async (e) => {
+    if (e) e.preventDefault();
+    if (!isLastStep) { handleNextStep(); return; }
+    if (!validateStep()) return;
+    if (!assignData.roomId) return alert('Please select a room');
     
-    // Use uploaded photo preview as avatar if available, otherwise generate dicebear
-    const avatar = assignData.photoPreview || `https://api.dicebear.com/9.x/initials/svg?seed=${assignData.name}&backgroundColor=6366f1`;
+    setIsSaving(true);
+    try {
+      const room = rooms.find(r => (r._id || r.id).toString() === assignData.roomId.toString());
+      const [tenantPhotoUrl, tenantAadhaarUrl, parentAadhaarUrl] = await Promise.all([ uploadFile(assignData.photoFile), uploadFile(assignData.tenantAadhaar), uploadFile(assignData.parentAadhaar) ]);
+      const avatar = tenantPhotoUrl || (assignData.avatar && !assignData.avatar.startsWith('blob:') ? assignData.avatar : `https://api.dicebear.com/9.x/initials/svg?seed=${assignData.name}&backgroundColor=6366f1`);
 
-    // 1. Create Tenant
-    const newTenant = await addTenant({
-        name: assignData.name,
-        phone: assignData.phone,
-        email: assignData.email,
-        address: assignData.address,
-        parentName: assignData.parentName,
-        parentPhone: assignData.parentPhone,
-        roomId: assignData.roomId,
-        roomNumber: assignData.roomNumber,
-        rent: assignData.rent,
-        deposit: assignData.deposit,
-        pendingDues: assignData.dueAmount,
-        avatar: avatar
-    });
+      const mappedCoTenants = await Promise.all(assignData.coTenants.map(async (ct) => {
+         const [ctPhotoUrl, ctAadhaarUrl, ctParentAadhaarUrl] = await Promise.all([ uploadFile(ct.photoFile), uploadFile(ct.tenantAadhaar), uploadFile(ct.parentAadhaar) ]);
+         return { name: ct.name, phone: ct.phone, parentName: ct.parentName, parentPhone: ct.parentPhone, avatar: ctPhotoUrl || (ct.avatar && !ct.avatar.startsWith('blob:') ? ct.avatar : `https://api.dicebear.com/9.x/initials/svg?seed=${ct.name}&backgroundColor=6366f1`), idProof: ctAadhaarUrl || ct.idProof, parentIdProof: ctParentAadhaarUrl || ct.parentIdProof };
+      }));
 
-    // 2. Record Initial Payment (Deposit/Advance)
-    if (newTenant && (assignData.paidAmount > 0 || assignData.dueAmount > 0)) {
-        await addPayment({
-            tenantId: newTenant._id || newTenant.id,
-            tenantName: newTenant.name,
-            roomId: newTenant.roomId,
-            roomNumber: newTenant.roomNumber,
-            totalAmount: assignData.deposit,
-            paidAmount: assignData.paidAmount,
-            dueAmount: assignData.dueAmount,
-            method: assignData.method,
-            status: assignData.dueAmount > 0 ? 'pending' : 'completed',
-            month: new Date().toLocaleDateString('en-IN', { month: 'short', year: 'numeric' }),
-            notes: 'Advance/Deposit payment on allocation'
-        });
-    }
+      const tenantData = { name: assignData.name, phone: assignData.phone, address: assignData.address, parentName: assignData.parentName, parentPhone: assignData.parentPhone, idProof: tenantAadhaarUrl || assignData.idProof, parentIdProof: parentAadhaarUrl || assignData.parentIdProof, coTenants: mappedCoTenants, roomId: assignData.roomId, roomNumber: room.number, rent: Number(assignData.rent) || room.rent, deposit: Number(assignData.deposit) || 0, pendingDues: Number(assignData.dueAmount) || 0, avatar: avatar, joinDate: new Date(assignData.joinDate).toISOString(), status: 'active', vacateDate: null };
 
+      const newTenant = await addTenant(tenantData);
+      if (newTenant && ((Number(assignData.paidAmount) || 0) > 0 || (Number(assignData.dueAmount) || 0) > 0)) {
+        addPayment({ tenantId: newTenant._id || newTenant.id, tenantName: newTenant.name, roomId: newTenant.roomId, roomNumber: newTenant.roomNumber, totalAmount: Number(assignData.deposit) || 0, paidAmount: Number(assignData.paidAmount) || 0, dueAmount: Number(assignData.dueAmount) || 0, method: assignData.method, status: (Number(assignData.dueAmount) || 0) > 0 ? 'pending' : 'completed', month: new Date().toLocaleDateString('en-IN', { month: 'short', year: 'numeric' }), notes: 'Advance/Deposit on allocation' });
+      }
+    } catch (error) { console.error("Error saving tenant:", error); alert("Failed to save tenant. Please try again."); } finally { setIsSaving(false); }
     setShowAssignModal(false);
   };
 
@@ -378,14 +469,6 @@ export default function RoomsPage() {
   };
 
   const parseNum = (val) => val === '' ? '' : Number(val);
-
-  const handlePhotoUpload = (e) => {
-      const file = e.target.files[0];
-      if (file) {
-          const previewUrl = URL.createObjectURL(file);
-          setAssignData({...assignData, photoFile: file, photoPreview: previewUrl});
-      }
-  };
 
   return (
     <div className="page">
@@ -673,105 +756,161 @@ export default function RoomsPage() {
       {/* Add Payment Modal */}
 
 
-      {/* Assign Tenant Modal */}
-      <Modal isOpen={showAssignModal} onClose={() => setShowAssignModal(false)} title={`Assign Tenant - Room ${selectedRoom?.number}`} maxWidth="700px">
-        <form onSubmit={handleAssignSubmit}>
-          <h3 className="profile-section-title" style={{ marginTop: 0 }}>Tenant Details</h3>
-          <div className="form-grid">
-            <div className="form-group">
-              <label className="form-label">Tenant Name</label>
-              <input type="text" className="form-input" value={assignData.name || ''} onChange={e => setAssignData({...assignData, name: e.target.value})} required />
-            </div>
-            <div className="form-group">
-              <label className="form-label">Tenant Contact</label>
-              <input type="tel" className="form-input" value={assignData.phone || ''} onChange={e => setAssignData({...assignData, phone: e.target.value})} required />
-            </div>
-            <div className="form-group full">
-              <label className="form-label">Address</label>
-              <input type="text" className="form-input" value={assignData.address || ''} onChange={e => setAssignData({...assignData, address: e.target.value})} required />
-            </div>
-            <div className="form-group">
-              <label className="form-label">Tenant Photo</label>
-              <div className={`file-upload-box ${assignData.photoFile ? 'uploaded' : ''}`}>
-                <UploadCloud size={20} style={{color: assignData.photoFile ? 'var(--success)' : 'inherit'}}/>
-                <span style={{color: assignData.photoFile ? 'var(--success)' : 'inherit', flex: 1, whiteSpace: 'nowrap', overflow: 'hidden', textOverflow: 'ellipsis'}}>
-                    {assignData.photoFile ? assignData.photoFile.name : 'Upload Photo'}
-                </span>
-                {assignData.photoPreview && <img src={assignData.photoPreview} alt="preview" style={{width: '24px', height: '24px', borderRadius: '50%', objectFit: 'cover', marginLeft: 'auto'}}/>}
-                <input type="file" accept="image/*" onChange={handlePhotoUpload} />
-              </div>
-            </div>
-            <div className="form-group">
-              <label className="form-label">Tenant Aadhaar Card</label>
-              <div className={`file-upload-box ${assignData.tenantAadhaar ? 'uploaded' : ''}`}>
-                <UploadCloud size={20} style={{color: assignData.tenantAadhaar ? 'var(--success)' : 'inherit'}} />
-                <span style={{color: assignData.tenantAadhaar ? 'var(--success)' : 'inherit', flex: 1, whiteSpace: 'nowrap', overflow: 'hidden', textOverflow: 'ellipsis'}}>
-                    {assignData.tenantAadhaar ? assignData.tenantAadhaar.name : 'Upload Aadhaar'}
-                </span>
-                <input type="file" accept="image/*,.pdf" onChange={e => setAssignData({...assignData, tenantAadhaar: e.target.files[0]})} />
-              </div>
-            </div>
-          </div>
+      {/* Assign Tenant Modal (Multi-step) */}
+      <Modal isOpen={showAssignModal} onClose={() => setShowAssignModal(false)} title="Assign Tenant to Room" maxWidth="850px">
+        <div className="wizard-progress">
+          <div className={`wizard-step ${addStep === 1 ? 'active' : ''} ${addStep > 1 ? 'completed' : ''}`} data-step="1">Room Selection</div>
+          <div className="wizard-line" />
+          <div className={`wizard-step ${addStep === 2 ? 'active' : ''} ${addStep > 2 ? 'completed' : ''}`} data-step="2">Primary Tenant</div>
+          {maxOccupancy > 1 && (
+            <>
+              <div className="wizard-line" />
+              <div className={`wizard-step ${addStep === 3 ? 'active' : ''}`} data-step="3">Roommates</div>
+            </>
+          )}
+        </div>
 
-          <h3 className="profile-section-title" style={{ marginTop: '24px' }}>Parent/Guardian Details</h3>
-          <div className="form-grid">
-            <div className="form-group">
-              <label className="form-label">Parent's Name</label>
-              <input type="text" className="form-input" value={assignData.parentName || ''} onChange={e => setAssignData({...assignData, parentName: e.target.value})} required />
-            </div>
-            <div className="form-group">
-              <label className="form-label">Parent's Contact</label>
-              <input type="tel" className="form-input" value={assignData.parentPhone || ''} onChange={e => setAssignData({...assignData, parentPhone: e.target.value})} required />
-            </div>
-            <div className="form-group full">
-              <label className="form-label">Parent's Aadhaar Card</label>
-              <div className={`file-upload-box ${assignData.parentAadhaar ? 'uploaded' : ''}`}>
-                <UploadCloud size={20} style={{color: assignData.parentAadhaar ? 'var(--success)' : 'inherit'}} />
-                <span style={{color: assignData.parentAadhaar ? 'var(--success)' : 'inherit', flex: 1, whiteSpace: 'nowrap', overflow: 'hidden', textOverflow: 'ellipsis'}}>
-                    {assignData.parentAadhaar ? assignData.parentAadhaar.name : 'Upload Parent Aadhaar'}
-                </span>
-                <input type="file" accept="image/*,.pdf" onChange={e => setAssignData({...assignData, parentAadhaar: e.target.files[0]})} />
+        <div className="form-container" onKeyDown={(e) => { if (e.key === 'Enter') { e.preventDefault(); handleAddSubmit(); } }}>
+          {/* STEP 1: ROOM SELECTION */}
+          <div style={{ display: addStep === 1 ? 'block' : 'none', animation: 'fadeIn 0.3s ease' }}>
+            <h3 className="profile-section-title" style={{ marginTop: 0 }}>Room & Payment Details</h3>
+            <div className="form-grid">
+              <div className="form-group full">
+                <label className="form-label">Assign Room *</label>
+                <select className="form-select" value={assignData.roomId} disabled required={addStep === 1}>
+                  <option value={assignData.roomId}>Room {assignData.roomNumber}</option>
+                </select>
+              </div>
+              <div className="form-group full">
+                <label className="form-label">Date of Joining</label>
+                <input type="date" className="form-input" value={assignData.joinDate} onChange={e => setAssignData({...assignData, joinDate: e.target.value})} required />
+              </div>
+              <div className="form-group">
+                <label className="form-label">Monthly Rent (₹)</label>
+                <input type="number" className="form-input" value={assignData.rent} onWheel={(e) => e.target.blur()} onChange={e => {
+                    const monthly = Number(e.target.value);
+                    const booked = Number(assignData.paidAmount) || 0;
+                    setAssignData({...assignData, rent: monthly, dueAmount: Math.max(0, (monthly || 0) - booked)});
+                }} />
+              </div>
+              <div className="form-group">
+                <label className="form-label">Amount Paid Upfront (₹)</label>
+                <input type="number" className="form-input" value={assignData.paidAmount} onWheel={(e) => e.target.blur()} onChange={e => {
+                    const booked = Number(e.target.value);
+                    const monthly = Number(assignData.rent) || 0;
+                    setAssignData({...assignData, paidAmount: booked, deposit: booked, dueAmount: Math.max(0, monthly - (booked || 0))});
+                }} />
+              </div>
+              <div className="form-group full">
+                <label className="form-label">Pending Amount (₹) <span style={{fontWeight: 'normal', opacity: 0.7}}>= Monthly − Paid</span></label>
+                <input type="number" className="form-input" value={assignData.dueAmount} readOnly style={{ background: assignData.dueAmount > 0 ? 'rgba(248,113,113,0.08)' : 'rgba(52,211,153,0.08)', borderColor: assignData.dueAmount > 0 ? 'rgba(248,113,113,0.3)' : 'rgba(52,211,153,0.3)', color: assignData.dueAmount > 0 ? 'var(--danger)' : 'var(--success)', fontWeight: 700 }} />
               </div>
             </div>
           </div>
 
-          <h3 className="profile-section-title" style={{ marginTop: '24px' }}>Advance & Rent Payment</h3>
-          <div className="form-grid">
-            <div className="form-group">
-              <label className="form-label">Deposit/Advance Total (₹)</label>
-              <input type="number" className="form-input" value={assignData.deposit ?? ''} onChange={e => {
-                  const val = parseNum(e.target.value);
-                  const paid = assignData.paidAmount || 0;
-                  setAssignData({...assignData, deposit: val, dueAmount: Math.max(0, val - paid)});
-              }} required />
+          {/* STEP 2: PRIMARY TENANT */}
+          <div style={{ display: addStep === 2 ? 'block' : 'none', animation: 'fadeIn 0.3s ease' }}>
+            <h3 className="profile-section-title" style={{ marginTop: 0 }}>Primary Tenant Information</h3>
+            <div className="form-grid">
+              <div className="form-group"><label className="form-label">Full Name *</label><input type="text" className="form-input" value={assignData.name} onChange={e => setAssignData({...assignData, name: e.target.value})} required={addStep === 2} /></div>
+              <div className="form-group"><label className="form-label">Contact Number *</label><input type="tel" className="form-input" value={assignData.phone} onChange={e => { const val = e.target.value.replace(/[^0-9]/g, '').slice(0, 10); setAssignData({...assignData, phone: val}); }} required={addStep === 2} placeholder="10-digit number" /></div>
+              <div className="form-group full"><label className="form-label">Permanent Address *</label><input type="text" className="form-input" value={assignData.address} onChange={e => setAssignData({...assignData, address: e.target.value})} required={addStep === 2} /></div>
+              <div className="form-group"><label className="form-label">Guardian's Name *</label><input type="text" className="form-input" value={assignData.parentName} onChange={e => setAssignData({...assignData, parentName: e.target.value})} required={addStep === 2} /></div>
+              <div className="form-group"><label className="form-label">Guardian's Contact *</label><input type="tel" className="form-input" value={assignData.parentPhone} onChange={e => { const val = e.target.value.replace(/[^0-9]/g, '').slice(0, 10); setAssignData({...assignData, parentPhone: val}); }} required={addStep === 2} placeholder="10-digit number" /></div>
             </div>
-            <div className="form-group">
-              <label className="form-label">Paid Amount (₹)</label>
-              <input type="number" className="form-input" value={assignData.paidAmount ?? ''} onChange={e => {
-                  const val = parseNum(e.target.value);
-                  const deposit = assignData.deposit || 0;
-                  setAssignData({...assignData, paidAmount: val, dueAmount: Math.max(0, deposit - val)});
-              }} required />
-            </div>
-            <div className="form-group">
-              <label className="form-label">Due Amount (₹)</label>
-              <input type="number" className="form-input" value={assignData.dueAmount ?? ''} onChange={e => setAssignData({...assignData, dueAmount: parseNum(e.target.value)})} required />
-            </div>
-            <div className="form-group">
-              <label className="form-label">Payment Method</label>
-              <select className="form-select" value={assignData.method || 'Cash'} onChange={e => setAssignData({...assignData, method: e.target.value})}>
-                <option value="Cash">Cash</option>
-                <option value="UPI">UPI</option>
-                <option value="Bank Transfer">Bank Transfer</option>
-              </select>
+            <h3 className="profile-section-title" style={{ marginTop: '24px' }}>Documents</h3>
+            <div className="form-grid" style={{ gridTemplateColumns: '1fr 1fr 1fr' }}>
+              <div className="form-group">
+                <label className="form-label">Tenant Photo</label>
+                <div className={`file-upload-box ${assignData.photoFile ? 'uploaded' : ''}`} style={{cursor: 'pointer', position: 'relative'}}>
+                  <div style={{display: 'flex', alignItems: 'center', gap: '8px', flex: 1}} onClick={() => setPhotoSourceTarget({ isCoTenant: false, index: 0 })}>
+                    <UploadCloud size={20} style={{color: assignData.photoFile ? 'var(--success)' : 'inherit'}}/>
+                    <span style={{fontSize: '12px'}}>{assignData.photoFile ? 'Uploaded' : 'Add Photo'}</span>
+                    {assignData.photoPreview && <img src={assignData.photoPreview} alt="" style={{width: '24px', height: '24px', borderRadius: '50%', objectFit: 'cover'}}/>}
+                  </div>
+                  {assignData.photoFile && ( <button type="button" className="btn-icon-sm" style={{ zIndex: 10, background: 'rgba(99,102,241,0.1)', padding: '4px', borderRadius: '4px' }} onClick={(e) => { e.stopPropagation(); handleViewDoc(assignData.photoPreview, 'Tenant Photo'); }}><Download size={12}/></button> )}
+                </div>
+              </div>
+              <div className="form-group">
+                <label className="form-label">Tenant Aadhaar</label>
+                <div className={`file-upload-box ${assignData.tenantAadhaar ? 'uploaded' : ''}`} style={{ position: 'relative' }}>
+                  <UploadCloud size={20} style={{color: assignData.tenantAadhaar ? 'var(--success)' : 'inherit'}} />
+                  <span style={{fontSize: '12px'}}>{assignData.tenantAadhaar ? 'Uploaded' : 'Upload ID'}</span>
+                  {assignData.tenantAadhaar && ( <button type="button" className="btn-icon-sm" style={{ marginLeft: 'auto', zIndex: 10, background: 'rgba(99,102,241,0.1)', padding: '4px', borderRadius: '4px' }} onClick={(e) => { e.stopPropagation(); handleViewDoc(URL.createObjectURL(assignData.tenantAadhaar), 'Tenant Aadhaar'); }}><Download size={12}/></button> )}
+                  <input type="file" accept="image/*" onChange={e => handleDocumentUpload(e.target.files[0], 'tenantAadhaar')} style={{ position: 'absolute', inset: 0, opacity: 0, cursor: 'pointer', zIndex: 1 }} />
+                </div>
+              </div>
+              <div className="form-group">
+                <label className="form-label">Guardian Aadhaar</label>
+                <div className={`file-upload-box ${assignData.parentAadhaar ? 'uploaded' : ''}`} style={{ position: 'relative' }}>
+                  <UploadCloud size={20} style={{color: assignData.parentAadhaar ? 'var(--success)' : 'inherit'}} />
+                  <span style={{fontSize: '12px'}}>{assignData.parentAadhaar ? 'Uploaded' : 'Upload ID'}</span>
+                  {assignData.parentAadhaar && ( <button type="button" className="btn-icon-sm" style={{ marginLeft: 'auto', zIndex: 10, background: 'rgba(99,102,241,0.1)', padding: '4px', borderRadius: '4px' }} onClick={(e) => { e.stopPropagation(); handleViewDoc(URL.createObjectURL(assignData.parentAadhaar), 'Guardian Aadhaar'); }}><Download size={12}/></button> )}
+                  <input type="file" accept="image/*" onChange={e => handleDocumentUpload(e.target.files[0], 'parentAadhaar')} style={{ position: 'absolute', inset: 0, opacity: 0, cursor: 'pointer', zIndex: 1 }} />
+                </div>
+              </div>
             </div>
           </div>
 
-          <div className="form-actions">
-            <button type="button" className="btn btn-ghost" onClick={() => setShowAssignModal(false)}>Cancel</button>
-            <button type="submit" className="btn btn-primary"><UserPlus size={16}/> Allocate Room & Save</button>
+          {/* STEP 3: CO-TENANTS */}
+          {maxOccupancy > 1 && (
+            <div style={{ display: addStep === 3 ? 'block' : 'none', animation: 'fadeIn 0.3s ease' }}>
+              <div style={{display: 'flex', justifyContent: 'space-between', alignItems: 'center', marginBottom: '16px'}}>
+                <div>
+                    <h3 className="profile-section-title" style={{ margin: 0 }}>Roommates Information (Optional)</h3>
+                    <p style={{fontSize: '13px', color: 'var(--text-tertiary)', marginTop: '4px'}}>Add up to {maxOccupancy - 1} roommates for this {selectedRoomObj?.type || 'selected'} room.</p>
+                </div>
+                {canAddRoommate && ( <button type="button" className="btn btn-ghost" onClick={() => { setAssignData({...assignData, coTenants: [...assignData.coTenants, { name: '', phone: '', parentName: '', parentPhone: '', photoFile: null, photoPreview: null, tenantAadhaar: null, parentAadhaar: null }]}); }}><Plus size={14}/> Add Roommate</button> )}
+              </div>
+              {assignData.coTenants.length === 0 && ( <div className="page-empty" style={{padding: '24px'}}>No roommates added. Click the button above to add one.</div> )}
+              {assignData.coTenants.map((ct, i) => (
+                <div key={i} className="cotenant-card">
+                  <div className="cotenant-card-header"><h4>Roommate #{i + 1}</h4><button type="button" onClick={() => setAssignData({...assignData, coTenants: assignData.coTenants.filter((_, idx) => idx !== i)})} className="btn-remove"><Trash2 size={14}/> Remove</button></div>
+                  <div className="form-grid">
+                    <div className="form-group"><label className="form-label">Full Name *</label><input type="text" className="form-input" value={ct.name} onChange={e => {const n=[...assignData.coTenants]; n[i].name=e.target.value; setAssignData({...assignData, coTenants: n})}} required={addStep === 3} /></div>
+                    <div className="form-group"><label className="form-label">Contact *</label><input type="tel" className="form-input" value={ct.phone} onChange={e => { const val = e.target.value.replace(/[^0-9]/g, '').slice(0, 10); const n=[...assignData.coTenants]; n[i].phone=val; setAssignData({...assignData, coTenants: n}) }} required={addStep === 3} placeholder="10-digit number" /></div>
+                    <div className="form-group"><label className="form-label">Guardian Name *</label><input type="text" className="form-input" value={ct.parentName} onChange={e => {const n=[...assignData.coTenants]; n[i].parentName=e.target.value; setAssignData({...assignData, coTenants: n})}} required={addStep === 3} /></div>
+                    <div className="form-group"><label className="form-label">Guardian Contact *</label><input type="tel" className="form-input" value={ct.parentPhone} onChange={e => { const val = e.target.value.replace(/[^0-9]/g, '').slice(0, 10); const n=[...assignData.coTenants]; n[i].parentPhone=val; setAssignData({...assignData, coTenants: n}) }} required={addStep === 3} placeholder="10-digit number" /></div>
+                  </div>
+                  <div className="form-grid" style={{ gridTemplateColumns: '1fr 1fr 1fr', marginTop: '16px' }}>
+                    <div className="form-group">
+                        <label className="form-label">Photo</label>
+                        <div className={`file-upload-box ${ct.photoFile ? 'uploaded' : ''}`} style={{cursor: 'pointer', position: 'relative'}}>
+                            <div style={{display: 'flex', alignItems: 'center', gap: '8px', flex: 1}} onClick={() => setPhotoSourceTarget({ isCoTenant: true, index: i })}><UploadCloud size={20} style={{color: ct.photoFile ? 'var(--success)' : 'inherit'}}/><span style={{fontSize: '12px'}}>{ct.photoFile ? 'Uploaded' : 'Add Photo'}</span>{ct.photoPreview && <img src={ct.photoPreview} alt="" style={{width: '24px', height: '24px', borderRadius: '50%', objectFit: 'cover'}}/>}</div>
+                            {ct.photoFile && ( <button type="button" className="btn-icon-sm" style={{ zIndex: 10, background: 'rgba(99,102,241,0.1)', padding: '4px', borderRadius: '4px' }} onClick={(e) => { e.stopPropagation(); handleViewDoc(ct.photoPreview, `${ct.name} - Photo`); }}><Download size={12}/></button> )}
+                        </div>
+                    </div>
+                    <div className="form-group">
+                        <label className="form-label">Aadhaar</label>
+                        <div className={`file-upload-box ${ct.tenantAadhaar ? 'uploaded' : ''}`} style={{ position: 'relative' }}>
+                            <UploadCloud size={20} style={{color: ct.tenantAadhaar ? 'var(--success)' : 'inherit'}}/><span style={{fontSize: '12px'}}>{ct.tenantAadhaar ? 'Uploaded' : 'Upload'}</span>
+                            {ct.tenantAadhaar && ( <button type="button" className="btn-icon-sm" style={{ marginLeft: 'auto', zIndex: 10, background: 'rgba(99,102,241,0.1)', padding: '4px', borderRadius: '4px' }} onClick={(e) => { e.stopPropagation(); handleViewDoc(URL.createObjectURL(ct.tenantAadhaar), 'Tenant Aadhaar'); }}><Download size={12}/></button> )}
+                            <input type="file" accept="image/*" onChange={e => handleDocumentUpload(e.target.files[0], 'tenantAadhaar', true, i)} style={{ position: 'absolute', inset: 0, opacity: 0, cursor: 'pointer', zIndex: 1 }} />
+                        </div>
+                    </div>
+                    <div className="form-group">
+                        <label className="form-label">Parent Aadhaar</label>
+                        <div className={`file-upload-box ${ct.parentAadhaar ? 'uploaded' : ''}`} style={{ position: 'relative' }}>
+                            <UploadCloud size={20} style={{color: ct.parentAadhaar ? 'var(--success)' : 'inherit'}}/><span style={{fontSize: '12px'}}>{ct.parentAadhaar ? 'Uploaded' : 'Upload'}</span>
+                            {ct.parentAadhaar && ( <button type="button" className="btn-icon-sm" style={{ marginLeft: 'auto', zIndex: 10, background: 'rgba(99,102,241,0.1)', padding: '4px', borderRadius: '4px' }} onClick={(e) => { e.stopPropagation(); handleViewDoc(URL.createObjectURL(ct.parentAadhaar), 'Parent Aadhaar'); }}><Download size={12}/></button> )}
+                            <input type="file" accept="image/*" onChange={e => handleDocumentUpload(e.target.files[0], 'parentAadhaar', true, i)} style={{ position: 'absolute', inset: 0, opacity: 0, cursor: 'pointer', zIndex: 1 }} />
+                        </div>
+                    </div>
+                  </div>
+                </div>
+              ))}
+            </div>
+          )}
+
+          <div className="form-actions" style={{ justifyContent: 'space-between', borderTop: '1px solid var(--border-primary)', paddingTop: '20px', marginTop: '24px' }}>
+            {addStep > 1 ? ( <button type="button" className="btn btn-ghost" onClick={() => setAddStep(s => s - 1)}>Back</button> ) : ( <button type="button" className="btn btn-ghost" onClick={() => setShowAssignModal(false)}>Cancel</button> )}
+            {(addStep < 3) ? ( <button type="button" className="btn btn-primary" onClick={handleNextStep}>Next Step</button> ) : (
+              <button type="button" className={`btn btn-primary ${isSaving ? 'loading' : ''}`} onClick={async () => { await handleAddSubmit(); }} disabled={isSaving}>
+                {isSaving ? ( <><div className="btn-spinner" style={{ marginRight: '8px' }}></div>Saving...</> ) : ( <><UserPlus size={14} style={{marginRight: '8px'}}/>Allocate Room & Save</> )}
+              </button>
+            )}
           </div>
-        </form>
+        </div>
       </Modal>
 
       {/* Add/Edit Room Modal */}
@@ -967,6 +1106,34 @@ export default function RoomsPage() {
             <button type="submit" className="btn btn-primary" disabled={isSubmittingPayment}>{isSubmittingPayment ? 'Processing...' : '💰 Collect Payment'}</button>
           </div>
         </form>
+      </Modal>
+
+      {/* Camera Capture Modal */}
+      <Modal isOpen={showCamera} onClose={closeCamera} title="Take Live Photo" maxWidth="500px">
+        <div style={{display: 'flex', flexDirection: 'column', alignItems: 'center'}}>
+            <div style={{width: '100%', backgroundColor: '#000', borderRadius: 'var(--radius-md)', overflow: 'hidden', aspectRatio: '4/3', position: 'relative'}}>
+                <video ref={videoRef} autoPlay playsInline muted style={{width: '100%', height: '100%', objectFit: 'cover'}} />
+            </div>
+            <div style={{marginTop: '20px', display: 'flex', gap: '12px'}}>
+                <button className="btn btn-ghost" onClick={closeCamera}>Cancel</button>
+                <button className="btn btn-primary" onClick={capturePhoto}><Camera size={16}/> Capture Photo</button>
+            </div>
+        </div>
+      </Modal>
+      {/* Photo Source Modal */}
+      <Modal isOpen={!!photoSourceTarget} onClose={() => setPhotoSourceTarget(null)} title="Add Photo" maxWidth="320px">
+        <div style={{ display: 'flex', flexDirection: 'column', gap: '16px', padding: '10px 0' }}>
+          <label className="btn btn-outline" style={{display: 'flex', justifyContent: 'center', cursor: 'pointer', margin: 0}}><UploadCloud size={16}/> Upload from Device<input type="file" accept="image/*" style={{display: 'none'}} onChange={(e) => { handlePhotoUpload(e, photoSourceTarget?.isCoTenant, photoSourceTarget?.index); setPhotoSourceTarget(null); }} /></label>
+          <div style={{textAlign: 'center', color: 'var(--text-tertiary)', fontSize: '12px', fontWeight: 600}}>OR</div>
+          {/Mobi|Android|iPad|iPhone|iPod/i.test(navigator.userAgent) ? ( <label className="btn btn-primary" style={{display: 'flex', justifyContent: 'center', cursor: 'pointer', margin: 0}}><Camera size={16}/> Take Live Photo<input type="file" accept="image/*" capture="user" style={{display: 'none'}} onChange={(e) => { handlePhotoUpload(e, photoSourceTarget?.isCoTenant, photoSourceTarget?.index); setPhotoSourceTarget(null); }} /></label> ) : ( <button type="button" className="btn btn-primary" style={{display: 'flex', justifyContent: 'center', cursor: 'pointer', margin: 0}} onClick={() => { const target = photoSourceTarget; setPhotoSourceTarget(null); openCamera(target?.isCoTenant ?? false, target?.index ?? 0); }}><Camera size={16}/> Take Live Photo (Webcam)</button> )}
+        </div>
+      </Modal>
+      {/* Document Viewer Modal */}
+      <Modal isOpen={!!viewDocUrl} onClose={() => setViewDocUrl(null)} title={viewDocUrl?.title || "View Document"} maxWidth="800px">
+         <div style={{display: 'flex', flexDirection: 'column', alignItems: 'center', gap: '16px', width: '100%'}}>
+            {viewDocUrl?.url?.startsWith('data:application/pdf') ? ( <iframe src={viewDocUrl.url} style={{width: '100%', height: '60vh', border: 'none', borderRadius: 'var(--radius-md)'}} /> ) : ( <img src={viewDocUrl?.url} alt="Document" style={{maxWidth: '100%', maxHeight: '60vh', objectFit: 'contain', borderRadius: 'var(--radius-md)'}} /> )}
+            <div style={{display: 'flex', gap: '12px'}}><button className="btn btn-ghost" onClick={() => setViewDocUrl(null)}>Close</button><a className="btn btn-primary" href={viewDocUrl?.url} download={viewDocUrl?.title || 'document'} style={{textDecoration: 'none', display: 'flex', alignItems: 'center', gap: '8px'}}><Download size={16}/> Download File</a></div>
+         </div>
       </Modal>
 
     </div>
