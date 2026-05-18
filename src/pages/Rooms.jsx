@@ -5,7 +5,7 @@ import Modal from '../components/Modal';
 import './Pages.css';
 
 const statusConfig = {
-  occupied: { label: 'Occupied', color: 'var(--success)', bg: 'var(--success-bg)' },
+  occupied: { label: 'Occupied', color: 'var(--danger)', bg: 'var(--danger-bg)' },
   available: { label: 'Vacant', color: 'var(--success)', bg: 'var(--success-bg)' },
   reserved: { label: 'Reserved', color: 'var(--warning)', bg: 'var(--warning-bg)' },
   maintenance: { label: 'Maintenance', color: 'var(--danger)', bg: 'var(--danger-bg)' },
