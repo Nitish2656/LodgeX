@@ -316,6 +316,38 @@ export function StoreProvider({ children }) {
         body: JSON.stringify(paymentData)
       });
       if (response.ok) {
+        // Find all pending payments for this tenant and deduct the paidAmount
+        const tenantId = paymentData.tenantId;
+        const pendingPayments = payments
+          .filter(p => (p.tenantId === tenantId || p._id === tenantId) && p.status === 'pending')
+          .sort((a, b) => new Date(a.date) - new Date(b.date)); // oldest first
+
+        let amountLeft = paymentData.paidAmount || 0;
+        
+        for (const p of pendingPayments) {
+          if (amountLeft <= 0) break;
+          // Use dueAmount if defined, otherwise totalAmount
+          const currentDue = p.dueAmount !== undefined ? p.dueAmount : p.totalAmount;
+          if (currentDue <= amountLeft) {
+            // This pending payment is fully cleared!
+            amountLeft -= currentDue;
+            await fetch(`${API_BASE_URL}/payments/${p._id || p.id}`, {
+              method: 'PATCH',
+              headers: { 'Content-Type': 'application/json' },
+              body: JSON.stringify({ dueAmount: 0, status: 'completed' })
+            });
+          } else {
+            // Partially clear this pending payment
+            const remainingDue = currentDue - amountLeft;
+            amountLeft = 0;
+            await fetch(`${API_BASE_URL}/payments/${p._id || p.id}`, {
+              method: 'PATCH',
+              headers: { 'Content-Type': 'application/json' },
+              body: JSON.stringify({ dueAmount: remainingDue })
+            });
+          }
+        }
+
         // 1. Optimistic update — show correct amount instantly in UI
         setTenants(prev => prev.map(t =>
           (t._id || t.id).toString() === paymentData.tenantId?.toString()

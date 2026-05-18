@@ -7,7 +7,7 @@ import './Pages.css';
 export default function TenantsPage() {
   const { 
     tenants, rooms, payments, updateTenant, deleteTenant, 
-    addTenant, addPayment, fetchTenants, fetchRooms, fetchTenantById,
+    addTenant, addPayment, fetchTenants, fetchRooms, fetchTenantById, fetchPayments,
     pageAction, setPageAction, uploadFile, settings 
   } = useStore();
 
@@ -138,10 +138,33 @@ export default function TenantsPage() {
     }).catch(err => console.error("BG Fetch error", err));
   };
 
-  const openPayDues = (tenant) => {
+  const openPayDues = async (tenant) => {
+      const tenantId = tenant._id || tenant.id;
       setPayDuesTenantObj(tenant);
       setPayDuesData({ amount: tenant.pendingDues, method: 'Cash' });
       setShowPayDuesModal(true);
+
+      // Reconcile outstanding dues to pending payments in the DB automatically
+      const tenantPendingPayments = payments.filter(p => 
+        (p.tenantId === tenantId || p._id === tenantId) && p.status === 'pending'
+      );
+      if (tenantPendingPayments.length === 1) {
+        const singleP = tenantPendingPayments[0];
+        const currentDue = singleP.dueAmount !== undefined ? singleP.dueAmount : singleP.totalAmount;
+        if (currentDue !== tenant.pendingDues) {
+          try {
+            const API_URL = import.meta.env.VITE_API_URL || 'https://lodgex-backend.onrender.com/api';
+            await fetch(`${API_URL}/payments/${singleP._id || singleP.id}`, {
+              method: 'PATCH',
+              headers: { 'Content-Type': 'application/json' },
+              body: JSON.stringify({ dueAmount: tenant.pendingDues })
+            });
+            await fetchPayments();
+          } catch(e) {
+            console.error('Failed to reconcile pending payment:', e);
+          }
+        }
+      }
   };
 
   const handlePayDuesSubmit = async (e) => {
@@ -1299,7 +1322,7 @@ export default function TenantsPage() {
                                         </div>
                                     </div>
                                     <div style={{ fontWeight: 800, color: 'var(--danger)', fontSize: '14px' }}>
-                                        ₹{(p.dueAmount || p.totalAmount).toLocaleString('en-IN')}
+                                        ₹{(p.dueAmount !== undefined ? p.dueAmount : p.totalAmount).toLocaleString('en-IN')}
                                     </div>
                                 </div>
                             ));
