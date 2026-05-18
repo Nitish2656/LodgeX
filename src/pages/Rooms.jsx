@@ -354,7 +354,7 @@ export default function RoomsPage() {
           const status = statusConfig[room.status];
           const tenant = room.tenantId ? getTenant(room.tenantId) : null;
           return (
-            <div key={room._id || room.id} className={`room-card animate-in stagger-${(idx % 8) + 1}`}>
+            <div key={room._id || room.id} className={`room-card animate-in stagger-${(idx % 8) + 1}`} style={{ cursor: tenant ? 'pointer' : 'default' }} onClick={() => { if (tenant) navigateWithAction('tenants', { type: 'profile', tenantId: tenant._id || tenant.id }); }}>
               <div className="room-card-top">
                 <div className="room-number">
                   <BedDouble size={16} />

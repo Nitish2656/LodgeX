@@ -17,10 +17,13 @@ export default function TenantsPage() {
         openAddModal();
       } else if (typeof pageAction === 'object' && pageAction.type === 'add') {
         openAddModal(pageAction.roomId);
+      } else if (typeof pageAction === 'object' && pageAction.type === 'profile') {
+        const target = tenants.find(t => (t._id || t.id) === pageAction.tenantId);
+        if (target) openProfile(target);
       }
       setPageAction(null); // Clear action
     }
-  }, [pageAction, setPageAction, rooms]);
+  }, [pageAction, setPageAction, rooms, tenants]);
   const [search, setSearch] = useState('');
   const [filter, setFilter] = useState('all');
 
