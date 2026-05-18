@@ -338,10 +338,6 @@
 }
 
 /* Room Action Menu */
-.room-card.has-active-menu {
-  z-index: 100;
-}
-
 .action-menu-container {
   position: relative;
 }
@@ -370,9 +366,9 @@
   border: 1px solid var(--border-primary);
   border-radius: var(--radius-md);
   padding: 6px;
-  min-width: 180px;
+  min-width: 160px;
   box-shadow: var(--shadow-lg);
-  z-index: 1000;
+  z-index: 50;
   animation: fadeIn 0.15s ease-out;
 }
 
@@ -409,58 +405,6 @@
 
 .action-menu-item.success:hover {
   background: var(--success-bg);
-}
-
-/* Mobile Action Sheet (Bottom Sheet) */
-@media (max-width: 768px) {
-  .action-menu {
-    position: fixed;
-    top: auto;
-    bottom: 0;
-    left: 0;
-    right: 0;
-    width: 100%;
-    background: var(--bg-card);
-    border-top: 1px solid var(--border-primary);
-    border-radius: 24px 24px 0 0;
-    padding: 24px 20px 32px;
-    box-shadow: 0 -10px 40px rgba(0, 0, 0, 0.3);
-    z-index: 999999;
-    animation: slideUp 0.25s cubic-bezier(0.16, 1, 0.3, 1);
-    display: flex;
-    flex-direction: column;
-    gap: 12px;
-  }
-
-  .action-menu::before {
-    content: '';
-    width: 40px;
-    height: 4px;
-    background: var(--text-tertiary);
-    border-radius: 2px;
-    margin: 0 auto 12px;
-    opacity: 0.5;
-  }
-
-  .action-menu-item {
-    padding: 16px 20px;
-    border-radius: 16px;
-    background: var(--bg-secondary);
-    font-size: 16px;
-    font-weight: 600;
-    justify-content: center;
-    border: 1px solid var(--border-primary);
-  }
-
-  .action-menu-item.danger {
-    background: var(--danger-bg);
-    border-color: rgba(239, 68, 68, 0.3);
-  }
-}
-
-@keyframes slideUp {
-  from { transform: translateY(100%); }
-  to { transform: translateY(0); }
 }
 
 /* ===== Tenants Grid ===== */
@@ -1707,6 +1651,23 @@
   width: 40px;
   background: var(--border-primary);
   opacity: 0.5;
+}
+
+@media (max-width: 600px) {
+  .wizard-progress {
+    justify-content: flex-start;
+    gap: 8px;
+    padding-bottom: 16px;
+    margin-bottom: 24px;
+  }
+  .wizard-step {
+    padding: 6px 12px;
+    font-size: 13px;
+    gap: 8px;
+  }
+  .wizard-line {
+    width: 20px;
+  }
 }
 
 .wizard-step.completed {
