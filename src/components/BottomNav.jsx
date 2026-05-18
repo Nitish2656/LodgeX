@@ -1,5 +1,5 @@
 import { useStore } from '../data/store';
-import { Home, BedDouble, Zap, CreditCard, Menu } from 'lucide-react';
+import { Home, BedDouble, User, CreditCard, Menu } from 'lucide-react';
 import './BottomNav.css';
 
 export default function BottomNav() {
@@ -9,7 +9,7 @@ export default function BottomNav() {
     { id: 'dashboard', icon: Home, label: 'Home' },
     { id: 'rooms', icon: BedDouble, label: 'Rooms' },
     { id: 'payments', icon: CreditCard, label: 'Payments' },
-    { id: 'electricity', icon: Zap, label: 'Electricity' }
+    { id: 'settings', icon: User, label: 'Profile' }
   ];
 
   const handleMenuClick = () => {

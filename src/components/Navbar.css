@@ -479,15 +479,7 @@
     height: 36px;
   }
 
-  .navbar-profile {
-    padding: 4px;
-  }
-
-  .navbar-profile-info {
-    display: none;
-  }
-
-  .navbar-profile-chevron {
+  .navbar-profile-wrapper {
     display: none;
   }
 
