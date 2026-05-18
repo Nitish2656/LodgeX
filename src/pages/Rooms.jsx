@@ -1059,6 +1059,44 @@ export default function RoomsPage() {
             </div>
           </div>
 
+          {detailTenant.coTenants && detailTenant.coTenants.length > 0 && (
+              <div style={{ marginBottom: '32px' }}>
+                  <div style={{ display: 'flex', alignItems: 'center', gap: '8px', marginBottom: '16px', color: 'var(--text-primary)', fontWeight: 700, fontSize: '15px' }}>
+                      <Users size={18} style={{ color: 'var(--accent-primary)' }} /> Roommates ({detailTenant.coTenants.length})
+                  </div>
+                  <div style={{ display: 'grid', gridTemplateColumns: 'repeat(auto-fill, minmax(280px, 1fr))', gap: '16px' }}>
+                      {detailTenant.coTenants.map((ct, idx) => (
+                          <div key={idx} style={{ background: 'var(--bg-secondary)', padding: '16px', borderRadius: '16px', border: '1px solid var(--border-primary)' }}>
+                              <div style={{ display: 'flex', alignItems: 'center', gap: '12px', marginBottom: '16px' }}>
+                                  <img src={ct.avatar || `https://api.dicebear.com/9.x/initials/svg?seed=${ct.name}&backgroundColor=6366f1`} alt="" style={{ width: '40px', height: '40px', borderRadius: '50%', objectFit: 'cover', border: '2px solid var(--bg-card)' }} />
+                                  <div>
+                                      <div style={{ fontSize: '14px', fontWeight: 700, color: 'var(--text-primary)' }}>{ct.name}</div>
+                                      <div style={{ fontSize: '12px', color: 'var(--text-tertiary)', fontWeight: 600 }}>{ct.phone}</div>
+                                  </div>
+                              </div>
+                              <div style={{ display: 'flex', flexDirection: 'column', gap: '8px', marginBottom: '16px' }}>
+                                  <div style={{ fontSize: '11px', color: 'var(--text-tertiary)', fontWeight: 600, display: 'flex', justifyContent: 'space-between' }}>
+                                    <span>Guardian</span>
+                                    <span style={{ color: 'var(--text-primary)' }}>{ct.parentName || '-'} {ct.parentPhone ? `(${ct.parentPhone})` : ''}</span>
+                                  </div>
+                              </div>
+                              <div style={{ display: 'flex', gap: '8px' }}>
+                                  <div style={{ background: 'var(--bg-card)', padding: '8px 12px', borderRadius: '8px', fontSize: '11px', fontWeight: 600, display: 'flex', justifyContent: 'space-between', alignItems: 'center', flex: 1, cursor: 'pointer', border: '1px solid var(--border-primary)' }} onClick={() => handleViewDoc(ct.idProof, `${ct.name} - Aadhaar`)}>
+                                      <span>Aadhaar</span><Download size={12} style={{color: 'var(--accent-primary)'}}/>
+                                  </div>
+                                  <div style={{ background: 'var(--bg-card)', padding: '8px 12px', borderRadius: '8px', fontSize: '11px', fontWeight: 600, display: 'flex', justifyContent: 'space-between', alignItems: 'center', flex: 1, cursor: 'pointer', border: '1px solid var(--border-primary)' }} onClick={() => handleViewDoc(ct.parentIdProof, `${ct.name} - Parent ID`)}>
+                                      <span>Parent ID</span><Download size={12} style={{color: 'var(--accent-primary)'}}/>
+                                  </div>
+                                  <div style={{ background: 'var(--bg-card)', padding: '8px 12px', borderRadius: '8px', fontSize: '11px', fontWeight: 600, display: 'flex', justifyContent: 'space-between', alignItems: 'center', flex: 1, cursor: 'pointer', border: '1px solid var(--border-primary)' }} onClick={() => handleViewDoc(ct.avatar, `${ct.name} - Photo`)}>
+                                      <span>Photo</span><Download size={12} style={{color: 'var(--accent-primary)'}}/>
+                                  </div>
+                              </div>
+                          </div>
+                      ))}
+                  </div>
+              </div>
+          )}
+
           <div style={{ display: 'flex', alignItems: 'center', gap: '8px', marginBottom: '16px', color: 'var(--text-primary)', fontWeight: 700, fontSize: '15px' }}><History size={18} style={{ color: 'var(--accent-primary)' }} /> Payment History</div>
           <div style={{ background: 'var(--bg-secondary)', border: '1px solid var(--border-primary)', borderRadius: '20px', overflow: 'hidden' }}>
             <table className="data-table" style={{ border: 'none', margin: 0, width: '100%' }}>
