@@ -611,11 +611,24 @@ export default function TenantsPage() {
                     borderRadius: '16px', 
                     objectFit: 'cover',
                     border: '2px solid var(--border-primary)',
-                    boxShadow: tenant.pendingDues > 0 ? '0 0 15px rgba(239, 68, 68, 0.15)' : 'none'
+                    boxShadow: tenant.pendingDues > 0 ? '0 0 15px rgba(16, 185, 129, 0.25)' : 'none'
                   }} 
                 />
                 {tenant.pendingDues > 0 && (
-                  <div style={{ position: 'absolute', top: '-4px', right: '-4px', width: '16px', height: '16px', background: '#ef4444', borderRadius: '50%', border: '3px solid var(--bg-card)', boxShadow: '0 0 10px rgba(239, 68, 68, 0.4)' }} />
+                  <div 
+                    className="green-blinking-dot"
+                    style={{ 
+                      position: 'absolute', 
+                      top: '-4px', 
+                      right: '-4px', 
+                      width: '14px', 
+                      height: '14px', 
+                      background: '#10b981', 
+                      borderRadius: '50%', 
+                      border: '2.5px solid var(--bg-card)', 
+                      boxShadow: '0 0 10px rgba(16, 185, 129, 0.5)' 
+                    }} 
+                  />
                 )}
               </div>
               

@@ -1917,3 +1917,23 @@
   color: var(--accent-primary);
   background: rgba(99, 102, 241, 0.1);
 }
+
+/* Green Blinking Dot Animation */
+@keyframes greenPulse {
+  0% {
+    transform: scale(0.95);
+    box-shadow: 0 0 0 0 rgba(16, 185, 129, 0.7);
+  }
+  50% {
+    transform: scale(1.15);
+    box-shadow: 0 0 0 8px rgba(16, 185, 129, 0);
+  }
+  100% {
+    transform: scale(0.95);
+    box-shadow: 0 0 0 0 rgba(16, 185, 129, 0);
+  }
+}
+
+.green-blinking-dot {
+  animation: greenPulse 1.8s infinite ease-in-out;
+}
