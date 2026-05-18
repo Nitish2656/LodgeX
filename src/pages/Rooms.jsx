@@ -331,7 +331,7 @@ export default function RoomsPage() {
             <input type="text" placeholder="Search room number or type..." value={search} onChange={(e) => setSearch(e.target.value)} />
           </div>
           <div className="toolbar-filters">
-            {['all', 'occupied', 'available', 'reserved', 'maintenance'].map(f => (
+            {['all', 'occupied', 'available'].map(f => (
               <button key={f} className={`filter-btn ${filter === f ? 'active' : ''}`} onClick={() => setFilter(f)}>
                 {f === 'all' ? 'All' : statusConfig[f].label}
               </button>
@@ -401,15 +401,13 @@ export default function RoomsPage() {
                             <button className="action-menu-item" onClick={() => openModal(room, 'edit')}><Edit2 size={14} /> Edit Tenant</button>
                             <button className="action-menu-item" onClick={() => openModal(room, 'shift')}><ArrowRightLeft size={14} /> Shift Room</button>
                             <button className="action-menu-item" onClick={() => openModal(room, 'editRoom')}><Edit2 size={14} /> Edit Room Details</button>
-                            <button className="action-menu-item" onClick={() => handleToggleMaintenance(room)}><Wrench size={14} /> Toggle Maintenance</button>
                             <button className="action-menu-item" onClick={() => openModal(room, 'vacate')}><LogOut size={14} /> Vacate Room</button>
                             <button className="action-menu-item danger" onClick={() => openModal(room, 'delete')}><Trash2 size={14} /> Delete Tenant</button>
                           </>
                         ) : (
                           <>
-                            {room.status !== 'maintenance' && <button className="action-menu-item" onClick={() => openModal(room, 'assign')}><UserPlus size={14} /> Assign Tenant</button>}
+                            <button className="action-menu-item" onClick={() => openModal(room, 'assign')}><UserPlus size={14} /> Assign Tenant</button>
                             <button className="action-menu-item" onClick={() => openModal(room, 'editRoom')}><Edit2 size={14} /> Edit Room Details</button>
-                            <button className="action-menu-item" onClick={() => handleToggleMaintenance(room)}><Wrench size={14} /> Toggle Maintenance</button>
                             <button className="action-menu-item danger" onClick={() => openModal(room, 'deleteRoom')}><Trash2 size={14} /> Delete Room</button>
                           </>
                         )}
