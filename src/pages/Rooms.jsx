@@ -1386,7 +1386,16 @@ export default function RoomsPage() {
                     <tr key={p._id || p.id}>
                       <td style={{ paddingLeft: '24px', borderBottom: idx === arr.length - 1 ? 'none' : '1px solid var(--border-primary)' }}><div style={{ display: 'flex', flexDirection: 'column', gap: '2px' }}><span style={{ fontSize: '13px', fontWeight: '500' }}>{new Date(p.date).toLocaleDateString('en-IN', { day: 'numeric', month: 'short', year: 'numeric' })}</span></div></td>
                       <td style={{ borderBottom: idx === arr.length - 1 ? 'none' : '1px solid var(--border-primary)' }} className="text-bold text-success">+₹{p.paidAmount.toLocaleString('en-IN')}</td>
-                      <td style={{ borderBottom: idx === arr.length - 1 ? 'none' : '1px solid var(--border-primary)' }}><span style={{ background: 'var(--bg-card)', padding: '4px 10px', borderRadius: '8px', fontSize: '12px', fontWeight: 600 }}>{p.method}</span></td>
+                      <td style={{ borderBottom: idx === arr.length - 1 ? 'none' : '1px solid var(--border-primary)' }}>
+                        <div style={{ display: 'flex', flexDirection: 'column', gap: '4px', alignItems: 'flex-start' }}>
+                          <span style={{ background: 'var(--bg-card)', padding: '4px 10px', borderRadius: '8px', fontSize: '12px', fontWeight: 600 }}>{p.method}</span>
+                          {p.notes && (
+                            <span style={{ fontSize: '11px', color: 'var(--text-tertiary)', maxWidth: '150px', whiteSpace: 'nowrap', overflow: 'hidden', textOverflow: 'ellipsis' }} title={p.notes}>
+                              {p.notes.replace('Full payment - ', '').replace('Full dues cleared - ', '').replace('Advance/Deposit on allocation - ', '')}
+                            </span>
+                          )}
+                        </div>
+                      </td>
                       <td style={{ paddingRight: '24px', borderBottom: idx === arr.length - 1 ? 'none' : '1px solid var(--border-primary)' }}><span className={`status-pill completed`}>completed</span></td>
                     </tr>
                   ))

@@ -166,9 +166,16 @@ export default function PaymentsPage() {
                   <td className="text-bold text-success">₹{(p.paidAmount || 0).toLocaleString('en-IN')}</td>
                   <td className="text-danger">{p.dueAmount > 0 ? `₹${p.dueAmount.toLocaleString()}` : '-'}</td>
                   <td>
-                    <div className="method-badge">
-                      <MethodIcon size={12} />
-                      {p.method}
+                    <div style={{ display: 'flex', flexDirection: 'column', gap: '4px' }}>
+                      <div className="method-badge" style={{ width: 'fit-content' }}>
+                        <MethodIcon size={12} />
+                        {p.method}
+                      </div>
+                      {p.notes && (
+                        <span style={{ fontSize: '11px', color: 'var(--text-tertiary)', maxWidth: '120px', whiteSpace: 'nowrap', overflow: 'hidden', textOverflow: 'ellipsis' }} title={p.notes}>
+                          {p.notes.replace('Full payment - ', '').replace('Full dues cleared - ', '').replace('Advance/Deposit on allocation - ', '')}
+                        </span>
+                      )}
                     </div>
                   </td>
                   <td>
