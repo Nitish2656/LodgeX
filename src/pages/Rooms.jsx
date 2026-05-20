@@ -196,7 +196,10 @@ export default function RoomsPage() {
     if (tenant) {
       setDetailTenant(tenant);
       setShowTenantDetail(true);
-      await fetchPayments();
+      fetchPayments();
+      // Fetch full data in background (with documents)
+      const fullTenant = await fetchTenantById(tenant._id || tenant.id);
+      if (fullTenant) setDetailTenant(fullTenant);
     } else {
       openModal(room, 'assign');
     }
@@ -247,7 +250,7 @@ export default function RoomsPage() {
   };
 
   const isDocUploaded = (url) => {
-    return url && !url.includes('dicebear') && url !== 'Aadhaar Card';
+    return url && !url.includes('dicebear') && url !== 'Aadhaar Card' && (url.startsWith('data:') || url.startsWith('http') || url.startsWith('/api/files'));
   };
 
   const handleViewDoc = (url, label) => {
@@ -575,7 +578,10 @@ export default function RoomsPage() {
       const tenantData = { name: assignData.name, phone: assignData.phone, address: assignData.address, parentName: assignData.parentName, parentPhone: assignData.parentPhone, idProof: tenantAadhaarUrl || assignData.idProof, parentIdProof: parentAadhaarUrl || assignData.parentIdProof, coTenants: mappedCoTenants, roomId: assignData.roomId, roomNumber: room.number, rent: Number(assignData.rent) || room.rent, deposit: Number(assignData.deposit) || 0, pendingDues: Number(assignData.dueAmount) || 0, avatar: avatar, joinDate: new Date(assignData.joinDate).toISOString(), status: 'active', vacateDate: null };
 
       if (isEditingTenant) {
-        await updateTenant(editTenantId, tenantData);
+        const updated = await updateTenant(editTenantId, tenantData);
+        if (detailTenant && (detailTenant._id || detailTenant.id)?.toString() === editTenantId?.toString()) {
+          setDetailTenant(prev => ({ ...prev, ...tenantData }));
+        }
         if ((Number(assignData.paidAmount) || 0) > 0) {
           addPayment({ tenantId: editTenantId, tenantName: tenantData.name, roomId: tenantData.roomId, roomNumber: tenantData.roomNumber, totalAmount: 0, paidAmount: Number(assignData.paidAmount) || 0, dueAmount: tenantData.pendingDues, method: assignData.method, status: 'completed', month: new Date().toLocaleDateString('en-IN', { month: 'short', year: 'numeric' }), notes: 'Payment on update' });
         }
@@ -1330,14 +1336,17 @@ export default function RoomsPage() {
                                   </div>
                               </div>
                               <div style={{ display: 'flex', gap: '8px' }}>
-                                  <div style={{ background: 'var(--bg-card)', padding: '8px 12px', borderRadius: '8px', fontSize: '11px', fontWeight: 600, display: 'flex', justifyContent: 'space-between', alignItems: 'center', flex: 1, cursor: 'pointer', border: '1px solid var(--border-primary)' }} onClick={() => handleViewDoc(ct.idProof, `${ct.name} - Aadhaar`)}>
-                                      <span>Aadhaar</span><Download size={12} style={{color: 'var(--accent-primary)'}}/>
+                                  <div style={{ background: 'var(--bg-card)', padding: '8px 12px', borderRadius: '8px', fontSize: '11px', fontWeight: 600, display: 'flex', justifyContent: 'space-between', alignItems: 'center', flex: 1, cursor: isDocUploaded(ct.idProof) ? 'pointer' : 'default', border: '1px solid var(--border-primary)', opacity: isDocUploaded(ct.idProof) ? 1 : 0.5 }} onClick={() => handleViewDoc(ct.idProof, `${ct.name} - Aadhaar`)}>
+                                      <span style={{color: isDocUploaded(ct.idProof) ? 'inherit' : 'var(--text-tertiary)'}}>Aadhaar</span>
+                                      {isDocUploaded(ct.idProof) ? <Download size={12} style={{color: 'var(--accent-primary)'}}/> : <span style={{ fontSize: '9px', fontWeight: 700, color: 'var(--text-tertiary)', background: 'rgba(255,255,255,0.05)', padding: '2px 4px', borderRadius: '4px' }}>N/A</span>}
                                   </div>
-                                  <div style={{ background: 'var(--bg-card)', padding: '8px 12px', borderRadius: '8px', fontSize: '11px', fontWeight: 600, display: 'flex', justifyContent: 'space-between', alignItems: 'center', flex: 1, cursor: 'pointer', border: '1px solid var(--border-primary)' }} onClick={() => handleViewDoc(ct.parentIdProof, `${ct.name} - Parent ID`)}>
-                                      <span>Parent ID</span><Download size={12} style={{color: 'var(--accent-primary)'}}/>
+                                  <div style={{ background: 'var(--bg-card)', padding: '8px 12px', borderRadius: '8px', fontSize: '11px', fontWeight: 600, display: 'flex', justifyContent: 'space-between', alignItems: 'center', flex: 1, cursor: isDocUploaded(ct.parentIdProof) ? 'pointer' : 'default', border: '1px solid var(--border-primary)', opacity: isDocUploaded(ct.parentIdProof) ? 1 : 0.5 }} onClick={() => handleViewDoc(ct.parentIdProof, `${ct.name} - Parent ID`)}>
+                                      <span style={{color: isDocUploaded(ct.parentIdProof) ? 'inherit' : 'var(--text-tertiary)'}}>Parent ID</span>
+                                      {isDocUploaded(ct.parentIdProof) ? <Download size={12} style={{color: 'var(--accent-primary)'}}/> : <span style={{ fontSize: '9px', fontWeight: 700, color: 'var(--text-tertiary)', background: 'rgba(255,255,255,0.05)', padding: '2px 4px', borderRadius: '4px' }}>N/A</span>}
                                   </div>
-                                  <div style={{ background: 'var(--bg-card)', padding: '8px 12px', borderRadius: '8px', fontSize: '11px', fontWeight: 600, display: 'flex', justifyContent: 'space-between', alignItems: 'center', flex: 1, cursor: 'pointer', border: '1px solid var(--border-primary)' }} onClick={() => handleViewDoc(ct.avatar, `${ct.name} - Photo`)}>
-                                      <span>Photo</span><Download size={12} style={{color: 'var(--accent-primary)'}}/>
+                                  <div style={{ background: 'var(--bg-card)', padding: '8px 12px', borderRadius: '8px', fontSize: '11px', fontWeight: 600, display: 'flex', justifyContent: 'space-between', alignItems: 'center', flex: 1, cursor: isDocUploaded(ct.avatar) ? 'pointer' : 'default', border: '1px solid var(--border-primary)', opacity: isDocUploaded(ct.avatar) ? 1 : 0.5 }} onClick={() => handleViewDoc(ct.avatar, `${ct.name} - Photo`)}>
+                                      <span style={{color: isDocUploaded(ct.avatar) ? 'inherit' : 'var(--text-tertiary)'}}>Photo</span>
+                                      {isDocUploaded(ct.avatar) ? <Download size={12} style={{color: 'var(--accent-primary)'}}/> : <span style={{ fontSize: '9px', fontWeight: 700, color: 'var(--text-tertiary)', background: 'rgba(255,255,255,0.05)', padding: '2px 4px', borderRadius: '4px' }}>N/A</span>}
                                   </div>
                               </div>
                           </div>
