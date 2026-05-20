@@ -5,7 +5,6 @@ import BottomNav from './components/BottomNav';
 import Login from './pages/Login';
 import Dashboard from './pages/Dashboard';
 import Rooms from './pages/Rooms';
-import Tenants from './pages/Tenants';
 import Payments from './pages/Payments';
 import Electricity from './pages/Electricity';
 import Expenses from './pages/Expenses';
@@ -22,7 +21,6 @@ import './App.css';
 const pages = {
   dashboard: Dashboard,
   rooms: Rooms,
-  tenants: Tenants,
   payments: Payments,
   electricity: Electricity,
   expenses: Expenses,

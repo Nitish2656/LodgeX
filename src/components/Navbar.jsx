@@ -31,7 +31,7 @@ export default function Navbar() {
 
   const handleResultClick = (result) => {
     if (result.type === 'tenant') {
-      navigateWithAction('tenants', { type: 'OPEN_TENANT', id: result._id || result.id });
+      navigateWithAction('rooms', { type: 'OPEN_TENANT', id: result._id || result.id });
     } else if (result.type === 'room') {
       navigateWithAction('rooms', { type: 'OPEN_ROOM', id: result._id || result.id });
     }

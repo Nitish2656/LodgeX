@@ -212,8 +212,19 @@ export default function RoomsPage() {
         handleRoomCardClick(room);
         setPageAction(null);
       }
+    } else if (pageAction?.type === 'OPEN_TENANT' && pageAction?.id) {
+      const tenant = tenants.find(t => t._id === pageAction.id || t.id === pageAction.id);
+      if (tenant) {
+        setDetailTenant(tenant);
+        setShowTenantDetail(true);
+        fetchPayments();
+        fetchTenantById(tenant._id || tenant.id).then(full => {
+            if (full) setDetailTenant(full);
+        });
+        setPageAction(null);
+      }
     }
-  }, [pageAction, rooms, setPageAction]);
+  }, [pageAction, rooms, tenants, setPageAction]);
 
   const openPayDues = async (tenant) => {
     const tenantId = tenant._id || tenant.id;
@@ -1177,12 +1188,17 @@ export default function RoomsPage() {
                 {detailTenant.pendingDues > 0 && payments.filter(p => (p.tenantId === (detailTenant._id || detailTenant.id) || p._id === (detailTenant._id || detailTenant.id)) && p.status === 'pending').length > 0 && (
                   <div style={{ marginTop: '8px', paddingTop: '12px', borderTop: '1px solid rgba(239,68,68,0.15)', display: 'flex', flexDirection: 'column', gap: '6px' }}>
                     <div style={{ fontSize: '11px', fontWeight: 700, color: 'rgba(239,68,68,0.7)', textTransform: 'uppercase', letterSpacing: '0.05em' }}>Dues Breakdown</div>
-                    {payments.filter(p => (p.tenantId === (detailTenant._id || detailTenant.id) || p._id === (detailTenant._id || detailTenant.id)) && p.status === 'pending').map((p) => (
-                      <div key={p._id || p.id} style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', fontSize: '13px', fontWeight: 600, color: 'var(--text-primary)', background: 'rgba(255,255,255,0.5)', padding: '6px 12px', borderRadius: '8px', border: '1px solid rgba(239,68,68,0.1)' }}>
-                        <span style={{ display: 'flex', alignItems: 'center', gap: '6px' }}>📅 {p.month || 'Advance/Other'}</span>
-                        <span style={{ color: '#ef4444', fontWeight: 700 }}>₹{(p.dueAmount !== undefined ? p.dueAmount : p.totalAmount).toLocaleString('en-IN')}</span>
-                      </div>
-                    ))}
+                    {(() => {
+                      const pending = payments.filter(p => (p.tenantId === (detailTenant._id || detailTenant.id) || p._id === (detailTenant._id || detailTenant.id)) && p.status === 'pending');
+                      const grouped = {};
+                      pending.forEach(p => { const m = p.month || 'Advance/Other'; grouped[m] = (grouped[m] || 0) + (p.dueAmount !== undefined ? p.dueAmount : p.totalAmount); });
+                      return Object.keys(grouped).map(m => (
+                        <div key={m} style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', fontSize: '13px', fontWeight: 600, color: 'var(--text-primary)', background: 'rgba(255,255,255,0.5)', padding: '6px 12px', borderRadius: '8px', border: '1px solid rgba(239,68,68,0.1)' }}>
+                          <span style={{ display: 'flex', alignItems: 'center', gap: '6px' }}>📅 {m}</span>
+                          <span style={{ color: '#ef4444', fontWeight: 700 }}>₹{grouped[m].toLocaleString('en-IN')}</span>
+                        </div>
+                      ));
+                    })()}
                   </div>
                 )}
               </div>
