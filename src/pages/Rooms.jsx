@@ -73,7 +73,7 @@ export default function RoomsPage() {
   });
 
   const getTenant = (tenantId) => tenants.find(t => t.id === tenantId || t._id === tenantId);
-  const getTenantPayments = (tenantId) => payments.filter(p => (p.tenantId === tenantId || p._id === tenantId)).sort((a, b) => new Date(b.date) - new Date(a.date));
+  const getTenantPayments = (tenantId) => payments.filter(p => (p.tenantId === tenantId || p._id === tenantId) && p.paidAmount > 0).sort((a, b) => new Date(b.date) - new Date(a.date));
   const getPendingMonths = (tenantId) => {
     const pending = payments.filter(p => (p.tenantId === tenantId || p._id === tenantId) && p.status === 'pending' && p.month);
     return [...new Set(pending.map(p => p.month))].join(', ');
@@ -1370,7 +1370,7 @@ export default function RoomsPage() {
                       <td style={{ paddingLeft: '24px', borderBottom: idx === arr.length - 1 ? 'none' : '1px solid var(--border-primary)' }}><div style={{ display: 'flex', flexDirection: 'column', gap: '2px' }}><span style={{ fontSize: '13px', fontWeight: '500' }}>{new Date(p.date).toLocaleDateString('en-IN', { day: 'numeric', month: 'short', year: 'numeric' })}</span></div></td>
                       <td style={{ borderBottom: idx === arr.length - 1 ? 'none' : '1px solid var(--border-primary)' }} className="text-bold text-success">+₹{p.paidAmount.toLocaleString('en-IN')}</td>
                       <td style={{ borderBottom: idx === arr.length - 1 ? 'none' : '1px solid var(--border-primary)' }}><span style={{ background: 'var(--bg-card)', padding: '4px 10px', borderRadius: '8px', fontSize: '12px', fontWeight: 600 }}>{p.method}</span></td>
-                      <td style={{ paddingRight: '24px', borderBottom: idx === arr.length - 1 ? 'none' : '1px solid var(--border-primary)' }}><span className={`status-pill ${p.status}`}>{p.status}</span></td>
+                      <td style={{ paddingRight: '24px', borderBottom: idx === arr.length - 1 ? 'none' : '1px solid var(--border-primary)' }}><span className={`status-pill completed`}>completed</span></td>
                     </tr>
                   ))
                 ) : (

@@ -38,6 +38,7 @@ export default function PaymentsPage() {
   }, [tenants]);
 
   const filtered = useMemo(() => payments.filter(p => {
+    if (!p.paidAmount || p.paidAmount <= 0) return false;
     const tenant = tenantMap[p.tenantId];
     const tName = p.tenantName || (tenant ? tenant.name : '');
     const tRoom = p.roomNumber || (tenant ? (tenant.roomNumber || '').toString() : '');
@@ -178,7 +179,7 @@ export default function PaymentsPage() {
                       </span>
                     </div>
                   </td>
-                  <td><span className={`status-pill ${p.status}`}>{p.status}</span></td>
+                  <td><span className={`status-pill completed`}>completed</span></td>
                   <td>
                     <div style={{ display: 'flex', gap: '4px' }}>
                         <button className="table-action-btn edit" onClick={() => openEdit(p)} title="Edit"><Edit2 size={14} /></button>
