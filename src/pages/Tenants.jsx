@@ -102,6 +102,25 @@ export default function TenantsPage() {
     return new Date().toLocaleDateString('en-IN', { month: 'short' }) + ' Pending';
   };
 
+  const getPaidDateLabel = (tenantId) => {
+    const currentMonthLabel = new Date().toLocaleDateString('en-IN', { month: 'short' }).toLowerCase();
+    const completedPayments = payments.filter(p => 
+      (p.tenantId === tenantId || (p.tenantId && (p.tenantId._id === tenantId || p.tenantId.id === tenantId)) || p._id === tenantId) && 
+      p.status === 'completed' &&
+      p.month &&
+      p.month.toLowerCase().includes(currentMonthLabel)
+    );
+    if (completedPayments.length > 0) {
+      const sorted = [...completedPayments].sort((a, b) => new Date(b.date) - new Date(a.date));
+      const latest = sorted[0];
+      if (latest && latest.date) {
+        const d = new Date(latest.date);
+        return ` (${d.toLocaleDateString('en-IN', { day: 'numeric', month: 'short' })})`;
+      }
+    }
+    return '';
+  };
+
   const openProfile = async (tenant) => {
     setSelectedTenant(tenant);
     setShowProfileModal(true);
@@ -919,7 +938,7 @@ export default function TenantsPage() {
                 </div>
                 <div style={{ display: 'flex', flexDirection: 'column', gap: '8px', background: selectedTenant.pendingDues > 0 ? 'rgba(239, 68, 68, 0.05)' : 'rgba(52, 211, 153, 0.05)', padding: '16px', borderRadius: '20px', margin: '-12px', border: selectedTenant.pendingDues > 0 ? '1px solid rgba(239, 68, 68, 0.15)' : '1px solid rgba(52, 211, 153, 0.15)' }}>
                     <div style={{ fontSize: '12px', color: selectedTenant.pendingDues > 0 ? 'rgba(239, 68, 68, 0.8)' : 'rgba(52, 211, 153, 0.8)', fontWeight: 800, textTransform: 'uppercase', letterSpacing: '0.05em', display: 'flex', alignItems: 'center', justifyContent: 'space-between' }}>
-                      <span>{selectedTenant.pendingDues > 0 ? getPendingMonthsLabel(selectedTenant._id || selectedTenant.id) : `${new Date().toLocaleDateString('en-IN', { month: 'short' })} Rent: Paid ✓`}</span>
+                      <span>{selectedTenant.pendingDues > 0 ? getPendingMonthsLabel(selectedTenant._id || selectedTenant.id) : `${new Date().toLocaleDateString('en-IN', { month: 'short' })} Rent: Paid ✓${getPaidDateLabel(selectedTenant._id || selectedTenant.id)}`}</span>
                       {selectedTenant.pendingDues > 0 && (
                           <button style={{ background: '#ef4444', color: 'white', border: 'none', padding: '6px 14px', borderRadius: '10px', fontSize: '12px', fontWeight: 700, cursor: 'pointer', boxShadow: '0 4px 12px rgba(239, 68, 68, 0.2)' }} onClick={(e) => { e.stopPropagation(); openPayDues(selectedTenant); }}>Pay Now</button>
                       )}

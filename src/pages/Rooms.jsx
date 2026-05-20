@@ -85,6 +85,25 @@ export default function RoomsPage() {
     return new Date().toLocaleDateString('en-IN', { month: 'short' }) + ' Pending';
   };
 
+  const getPaidDateLabel = (tenantId) => {
+    const currentMonthLabel = new Date().toLocaleDateString('en-IN', { month: 'short' }).toLowerCase();
+    const completedPayments = payments.filter(p => 
+      (p.tenantId === tenantId || (p.tenantId && (p.tenantId._id === tenantId || p.tenantId.id === tenantId)) || p._id === tenantId) && 
+      p.status === 'completed' &&
+      p.month &&
+      p.month.toLowerCase().includes(currentMonthLabel)
+    );
+    if (completedPayments.length > 0) {
+      const sorted = [...completedPayments].sort((a, b) => new Date(b.date) - new Date(a.date));
+      const latest = sorted[0];
+      if (latest && latest.date) {
+        const d = new Date(latest.date);
+        return ` (${d.toLocaleDateString('en-IN', { day: 'numeric', month: 'short' })})`;
+      }
+    }
+    return '';
+  };
+
   // Sync detailTenant with global tenants state
   useEffect(() => {
     if (detailTenant) {
@@ -654,7 +673,7 @@ export default function RoomsPage() {
                       </div>
                     ) : (
                       <div className="room-tenant-dues" style={{ background: 'rgba(16, 185, 129, 0.1)', color: '#10b981', border: '1px solid rgba(16, 185, 129, 0.2)', padding: '4px 8px', borderRadius: '6px', fontSize: '11px', fontWeight: 700, textAlign: 'right', display: 'flex', alignItems: 'center', gap: '4px' }}>
-                        <span>{new Date().toLocaleDateString('en-IN', { month: 'short' })} Paid</span>
+                        <span>{new Date().toLocaleDateString('en-IN', { month: 'short' })} Paid {getPaidDateLabel(tenant._id || tenant.id)}</span>
                         <span style={{ fontSize: '12px' }}>✓</span>
                       </div>
                     )}
@@ -1056,7 +1075,7 @@ export default function RoomsPage() {
               </div>
               <div style={{ display: 'flex', flexDirection: 'column', gap: '8px', background: detailTenant.pendingDues > 0 ? 'rgba(239,68,68,0.05)' : 'rgba(52,211,153,0.05)', padding: '16px', borderRadius: '20px', margin: '-12px', border: detailTenant.pendingDues > 0 ? '1px solid rgba(239,68,68,0.15)' : '1px solid rgba(52,211,153,0.15)' }}>
                 <div style={{ fontSize: '12px', color: detailTenant.pendingDues > 0 ? 'rgba(239,68,68,0.8)' : 'rgba(52,211,153,0.8)', fontWeight: 800, textTransform: 'uppercase', display: 'flex', justifyContent: 'space-between', alignItems: 'center' }}>
-                  <span>{detailTenant.pendingDues > 0 ? getPendingMonthsLabel(detailTenant._id || detailTenant.id) : `${new Date().toLocaleDateString('en-IN', { month: 'short' })} Rent: Paid ✓`}</span>
+                  <span>{detailTenant.pendingDues > 0 ? getPendingMonthsLabel(detailTenant._id || detailTenant.id) : `${new Date().toLocaleDateString('en-IN', { month: 'short' })} Rent: Paid ✓${getPaidDateLabel(detailTenant._id || detailTenant.id)}`}</span>
                   {detailTenant.pendingDues > 0 && <button style={{ background: '#ef4444', color: 'white', border: 'none', padding: '6px 14px', borderRadius: '10px', fontSize: '12px', fontWeight: 700, cursor: 'pointer', boxShadow: '0 4px 12px rgba(239,68,68,0.2)' }} onClick={() => openPayDues(detailTenant)}>Pay Now</button>}
                 </div>
                 <div style={{ fontSize: '28px', fontWeight: 800, color: detailTenant.pendingDues > 0 ? '#ef4444' : '#34d399' }}>
