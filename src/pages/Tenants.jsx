@@ -215,20 +215,23 @@ export default function TenantsPage() {
     setIsEditing(true);
     setEditingId(tenant._id || tenant.id);
     
-    const assignedRoom = rooms.find(r => (r._id || r.id).toString() === tenant.roomId?.toString());
-    const tenantRent = tenant.rent || assignedRoom?.rent || '';
+    // Fetch full data in background to ensure documents are not lost on save
+    const fullTenant = await fetchTenantById(tenant._id || tenant.id) || tenant;
+    
+    const assignedRoom = rooms.find(r => (r._id || r.id).toString() === fullTenant.roomId?.toString());
+    const tenantRent = fullTenant.rent || assignedRoom?.rent || '';
 
     setAddData({
-      ...tenant,
-      joinDate: tenant.joinDate ? tenant.joinDate.split('T')[0] : new Date().toISOString().split('T')[0],
-      roomId: assignedRoom ? tenant.roomId : '',
+      ...fullTenant,
+      joinDate: fullTenant.joinDate ? fullTenant.joinDate.split('T')[0] : new Date().toISOString().split('T')[0],
+      roomId: assignedRoom ? fullTenant.roomId : '',
       roomNumber: assignedRoom ? assignedRoom.number : 'Unassigned',
       rent: tenantRent,
-      deposit: tenant.deposit || '',
+      deposit: fullTenant.deposit || '',
       paidAmount: 0,
-      dueAmount: tenant.pendingDues || 0,
-      photoPreview: tenant.avatar,
-      coTenants: (tenant.coTenants || []).map(ct => ({
+      dueAmount: fullTenant.pendingDues || 0,
+      photoPreview: fullTenant.avatar,
+      coTenants: (fullTenant.coTenants || []).map(ct => ({
         ...ct,
         photoPreview: ct.avatar
       }))

@@ -368,7 +368,7 @@ export default function RoomsPage() {
     }
   }, [addStep, showAssignModal]);
 
-  const openModal = (room, modalType) => {
+  const openModal = async (room, modalType) => {
     setSelectedRoom(room);
     setActiveMenuId(null);
     if (modalType === 'edit') {
@@ -377,17 +377,21 @@ export default function RoomsPage() {
         setIsEditingTenant(true);
         setEditTenantId(tenant._id || tenant.id);
         const tenantRent = tenant.rent || room.rent || '';
+        
+        // Fetch full data in background to ensure documents are not lost on save
+        const fullTenant = await fetchTenantById(tenant._id || tenant.id) || tenant;
+        
         setAssignData({
-          ...tenant,
-          joinDate: tenant.joinDate ? tenant.joinDate.split('T')[0] : new Date().toISOString().split('T')[0],
+          ...fullTenant,
+          joinDate: fullTenant.joinDate ? fullTenant.joinDate.split('T')[0] : new Date().toISOString().split('T')[0],
           roomId: room._id || room.id,
           roomNumber: room.number,
           rent: tenantRent,
-          deposit: tenant.deposit || '',
+          deposit: fullTenant.deposit || '',
           paidAmount: 0,
-          dueAmount: tenant.pendingDues || 0,
-          photoPreview: tenant.avatar,
-          coTenants: (tenant.coTenants || []).map(ct => ({
+          dueAmount: fullTenant.pendingDues || 0,
+          photoPreview: fullTenant.avatar,
+          coTenants: (fullTenant.coTenants || []).map(ct => ({
             ...ct,
             photoPreview: ct.avatar
           }))
