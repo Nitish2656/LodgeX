@@ -138,25 +138,7 @@ export default function TenantsPage() {
   const getMonthStatus = (tenant, year, mIdx) => {
     if (!tenant) return 'future';
 
-    // 1. Join date check
-    if (tenant.joinDate) {
-      const joinDateObj = new Date(tenant.joinDate);
-      const joinYear = joinDateObj.getFullYear();
-      const joinMonth = joinDateObj.getMonth();
-      if (year < joinYear || (year === joinYear && mIdx < joinMonth)) {
-        return 'N/A';
-      }
-    }
-
-    // 2. Future check
-    const today = new Date();
-    const currentYear = today.getFullYear();
-    const currentMonth = today.getMonth();
-    if (year > currentYear || (year === currentYear && mIdx > currentMonth)) {
-      return 'future';
-    }
-
-    // 3. Payment records check
+    // Check payment records first
     const targetMonthLabel = new Date(year, mIdx).toLocaleDateString('en-IN', { month: 'short', year: 'numeric' });
     const tenantId = tenant._id || tenant.id;
     const monthPayments = payments.filter(p => 
@@ -172,6 +154,24 @@ export default function TenantsPage() {
       if (monthPayments.some(p => p.status === 'completed')) {
         return 'completed';
       }
+    }
+
+    // 2. Join date check
+    if (tenant.joinDate) {
+      const joinDateObj = new Date(tenant.joinDate);
+      const joinYear = joinDateObj.getFullYear();
+      const joinMonth = joinDateObj.getMonth();
+      if (year < joinYear || (year === joinYear && mIdx < joinMonth)) {
+        return 'N/A';
+      }
+    }
+
+    // 3. Future check
+    const today = new Date();
+    const currentYear = today.getFullYear();
+    const currentMonth = today.getMonth();
+    if (year > currentYear || (year === currentYear && mIdx > currentMonth)) {
+      return 'future';
     }
 
     return 'completed';
