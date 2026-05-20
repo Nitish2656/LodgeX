@@ -174,7 +174,7 @@ export default function PaymentsPage() {
                     <div style={{ display: 'flex', flexDirection: 'column', gap: '2px' }}>
                       <span style={{ fontSize: '13px', fontWeight: '500' }}>{new Date(p.date).toLocaleDateString('en-IN', { day: 'numeric', month: 'short', year: 'numeric' })}</span>
                       <span style={{ fontSize: '11px', color: 'var(--text-tertiary)', opacity: 0.8 }}>
-                        {new Date(p.date).toLocaleTimeString('en-IN', { hour: '2-digit', minute: '2-digit', hour12: true })} {p.month ? `• ${p.month}` : ''}
+                        {new Date(p.date).toLocaleTimeString('en-IN', { hour: '2-digit', minute: '2-digit', hour12: true })}
                       </span>
                     </div>
                   </td>
