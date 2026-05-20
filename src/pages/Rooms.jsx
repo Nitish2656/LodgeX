@@ -160,6 +160,24 @@ export default function RoomsPage() {
     return 'completed';
   };
 
+  const getMonthPaidDate = (tenant, year, mIdx) => {
+    if (!tenant) return null;
+    const targetMonthLabel = new Date(year, mIdx).toLocaleDateString('en-IN', { month: 'short', year: 'numeric' });
+    const tenantId = tenant._id || tenant.id;
+    const completedPayments = payments.filter(p =>
+      (p.tenantId === tenantId || (p.tenantId && (p.tenantId._id === tenantId || p.tenantId.id === tenantId)) || p._id === tenantId) &&
+      p.month &&
+      p.month.toLowerCase().replace(/[^a-z0-9]/g, '').includes(targetMonthLabel.toLowerCase().replace(/[^a-z0-9]/g, '')) &&
+      p.status === 'completed'
+    );
+    if (completedPayments.length > 0) {
+      const sorted = [...completedPayments].sort((a, b) => new Date(b.date) - new Date(a.date));
+      const d = new Date(sorted[0].date);
+      return d.toLocaleDateString('en-IN', { day: 'numeric', month: 'short' });
+    }
+    return null;
+  };
+
   // Reset tracker year when opening/changing tenant details
   useEffect(() => {
     if (detailTenant) {
@@ -1190,6 +1208,7 @@ export default function RoomsPage() {
               <div style={{ display: 'grid', gridTemplateColumns: 'repeat(auto-fill, minmax(110px, 1fr))', gap: '12px' }}>
                 {trackerMonths.map((mName, mIdx) => {
                   const status = getMonthStatus(detailTenant, trackerYear, mIdx);
+                  const paidDate = status === 'completed' ? getMonthPaidDate(detailTenant, trackerYear, mIdx) : null;
                   
                   let bgColor = 'rgba(255, 255, 255, 0.02)';
                   let textColor = 'var(--text-tertiary)';
@@ -1238,7 +1257,7 @@ export default function RoomsPage() {
                         flexDirection: 'column',
                         alignItems: 'center',
                         justifyContent: 'center',
-                        gap: '8px',
+                        gap: '6px',
                         opacity: opacity,
                         transition: 'all 0.2s ease',
                         boxShadow: status === 'completed' || status === 'pending' ? '0 4px 12px rgba(0, 0, 0, 0.05)' : 'none'
@@ -1259,6 +1278,16 @@ export default function RoomsPage() {
                       }}>
                         {badgeText}
                       </span>
+                      {status === 'completed' && paidDate && (
+                        <span style={{
+                          fontSize: '10px',
+                          fontWeight: 600,
+                          color: 'rgba(16, 185, 129, 0.7)',
+                          marginTop: '2px'
+                        }}>
+                          {paidDate}
+                        </span>
+                      )}
                     </div>
                   );
                 })}
