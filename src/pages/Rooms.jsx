@@ -1389,11 +1389,16 @@ export default function RoomsPage() {
                       <td style={{ borderBottom: idx === arr.length - 1 ? 'none' : '1px solid var(--border-primary)' }}>
                         <div style={{ display: 'flex', flexDirection: 'column', gap: '4px', alignItems: 'flex-start' }}>
                           <span style={{ background: 'var(--bg-card)', padding: '4px 10px', borderRadius: '8px', fontSize: '12px', fontWeight: 600 }}>{p.method}</span>
-                          {p.notes && (
-                            <span style={{ fontSize: '11px', color: 'var(--text-tertiary)', maxWidth: '150px', whiteSpace: 'nowrap', overflow: 'hidden', textOverflow: 'ellipsis' }} title={p.notes}>
-                              {p.notes.replace('Full payment - ', '').replace('Full dues cleared - ', '').replace('Advance/Deposit on allocation - ', '')}
-                            </span>
-                          )}
+                          {p.notes && (() => {
+                            let customNote = p.notes;
+                            if (customNote.includes(' - ')) customNote = customNote.split(' - ').slice(1).join(' - ');
+                            else if (customNote.match(/^(Partial payment|Full payment|Full dues cleared|Advance\/Deposit|Payment on update)/)) customNote = null;
+                            return customNote ? (
+                              <span style={{ fontSize: '11px', color: 'var(--text-tertiary)', maxWidth: '150px', whiteSpace: 'nowrap', overflow: 'hidden', textOverflow: 'ellipsis' }} title={customNote}>
+                                {customNote}
+                              </span>
+                            ) : null;
+                          })()}
                         </div>
                       </td>
                       <td style={{ paddingRight: '24px', borderBottom: idx === arr.length - 1 ? 'none' : '1px solid var(--border-primary)' }}><span className={`status-pill completed`}>completed</span></td>

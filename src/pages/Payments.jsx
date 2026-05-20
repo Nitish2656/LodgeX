@@ -171,11 +171,16 @@ export default function PaymentsPage() {
                         <MethodIcon size={12} />
                         {p.method}
                       </div>
-                      {p.notes && (
-                        <span style={{ fontSize: '11px', color: 'var(--text-tertiary)', maxWidth: '120px', whiteSpace: 'nowrap', overflow: 'hidden', textOverflow: 'ellipsis' }} title={p.notes}>
-                          {p.notes.replace('Full payment - ', '').replace('Full dues cleared - ', '').replace('Advance/Deposit on allocation - ', '')}
-                        </span>
-                      )}
+                      {p.notes && (() => {
+                        let customNote = p.notes;
+                        if (customNote.includes(' - ')) customNote = customNote.split(' - ').slice(1).join(' - ');
+                        else if (customNote.match(/^(Partial payment|Full payment|Full dues cleared|Advance\/Deposit|Payment on update)/)) customNote = null;
+                        return customNote ? (
+                          <span style={{ fontSize: '11px', color: 'var(--text-tertiary)', maxWidth: '120px', whiteSpace: 'nowrap', overflow: 'hidden', textOverflow: 'ellipsis' }} title={customNote}>
+                            {customNote}
+                          </span>
+                        ) : null;
+                      })()}
                     </div>
                   </td>
                   <td>
