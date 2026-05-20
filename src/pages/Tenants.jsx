@@ -1,5 +1,5 @@
 import { useState, useRef, useEffect } from 'react';
-import { Search, Phone, Mail, MapPin, IndianRupee, FileText, Download, Edit2, Trash2, CalendarClock, ShieldCheck, Plus, UploadCloud, UserX, Camera, Users, History, Image } from 'lucide-react';
+import { Search, Phone, Mail, MapPin, IndianRupee, FileText, Download, Edit2, Trash2, Calendar, CalendarClock, ShieldCheck, Plus, UploadCloud, UserX, Camera, Users, History, Image } from 'lucide-react';
 import { useStore } from '../data/store';
 import Modal from '../components/Modal';
 import './Pages.css';
@@ -35,6 +35,7 @@ export default function TenantsPage() {
   const videoRef = useRef(null);
   const wizardProgressRef = useRef(null);
   const [stream, setStream] = useState(null);
+  const [trackerYear, setTrackerYear] = useState(new Date().getFullYear());
 
   const [payDuesTenantObj, setPayDuesTenantObj] = useState(null);
   const [payDuesData, setPayDuesData] = useState({ amount: '', method: 'Cash' });
@@ -120,6 +121,68 @@ export default function TenantsPage() {
     }
     return '';
   };
+
+  const trackerMonths = ['Jan', 'Feb', 'Mar', 'Apr', 'May', 'Jun', 'Jul', 'Aug', 'Sep', 'Oct', 'Nov', 'Dec'];
+
+  const getTrackerYears = (tenant) => {
+    if (!tenant) return [new Date().getFullYear()];
+    const joinYear = tenant.joinDate ? new Date(tenant.joinDate).getFullYear() : new Date().getFullYear();
+    const currentYear = new Date().getFullYear();
+    const yearsList = [];
+    for (let y = Math.min(joinYear, currentYear); y <= Math.max(joinYear, currentYear); y++) {
+      yearsList.push(y);
+    }
+    return [...new Set(yearsList)].sort((a, b) => b - a);
+  };
+
+  const getMonthStatus = (tenant, year, mIdx) => {
+    if (!tenant) return 'future';
+
+    // 1. Join date check
+    if (tenant.joinDate) {
+      const joinDateObj = new Date(tenant.joinDate);
+      const joinYear = joinDateObj.getFullYear();
+      const joinMonth = joinDateObj.getMonth();
+      if (year < joinYear || (year === joinYear && mIdx < joinMonth)) {
+        return 'N/A';
+      }
+    }
+
+    // 2. Future check
+    const today = new Date();
+    const currentYear = today.getFullYear();
+    const currentMonth = today.getMonth();
+    if (year > currentYear || (year === currentYear && mIdx > currentMonth)) {
+      return 'future';
+    }
+
+    // 3. Payment records check
+    const targetMonthLabel = new Date(year, mIdx).toLocaleDateString('en-IN', { month: 'short', year: 'numeric' });
+    const tenantId = tenant._id || tenant.id;
+    const monthPayments = payments.filter(p => 
+      (p.tenantId === tenantId || (p.tenantId && (p.tenantId._id === tenantId || p.tenantId.id === tenantId)) || p._id === tenantId) &&
+      p.month &&
+      p.month.toLowerCase().replace(/[^a-z0-9]/g, '').includes(targetMonthLabel.toLowerCase().replace(/[^a-z0-9]/g, ''))
+    );
+
+    if (monthPayments.length > 0) {
+      if (monthPayments.some(p => p.status === 'pending')) {
+        return 'pending';
+      }
+      if (monthPayments.some(p => p.status === 'completed')) {
+        return 'completed';
+      }
+    }
+
+    return 'completed';
+  };
+
+  // Reset tracker year when opening/changing tenant details
+  useEffect(() => {
+    if (selectedTenant) {
+      setTrackerYear(new Date().getFullYear());
+    }
+  }, [selectedTenant]);
 
   const openProfile = async (tenant) => {
     setSelectedTenant(tenant);
@@ -956,6 +1019,116 @@ export default function TenantsPage() {
                       </div>
                     )}
                 </div>
+            </div>
+
+            {/* Rent Payment Tracker Grid */}
+            <div style={{ background: 'var(--bg-secondary)', padding: '20px', borderRadius: '20px', border: '1px solid var(--border-primary)', gridColumn: '1 / -1' }}>
+              <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', marginBottom: '20px', flexWrap: 'wrap', gap: '12px' }}>
+                <div style={{ display: 'flex', alignItems: 'center', gap: '8px', color: 'var(--text-primary)', fontWeight: 700, fontSize: '15px' }}>
+                  <Calendar size={18} style={{ color: 'var(--accent-primary)' }} />
+                  Rent Payment Tracker
+                </div>
+                {/* Year selector tabs */}
+                <div style={{ display: 'flex', gap: '4px', background: 'var(--bg-primary)', padding: '4px', borderRadius: '12px', border: '1px solid var(--border-primary)' }}>
+                  {getTrackerYears(selectedTenant).map(yr => (
+                    <button
+                      key={yr}
+                      type="button"
+                      onClick={() => setTrackerYear(yr)}
+                      style={{
+                        background: trackerYear === yr ? 'var(--accent-primary)' : 'transparent',
+                        color: trackerYear === yr ? '#fff' : 'var(--text-secondary)',
+                        border: 'none',
+                        padding: '6px 14px',
+                        borderRadius: '8px',
+                        fontSize: '12px',
+                        fontWeight: 700,
+                        cursor: 'pointer',
+                        transition: 'all 0.2s ease'
+                      }}
+                    >
+                      {yr}
+                    </button>
+                  ))}
+                </div>
+              </div>
+              
+              <div style={{ display: 'grid', gridTemplateColumns: 'repeat(auto-fill, minmax(110px, 1fr))', gap: '12px' }}>
+                {trackerMonths.map((mName, mIdx) => {
+                  const status = getMonthStatus(selectedTenant, trackerYear, mIdx);
+                  
+                  let bgColor = 'rgba(255, 255, 255, 0.02)';
+                  let textColor = 'var(--text-tertiary)';
+                  let borderColor = 'var(--border-primary)';
+                  let badgeText = 'Not Due';
+                  let badgeBg = 'rgba(255, 255, 255, 0.05)';
+                  let badgeColor = 'var(--text-tertiary)';
+                  let opacity = 0.5;
+
+                  if (status === 'completed') {
+                    bgColor = 'rgba(16, 185, 129, 0.02)';
+                    textColor = 'var(--text-primary)';
+                    borderColor = 'rgba(16, 185, 129, 0.15)';
+                    badgeText = 'Paid ✓';
+                    badgeBg = 'rgba(16, 185, 129, 0.1)';
+                    badgeColor = '#10b981';
+                    opacity = 1;
+                  } else if (status === 'pending') {
+                    bgColor = 'rgba(239, 68, 68, 0.02)';
+                    textColor = 'var(--text-primary)';
+                    borderColor = 'rgba(239, 68, 68, 0.15)';
+                    badgeText = 'Pending ✗';
+                    badgeBg = 'rgba(239, 68, 68, 0.1)';
+                    badgeColor = '#ef4444';
+                    opacity = 1;
+                  } else if (status === 'N/A') {
+                    bgColor = 'transparent';
+                    textColor = 'var(--text-tertiary)';
+                    borderColor = 'rgba(255, 255, 255, 0.05)';
+                    badgeText = 'N/A';
+                    badgeBg = 'rgba(255, 255, 255, 0.02)';
+                    badgeColor = 'var(--text-tertiary)';
+                    opacity = 0.35;
+                  }
+
+                  return (
+                    <div
+                      key={mName}
+                      style={{
+                        background: bgColor,
+                        border: `1px solid ${borderColor}`,
+                        borderRadius: '16px',
+                        padding: '16px 12px',
+                        textAlign: 'center',
+                        display: 'flex',
+                        flexDirection: 'column',
+                        alignItems: 'center',
+                        justifyContent: 'center',
+                        gap: '8px',
+                        opacity: opacity,
+                        transition: 'all 0.2s ease',
+                        boxShadow: status === 'completed' || status === 'pending' ? '0 4px 12px rgba(0, 0, 0, 0.05)' : 'none'
+                      }}
+                    >
+                      <span style={{ fontSize: '14px', fontWeight: 700, color: 'var(--text-primary)' }}>
+                        {mName}
+                      </span>
+                      <span style={{ 
+                        fontSize: '11px', 
+                        fontWeight: 800, 
+                        color: badgeColor, 
+                        background: badgeBg, 
+                        padding: '3px 8px', 
+                        borderRadius: '8px',
+                        textTransform: 'uppercase',
+                        letterSpacing: '0.02em'
+                      }}>
+                        {badgeText}
+                      </span>
+                    </div>
+                  );
+                })}
+              </div>
             </div>
 
             {/* Documents */}
