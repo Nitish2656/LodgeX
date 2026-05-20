@@ -418,11 +418,12 @@ export default function TenantsPage() {
     }
   };
 
+  const isDocUploaded = (url) => {
+    return url && !url.includes('dicebear') && url !== 'Aadhaar Card' && (url.startsWith('data:') || url.startsWith('http') || url.startsWith('/api/files'));
+  };
+
   const handleViewDoc = (docStr, title = 'Document') => {
-    if (!docStr || docStr === 'Aadhaar Card' || (!docStr.startsWith('data:') && !docStr.startsWith('http') && !docStr.startsWith('/api/files'))) {
-       alert('No valid document uploaded for this record.');
-       return;
-    }
+    if (!isDocUploaded(docStr)) return;
     setViewDocUrl({ url: docStr, title });
   };
 
@@ -1166,20 +1167,20 @@ export default function TenantsPage() {
                     <FileText size={18} style={{ color: 'var(--warning)' }} /> Documents
                 </div>
                 <div style={{ display: 'flex', gap: '12px', flexWrap: 'wrap' }}>
-                    <div style={{ background: 'var(--bg-card)', border: '1px solid var(--border-primary)', padding: '12px 16px', borderRadius: '12px', display: 'flex', alignItems: 'center', gap: '12px', cursor: 'pointer', flex: '1 1 200px', transition: 'all 0.2s' }} onClick={() => handleViewDoc(selectedTenant.idProof, 'Tenant Aadhaar')} className="doc-tile">
-                        <FileText size={20} style={{ color: 'var(--accent-primary)' }} />
+                    <div style={{ background: 'var(--bg-card)', border: '1px solid var(--border-primary)', padding: '12px 16px', borderRadius: '12px', display: 'flex', alignItems: 'center', gap: '12px', cursor: isDocUploaded(selectedTenant.idProof) ? 'pointer' : 'default', flex: '1 1 200px', transition: 'all 0.2s', opacity: isDocUploaded(selectedTenant.idProof) ? 1 : 0.5 }} onClick={() => handleViewDoc(selectedTenant.idProof, 'Tenant Aadhaar')} className="doc-tile">
+                        <FileText size={20} style={{ color: isDocUploaded(selectedTenant.idProof) ? 'var(--accent-primary)' : 'var(--text-tertiary)' }} />
                         <span style={{ fontSize: '13px', fontWeight: 600, flex: 1, color: 'var(--text-primary)' }}>Tenant Aadhaar</span>
-                        <Download size={14} style={{ color: 'var(--text-tertiary)' }} />
+                        {isDocUploaded(selectedTenant.idProof) ? <Download size={14} style={{ color: 'var(--text-tertiary)' }} /> : <span style={{ fontSize: '10px', fontWeight: 700, color: 'var(--text-tertiary)', background: 'rgba(255,255,255,0.05)', padding: '2px 8px', borderRadius: '6px' }}>Not Uploaded</span>}
                     </div>
-                    <div style={{ background: 'var(--bg-card)', border: '1px solid var(--border-primary)', padding: '12px 16px', borderRadius: '12px', display: 'flex', alignItems: 'center', gap: '12px', cursor: 'pointer', flex: '1 1 200px', transition: 'all 0.2s' }} onClick={() => handleViewDoc(selectedTenant.parentIdProof, 'Parent Aadhaar')} className="doc-tile">
-                        <FileText size={20} style={{ color: 'var(--accent-primary)' }} />
+                    <div style={{ background: 'var(--bg-card)', border: '1px solid var(--border-primary)', padding: '12px 16px', borderRadius: '12px', display: 'flex', alignItems: 'center', gap: '12px', cursor: isDocUploaded(selectedTenant.parentIdProof) ? 'pointer' : 'default', flex: '1 1 200px', transition: 'all 0.2s', opacity: isDocUploaded(selectedTenant.parentIdProof) ? 1 : 0.5 }} onClick={() => handleViewDoc(selectedTenant.parentIdProof, 'Parent Aadhaar')} className="doc-tile">
+                        <FileText size={20} style={{ color: isDocUploaded(selectedTenant.parentIdProof) ? 'var(--accent-primary)' : 'var(--text-tertiary)' }} />
                         <span style={{ fontSize: '13px', fontWeight: 600, flex: 1, color: 'var(--text-primary)' }}>Parent Aadhaar</span>
-                        <Download size={14} style={{ color: 'var(--text-tertiary)' }} />
+                        {isDocUploaded(selectedTenant.parentIdProof) ? <Download size={14} style={{ color: 'var(--text-tertiary)' }} /> : <span style={{ fontSize: '10px', fontWeight: 700, color: 'var(--text-tertiary)', background: 'rgba(255,255,255,0.05)', padding: '2px 8px', borderRadius: '6px' }}>Not Uploaded</span>}
                     </div>
-                    <div style={{ background: 'var(--bg-card)', border: '1px solid var(--border-primary)', padding: '12px 16px', borderRadius: '12px', display: 'flex', alignItems: 'center', gap: '12px', cursor: 'pointer', flex: '1 1 200px', transition: 'all 0.2s' }} onClick={() => handleViewDoc(selectedTenant.avatar, 'Tenant Photo')} className="doc-tile">
-                        <Image size={20} style={{ color: 'var(--accent-primary)' }} />
+                    <div style={{ background: 'var(--bg-card)', border: '1px solid var(--border-primary)', padding: '12px 16px', borderRadius: '12px', display: 'flex', alignItems: 'center', gap: '12px', cursor: isDocUploaded(selectedTenant.avatar) ? 'pointer' : 'default', flex: '1 1 200px', transition: 'all 0.2s', opacity: isDocUploaded(selectedTenant.avatar) ? 1 : 0.5 }} onClick={() => handleViewDoc(selectedTenant.avatar, 'Tenant Photo')} className="doc-tile">
+                        <Image size={20} style={{ color: isDocUploaded(selectedTenant.avatar) ? 'var(--accent-primary)' : 'var(--text-tertiary)' }} />
                         <span style={{ fontSize: '13px', fontWeight: 600, flex: 1, color: 'var(--text-primary)' }}>Tenant Photo</span>
-                        <Download size={14} style={{ color: 'var(--text-tertiary)' }} />
+                        {isDocUploaded(selectedTenant.avatar) ? <Download size={14} style={{ color: 'var(--text-tertiary)' }} /> : <span style={{ fontSize: '10px', fontWeight: 700, color: 'var(--text-tertiary)', background: 'rgba(255,255,255,0.05)', padding: '2px 8px', borderRadius: '6px' }}>Not Uploaded</span>}
                     </div>
                 </div>
             </div>
