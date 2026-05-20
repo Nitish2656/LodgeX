@@ -254,7 +254,7 @@ export default function RoomsPage() {
     setIsSubmittingPayment(true);
     const newDues = payDuesTenantObj.pendingDues - amountPaid;
     try {
-      await addPayment({ tenantId: payDuesTenantObj._id || payDuesTenantObj.id, tenantName: payDuesTenantObj.name, roomId: payDuesTenantObj.roomId, roomNumber: payDuesTenantObj.roomNumber, totalAmount: payDuesTenantObj.pendingDues, paidAmount: amountPaid, dueAmount: newDues, method: payDuesData.method, status: 'completed', month: new Date().toLocaleDateString('en-IN', { month: 'short', year: 'numeric' }), notes: newDues > 0 ? `Partial payment (₹${newDues.toLocaleString('en-IN')} remaining)` : 'Full dues cleared' });
+      await addPayment({ tenantId: payDuesTenantObj._id || payDuesTenantObj.id, tenantName: payDuesTenantObj.name, roomId: payDuesTenantObj.roomId, roomNumber: payDuesTenantObj.roomNumber, totalAmount: payDuesTenantObj.pendingDues, paidAmount: amountPaid, dueAmount: newDues, method: payDuesData.method, status: 'completed', month: new Date().toLocaleDateString('en-IN', { month: 'short', year: 'numeric' }), notes: (newDues > 0 ? `Partial payment (₹${newDues.toLocaleString('en-IN')} remaining)` : 'Full dues cleared') + (payDuesData.notes ? ` - ${payDuesData.notes}` : '') });
       setPayDuesTenantObj(prev => prev ? { ...prev, pendingDues: newDues } : prev);
       setShowPayDuesModal(false);
     } catch(err) { alert('Payment failed.'); } finally { setIsSubmittingPayment(false); }
@@ -528,7 +528,7 @@ export default function RoomsPage() {
       status: due > 0 ? 'pending' : 'completed',
       month: rentData.month,
       date: new Date(rentData.date).toISOString(),
-      notes: label
+      notes: label + (rentData.notes ? ` - ${rentData.notes}` : '')
     });
 
     const tenant = getTenant(rentData.tenantId);
@@ -873,14 +873,15 @@ export default function RoomsPage() {
               <label className="form-label">Payment Method</label>
               <select className="form-select" value={rentData.method} onChange={e => setRentData({...rentData, method: e.target.value})}>
                 <option value="Cash">Cash</option>
-                <option value="UPI">UPI</option>
-                <option value="Bank Transfer">Bank Transfer</option>
-                <option value="Google Pay">Google Pay</option>
-                <option value="PhonePe">PhonePe</option>
-                <option value="Paytm">Paytm</option>
-                <option value="Other">Other</option>
+                <option value="Online">Online</option>
               </select>
             </div>
+            {rentData.method === 'Online' && (
+              <div className="form-group" style={{ gridColumn: '1 / -1' }}>
+                <label className="form-label">Online Payment Notes / UPI Details</label>
+                <input type="text" className="form-input" placeholder="e.g. PhonePe - txn_id_12345" value={rentData.notes || ''} onChange={e => setRentData({...rentData, notes: e.target.value})} />
+              </div>
+            )}
           </div>
           <div className="form-actions">
             <button type="button" className="btn btn-ghost" onClick={() => setShowRentModal(false)}>Cancel</button>
@@ -1413,9 +1414,15 @@ export default function RoomsPage() {
             <div className="form-group">
               <label className="form-label" style={{ fontSize: '12px', fontWeight: 600 }}>Payment Method</label>
               <select className="form-select" style={{ height: '48px', borderRadius: '12px', fontWeight: 600 }} value={payDuesData.method} onChange={e => setPayDuesData({...payDuesData, method: e.target.value})} required>
-                <option value="Cash">💵 Cash</option><option value="Google Pay">📱 Google Pay</option><option value="PhonePe">📱 PhonePe</option><option value="Paytm">📱 Paytm</option><option value="UPI">📱 Other UPI</option><option value="CRED">💳 CRED</option><option value="Bank Transfer">🏦 Bank Transfer</option>
+                <option value="Cash">💵 Cash</option><option value="Online">📱 Online</option>
               </select>
             </div>
+            {payDuesData.method === 'Online' && (
+              <div className="form-group">
+                <label className="form-label" style={{ fontSize: '12px', fontWeight: 600 }}>Online Payment Notes / UPI Details</label>
+                <input type="text" className="form-input" style={{ borderRadius: '12px' }} placeholder="e.g. PhonePe - txn_id_12345" value={payDuesData.notes || ''} onChange={e => setPayDuesData({...payDuesData, notes: e.target.value})} />
+              </div>
+            )}
           </div>
           <div className="form-actions" style={{ marginTop: '20px' }}>
             <button type="button" className="btn btn-ghost" onClick={() => setShowPayDuesModal(false)}>Cancel</button>

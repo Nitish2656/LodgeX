@@ -131,7 +131,7 @@ export default function Dashboard() {
         dueAmount: dueAmount,
         method: paymentFormData.method,
         status: 'completed',
-        notes: dueAmount > 0 ? `Partial payment (₹${dueAmount.toLocaleString('en-IN')} remaining)` : (paymentFormData.notes || 'Full payment'),
+        notes: (dueAmount > 0 ? `Partial payment (₹${dueAmount.toLocaleString('en-IN')} remaining)` : 'Full payment') + (paymentFormData.notes ? ` - ${paymentFormData.notes}` : ''),
         date: new Date().toISOString(),
         month: new Date().toLocaleDateString('en-IN', { month: 'short', year: 'numeric' })
     });
@@ -457,16 +457,15 @@ export default function Dashboard() {
                     <label className="form-label" style={{ fontSize: '12px', fontWeight: 600 }}>Method</label>
                     <select className="form-select" style={{ height: '48px', borderRadius: '12px' }} value={paymentFormData.method || 'Cash'} onChange={e => setPaymentFormData({...paymentFormData, method: e.target.value})}>
                         <option value="Cash">💵 Cash</option>
-                        <option value="Google Pay">📱 Google Pay</option>
-                        <option value="PhonePe">📱 PhonePe</option>
-                        <option value="Paytm">📱 Paytm</option>
-                        <option value="UPI">📱 Other UPI</option>
-                        <option value="CRED">💳 CRED</option>
-                        <option value="Amazon Pay">🛒 Amazon Pay</option>
-                        <option value="Bank Transfer">🏦 Bank Transfer</option>
-                        <option value="Card">💳 Debit/Credit Card</option>
+                        <option value="Online">📱 Online</option>
                     </select>
                 </div>
+                {paymentFormData.method === 'Online' && (
+                  <div className="form-group">
+                    <label className="form-label" style={{ fontSize: '12px', fontWeight: 600 }}>Online Payment Notes / UPI Details</label>
+                    <input type="text" className="form-input" style={{ height: '48px', borderRadius: '12px' }} placeholder="e.g. PhonePe - txn_id_12345" value={paymentFormData.notes || ''} onChange={e => setPaymentFormData({...paymentFormData, notes: e.target.value})} />
+                  </div>
+                )}
             </div>
           </div>
 

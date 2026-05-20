@@ -129,7 +129,7 @@ export default function PaymentsPage() {
             <input type="text" placeholder="Search by tenant or room..." value={search} onChange={(e) => setSearch(e.target.value)} />
             </div>
             <div className="toolbar-filters">
-            {['all', 'Cash', 'UPI', 'Bank Transfer', 'Google Pay', 'PhonePe', 'Paytm', 'Card'].map(f => (
+            {['all', 'Cash', 'Online'].map(f => (
                 <button key={f} className={`filter-btn ${filter === f ? 'active' : ''}`} onClick={() => setFilter(f)}>
                 {f === 'all' ? 'All Methods' : f}
                 </button>
@@ -228,13 +228,7 @@ export default function PaymentsPage() {
               <label className="form-label">Payment Method</label>
               <select className="form-select" value={formData.method || 'Cash'} onChange={e => setFormData({...formData, method: e.target.value})}>
                 <option value="Cash">Cash</option>
-                <option value="UPI">UPI</option>
-                <option value="Bank Transfer">Bank Transfer</option>
-                <option value="Card">Card</option>
-                <option value="Google Pay">Google Pay</option>
-                <option value="PhonePe">PhonePe</option>
-                <option value="Paytm">Paytm</option>
-                <option value="Other">Other</option>
+                <option value="Online">Online</option>
               </select>
             </div>
             <div className="form-group">
