@@ -42,14 +42,9 @@ export default function ExpensesPage() {
           <h1 className="page-title">Expenses</h1>
           <p className="page-subtitle">Track and manage all lodge expenses</p>
         </div>
-        <div className="page-header-stat" style={{ display: 'flex', alignItems: 'center', gap: '20px' }}>
-          <div style={{ textAlign: 'right' }}>
-            <span className="page-header-stat-label">Total Expenses</span>
-            <span className="page-header-stat-value text-danger">₹{totalExpenses.toLocaleString('en-IN')}</span>
-          </div>
-          <button className="page-header-btn primary" onClick={() => setShowModal(true)}>
-            <Plus size={16} /> Add Expense
-          </button>
+        <div className="page-header-stat">
+          <span className="page-header-stat-label">Total Expenses</span>
+          <span className="page-header-stat-value text-danger">₹{totalExpenses.toLocaleString('en-IN')}</span>
         </div>
       </div>
 
@@ -131,6 +126,11 @@ export default function ExpensesPage() {
               <button key={c} className={`filter-btn ${catFilter === c ? 'active' : ''}`} onClick={() => setCatFilter(c)}>{c}</button>
             ))}
           </div>
+        </div>
+        <div className="toolbar-right">
+          <button className="page-header-btn primary" onClick={() => setShowModal(true)}>
+            <Plus size={16} /> Add Expense
+          </button>
         </div>
       </div>
 
