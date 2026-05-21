@@ -1545,7 +1545,8 @@
   .mini-stat-card {
     min-width: 0;
     padding: 12px;
-    gap: 8px;
+    gap: 12px;
+    justify-content: center;
   }
   
   .mini-stat-value {
@@ -1778,7 +1779,8 @@
   .mini-stat-card {
     min-width: 0;
     padding: 12px;
-    gap: 8px;
+    gap: 12px;
+    justify-content: center;
   }
   
   .mini-stat-value {
