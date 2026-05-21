@@ -16,7 +16,6 @@ const menuItems = [
   { id: 'reports', label: 'Reports', icon: FileText },
   { id: 'backup', label: 'Backup & Restore', icon: Database },
   { id: 'notifications', label: 'Notifications', icon: Bell },
-  { id: 'settings', label: 'Settings', icon: Settings },
 ];
 
 export default function Sidebar() {
