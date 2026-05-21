@@ -1128,7 +1128,7 @@ export default function RoomsPage() {
 
       {/* Tenant Detail Popup */}
       {detailTenant && (
-        <Modal isOpen={showTenantDetail} onClose={() => setShowTenantDetail(false)} title="" maxWidth="850px">
+        <Modal isOpen={showTenantDetail} onClose={() => setShowTenantDetail(false)} title="" maxWidth="1000px">
           <div style={{ height: '120px', background: 'linear-gradient(135deg, rgba(99, 102, 241, 0.1), rgba(99, 102, 241, 0.02))', margin: '-24px -24px 0', borderTopLeftRadius: '24px', borderTopRightRadius: '24px', position: 'relative' }}>
             <div style={{ position: 'absolute', top: '24px', right: '24px', display: 'flex', gap: '12px' }}>
               <button className="btn btn-ghost" style={{ background: 'var(--bg-card)', boxShadow: '0 4px 12px rgba(0,0,0,0.05)' }} onClick={() => { setShowTenantDetail(false); const r = rooms.find(rm => (rm._id || rm.id).toString() === detailTenant.roomId?.toString()); if(r) openModal(r, 'edit'); }}>
@@ -1288,7 +1288,7 @@ export default function RoomsPage() {
                   </div>
                 </div>
                 
-                <div style={{ display: 'grid', gridTemplateColumns: 'repeat(3, 1fr)', gap: '12px' }}>
+                <div className="tracker-grid">
                   {trackerMonths.map((mName, mIdx) => {
                     const status = getMonthStatus(detailTenant, trackerYear, mIdx);
                     const paidDate = status === 'completed' ? getMonthPaidDate(detailTenant, trackerYear, mIdx) : null;
