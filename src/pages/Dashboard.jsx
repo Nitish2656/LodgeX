@@ -146,15 +146,12 @@ export default function Dashboard() {
     <div className="dashboard">
       {/* Page Header */}
       <div className="dashboard-header animate-in">
-        <div className="dashboard-header-welcome">
-          <div className="dashboard-badge">📊 Overview Dashboard</div>
+        <div>
           <h1 className="dashboard-title">Dashboard</h1>
-          <p className="dashboard-subtitle">
-            Welcome back, <span className="admin-highlight">Admin</span>. Here's your lodge overview.
-          </p>
+          <p className="dashboard-subtitle">Welcome back, Admin. Here's your lodge overview.</p>
         </div>
         <div className="dashboard-header-date">
-          <Clock size={14} className="date-icon" />
+          <Clock size={14} />
           <span>{new Date().toLocaleDateString('en-IN', { weekday: 'long', year: 'numeric', month: 'long', day: 'numeric' })}</span>
         </div>
       </div>
