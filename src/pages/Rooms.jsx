@@ -1150,7 +1150,7 @@ export default function RoomsPage() {
             </div>
           </div>
 
-          <div style={{ display: 'grid', gridTemplateColumns: 'repeat(auto-fit, minmax(320px, 1fr))', gap: '24px', marginBottom: '32px' }}>
+          <div className="tenant-details-grid">
             {/* Left Column: Tenant + Guardian + Documents + Roommates */}
             <div style={{ display: 'flex', flexDirection: 'column', gap: '24px' }}>
               {/* Tenant Details + Guardian Details + Documents - ALL IN ONE CARD */}
@@ -1221,16 +1221,16 @@ export default function RoomsPage() {
             {/* Right Column: Rent/Deposit/Dues + Rent Payment Tracker */}
             <div style={{ display: 'flex', flexDirection: 'column', gap: '24px' }}>
               {/* Rent / Deposit / Dues */}
-              <div style={{ background: 'var(--bg-secondary)', padding: '20px', borderRadius: '20px', border: '1px solid var(--border-primary)', display: 'grid', gridTemplateColumns: '1fr 1fr', gap: '20px' }}>
-                <div style={{ display: 'flex', flexDirection: 'column', gap: '4px' }}>
+              <div style={{ display: 'grid', gridTemplateColumns: '1fr 1fr', gap: '16px' }}>
+                <div style={{ background: 'var(--bg-secondary)', padding: '16px', borderRadius: '16px', border: '1px solid var(--border-primary)', display: 'flex', flexDirection: 'column', gap: '4px' }}>
                   <span style={{ fontSize: '12px', color: 'var(--text-tertiary)', fontWeight: 700, textTransform: 'uppercase' }}>Monthly Rent</span>
                   <span style={{ fontSize: '20px', fontWeight: 800 }}>₹{detailTenant.rent?.toLocaleString('en-IN') || '-'}</span>
                 </div>
-                <div style={{ display: 'flex', flexDirection: 'column', gap: '4px' }}>
+                <div style={{ background: 'var(--bg-secondary)', padding: '16px', borderRadius: '16px', border: '1px solid var(--border-primary)', display: 'flex', flexDirection: 'column', gap: '4px' }}>
                   <span style={{ fontSize: '12px', color: 'var(--text-tertiary)', fontWeight: 700, textTransform: 'uppercase' }}>Deposit</span>
                   <span style={{ fontSize: '20px', fontWeight: 800 }}>₹{detailTenant.deposit?.toLocaleString('en-IN') || '-'}</span>
                 </div>
-                <div style={{ display: 'flex', flexDirection: 'column', gap: '8px', gridColumn: '1 / -1', background: detailTenant.pendingDues > 0 ? 'rgba(239,68,68,0.05)' : 'rgba(52,211,153,0.05)', padding: '16px', borderRadius: '20px', border: detailTenant.pendingDues > 0 ? '1px solid rgba(239,68,68,0.15)' : '1px solid rgba(52,211,153,0.15)' }}>
+                <div style={{ display: 'flex', flexDirection: 'column', gap: '8px', gridColumn: '1 / -1', background: detailTenant.pendingDues > 0 ? 'rgba(239,68,68,0.05)' : 'rgba(52,211,153,0.05)', padding: '20px', borderRadius: '16px', border: detailTenant.pendingDues > 0 ? '1px solid rgba(239,68,68,0.15)' : '1px solid rgba(52,211,153,0.15)' }}>
                   <div style={{ fontSize: '12px', color: detailTenant.pendingDues > 0 ? 'rgba(239,68,68,0.8)' : 'rgba(52,211,153,0.8)', fontWeight: 800, textTransform: 'uppercase', display: 'flex', justifyContent: 'space-between', alignItems: 'center' }}>
                     <span>{detailTenant.pendingDues > 0 ? getPendingMonthsLabel(detailTenant._id || detailTenant.id) : `${new Date().toLocaleDateString('en-IN', { month: 'short' })} Rent: Paid ✓${getPaidDateLabel(detailTenant._id || detailTenant.id)}`}</span>
                     {detailTenant.pendingDues > 0 && <button style={{ background: '#ef4444', color: 'white', border: 'none', padding: '6px 14px', borderRadius: '10px', fontSize: '12px', fontWeight: 700, cursor: 'pointer', boxShadow: '0 4px 12px rgba(239,68,68,0.2)' }} onClick={() => openPayDues(detailTenant)}>Pay Now</button>}
