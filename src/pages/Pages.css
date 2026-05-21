@@ -1553,9 +1553,16 @@
   }
 
   .toolbar-filters {
+    flex: 1;
+    min-width: 0;
     overflow-x: auto;
     flex-wrap: nowrap;
     padding-bottom: 4px;
+    -webkit-overflow-scrolling: touch;
+    scrollbar-width: none; /* Hide scrollbar for a cleaner look on mobile */
+  }
+  .toolbar-filters::-webkit-scrollbar {
+    display: none;
   }
 
   .rooms-grid {
