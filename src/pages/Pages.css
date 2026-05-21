@@ -60,6 +60,7 @@
   background: var(--bg-glass-hover);
   border: 1px solid var(--border-primary);
   color: var(--text-primary);
+  flex-shrink: 0;
 }
 
 .page-header-btn:hover {
@@ -1527,6 +1528,7 @@
   .toolbar-right {
     width: 100%;
     justify-content: space-between;
+    flex-wrap: nowrap;
   }
 
   .toolbar-search {
