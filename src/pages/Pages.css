@@ -1565,6 +1565,11 @@
     display: none;
   }
 
+  .filter-btn {
+    padding: 5px 10px;
+    font-size: 11px;
+  }
+
   .rooms-grid {
     grid-template-columns: 1fr;
   }
