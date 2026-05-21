@@ -1380,8 +1380,8 @@ export default function RoomsPage() {
           </div>
 
           <div style={{ display: 'flex', alignItems: 'center', gap: '8px', marginBottom: '16px', color: 'var(--text-primary)', fontWeight: 700, fontSize: '15px' }}><History size={18} style={{ color: 'var(--accent-primary)' }} /> Payment History</div>
-          <div style={{ background: 'var(--bg-secondary)', border: '1px solid var(--border-primary)', borderRadius: '20px', overflow: 'hidden' }}>
-            <table className="data-table" style={{ border: 'none', margin: 0, width: '100%' }}>
+          <div style={{ background: 'var(--bg-secondary)', border: '1px solid var(--border-primary)', borderRadius: '20px', overflowX: 'auto' }}>
+            <table className="data-table" style={{ border: 'none', margin: 0, width: '100%', minWidth: '500px' }}>
               <thead style={{ background: 'transparent' }}><tr><th style={{ paddingLeft: '24px', borderBottom: '1px solid var(--border-primary)' }}>Date</th><th style={{ borderBottom: '1px solid var(--border-primary)' }}>Amount Paid</th><th style={{ borderBottom: '1px solid var(--border-primary)' }}>Method</th><th style={{ paddingRight: '24px', borderBottom: '1px solid var(--border-primary)' }}>Status</th></tr></thead>
               <tbody>
                 {getTenantPayments(detailTenant._id || detailTenant.id).length > 0 ? (
