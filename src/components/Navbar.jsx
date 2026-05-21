@@ -139,14 +139,7 @@ export default function Navbar() {
         <div className="navbar-notif-wrapper" ref={notifRef}>
           <button
             className={`navbar-icon-btn ${showNotifPanel ? 'active' : ''}`}
-            onClick={() => {
-              if (window.innerWidth <= 768) {
-                setActivePage('notifications');
-              } else {
-                setShowNotifPanel(!showNotifPanel);
-                setShowProfileMenu(false);
-              }
-            }}
+            onClick={() => { setShowNotifPanel(!showNotifPanel); setShowProfileMenu(false); }}
           >
             <Bell size={20} />
             {unreadNotifications > 0 && (
@@ -169,7 +162,11 @@ export default function Navbar() {
                   <button
                     key={n.id}
                     className={`notif-item ${!n.read ? 'unread' : ''}`}
-                    onClick={() => markNotificationRead(n.id)}
+                    onClick={() => {
+                      markNotificationRead(n.id);
+                      setActivePage('notifications');
+                      setShowNotifPanel(false);
+                    }}
                   >
                     <span className="notif-item-icon">{notifIcon(n.type)}</span>
                     <div className="notif-item-content">
