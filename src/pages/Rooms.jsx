@@ -1154,227 +1154,234 @@ export default function RoomsPage() {
             </div>
           </div>
 
-          <div style={{ display: 'grid', gridTemplateColumns: 'repeat(auto-fit, minmax(280px, 1fr))', gap: '20px', marginBottom: '32px' }}>
-            <div style={{ background: 'var(--bg-secondary)', padding: '20px', borderRadius: '20px', border: '1px solid var(--border-primary)' }}>
-              <div style={{ display: 'flex', alignItems: 'center', gap: '8px', marginBottom: '16px', color: 'var(--text-primary)', fontWeight: 700, fontSize: '15px' }}><Phone size={18} style={{ color: 'var(--accent-primary)' }} /> Personal Details</div>
-              <div style={{ display: 'flex', flexDirection: 'column', gap: '12px' }}>
-                <div style={{ display: 'flex', justifyContent: 'space-between' }}><span style={{ fontSize: '13px', color: 'var(--text-tertiary)', fontWeight: 600 }}>Phone</span><span style={{ fontSize: '14px', fontWeight: 600 }}>{detailTenant.phone}</span></div>
-                <div style={{ display: 'flex', justifyContent: 'space-between' }}><span style={{ fontSize: '13px', color: 'var(--text-tertiary)', fontWeight: 600 }}>Address</span><span style={{ fontSize: '14px', fontWeight: 600, textAlign: 'right', maxWidth: '180px' }}>{detailTenant.address || '-'}</span></div>
-              </div>
-            </div>
-            <div style={{ background: 'var(--bg-secondary)', padding: '20px', borderRadius: '20px', border: '1px solid var(--border-primary)' }}>
-              <div style={{ display: 'flex', alignItems: 'center', gap: '8px', marginBottom: '16px', color: 'var(--text-primary)', fontWeight: 700, fontSize: '15px' }}><ShieldCheck size={18} style={{ color: 'var(--success)' }} /> Guardian Details</div>
-              <div style={{ display: 'flex', flexDirection: 'column', gap: '12px' }}>
-                <div style={{ display: 'flex', justifyContent: 'space-between' }}><span style={{ fontSize: '13px', color: 'var(--text-tertiary)', fontWeight: 600 }}>Name</span><span style={{ fontSize: '14px', fontWeight: 600 }}>{detailTenant.parentName || '-'}</span></div>
-                <div style={{ display: 'flex', justifyContent: 'space-between' }}><span style={{ fontSize: '13px', color: 'var(--text-tertiary)', fontWeight: 600 }}>Contact</span><span style={{ fontSize: '14px', fontWeight: 600 }}>{detailTenant.parentPhone || '-'}</span></div>
-              </div>
-            </div>
-            <div style={{ background: 'var(--bg-secondary)', padding: '20px', borderRadius: '20px', border: '1px solid var(--border-primary)', gridColumn: '1 / -1', display: 'grid', gridTemplateColumns: 'repeat(auto-fit, minmax(200px, 1fr))', gap: '20px' }}>
-              <div style={{ display: 'flex', flexDirection: 'column', gap: '4px' }}>
-                <span style={{ fontSize: '12px', color: 'var(--text-tertiary)', fontWeight: 700, textTransform: 'uppercase' }}>Monthly Rent</span>
-                <span style={{ fontSize: '20px', fontWeight: 800 }}>₹{detailTenant.rent?.toLocaleString('en-IN') || '-'}</span>
-              </div>
-              <div style={{ display: 'flex', flexDirection: 'column', gap: '4px' }}>
-                <span style={{ fontSize: '12px', color: 'var(--text-tertiary)', fontWeight: 700, textTransform: 'uppercase' }}>Deposit</span>
-                <span style={{ fontSize: '20px', fontWeight: 800 }}>₹{detailTenant.deposit?.toLocaleString('en-IN') || '-'}</span>
-              </div>
-              <div style={{ display: 'flex', flexDirection: 'column', gap: '8px', background: detailTenant.pendingDues > 0 ? 'rgba(239,68,68,0.05)' : 'rgba(52,211,153,0.05)', padding: '16px', borderRadius: '20px', margin: '-12px', border: detailTenant.pendingDues > 0 ? '1px solid rgba(239,68,68,0.15)' : '1px solid rgba(52,211,153,0.15)' }}>
-                <div style={{ fontSize: '12px', color: detailTenant.pendingDues > 0 ? 'rgba(239,68,68,0.8)' : 'rgba(52,211,153,0.8)', fontWeight: 800, textTransform: 'uppercase', display: 'flex', justifyContent: 'space-between', alignItems: 'center' }}>
-                  <span>{detailTenant.pendingDues > 0 ? getPendingMonthsLabel(detailTenant._id || detailTenant.id) : `${new Date().toLocaleDateString('en-IN', { month: 'short' })} Rent: Paid ✓${getPaidDateLabel(detailTenant._id || detailTenant.id)}`}</span>
-                  {detailTenant.pendingDues > 0 && <button style={{ background: '#ef4444', color: 'white', border: 'none', padding: '6px 14px', borderRadius: '10px', fontSize: '12px', fontWeight: 700, cursor: 'pointer', boxShadow: '0 4px 12px rgba(239,68,68,0.2)' }} onClick={() => openPayDues(detailTenant)}>Pay Now</button>}
+          <div style={{ display: 'grid', gridTemplateColumns: 'repeat(auto-fit, minmax(320px, 1fr))', gap: '24px', marginBottom: '32px' }}>
+            {/* Left Column: Tenant + Guardian + Documents + Roommates */}
+            <div style={{ display: 'flex', flexDirection: 'column', gap: '24px' }}>
+              {/* Tenant Details + Guardian Details + Documents - ALL IN ONE CARD */}
+              <div style={{ background: 'var(--bg-secondary)', padding: '20px', borderRadius: '20px', border: '1px solid var(--border-primary)' }}>
+                <div style={{ display: 'flex', alignItems: 'center', gap: '8px', marginBottom: '16px', color: 'var(--text-primary)', fontWeight: 700, fontSize: '15px' }}><Phone size={18} style={{ color: 'var(--accent-primary)' }} /> Tenant Details</div>
+                <div style={{ display: 'flex', flexDirection: 'column', gap: '12px', marginBottom: '24px' }}>
+                  <div style={{ display: 'flex', justifyContent: 'space-between' }}><span style={{ fontSize: '13px', color: 'var(--text-tertiary)', fontWeight: 600 }}>Phone</span><span style={{ fontSize: '14px', fontWeight: 600 }}>{detailTenant.phone}</span></div>
+                  <div style={{ display: 'flex', justifyContent: 'space-between' }}><span style={{ fontSize: '13px', color: 'var(--text-tertiary)', fontWeight: 600 }}>Address</span><span style={{ fontSize: '14px', fontWeight: 600, textAlign: 'right', maxWidth: '180px' }}>{detailTenant.address || '-'}</span></div>
                 </div>
-                <div style={{ fontSize: '28px', fontWeight: 800, color: detailTenant.pendingDues > 0 ? '#ef4444' : '#34d399' }}>
-                  {detailTenant.pendingDues > 0 ? `₹${detailTenant.pendingDues.toLocaleString('en-IN')} Due` : 'No Pending Dues'}
+
+                <div style={{ display: 'flex', alignItems: 'center', gap: '8px', marginBottom: '16px', color: 'var(--text-primary)', fontWeight: 700, fontSize: '15px' }}><ShieldCheck size={18} style={{ color: 'var(--success)' }} /> Guardian Details</div>
+                <div style={{ display: 'flex', flexDirection: 'column', gap: '12px', marginBottom: '24px' }}>
+                  <div style={{ display: 'flex', justifyContent: 'space-between' }}><span style={{ fontSize: '13px', color: 'var(--text-tertiary)', fontWeight: 600 }}>Name</span><span style={{ fontSize: '14px', fontWeight: 600 }}>{detailTenant.parentName || '-'}</span></div>
+                  <div style={{ display: 'flex', justifyContent: 'space-between' }}><span style={{ fontSize: '13px', color: 'var(--text-tertiary)', fontWeight: 600 }}>Contact</span><span style={{ fontSize: '14px', fontWeight: 600 }}>{detailTenant.parentPhone || '-'}</span></div>
                 </div>
-                {detailTenant.pendingDues > 0 && payments.filter(p => (p.tenantId === (detailTenant._id || detailTenant.id) || p._id === (detailTenant._id || detailTenant.id)) && p.status === 'pending').length > 0 && (
-                  <div style={{ marginTop: '8px', paddingTop: '12px', borderTop: '1px solid rgba(239,68,68,0.15)', display: 'flex', flexDirection: 'column', gap: '6px' }}>
-                    <div style={{ fontSize: '11px', fontWeight: 700, color: 'rgba(239,68,68,0.7)', textTransform: 'uppercase', letterSpacing: '0.05em' }}>Dues Breakdown</div>
-                    {(() => {
-                      const pending = payments.filter(p => (p.tenantId === (detailTenant._id || detailTenant.id) || p._id === (detailTenant._id || detailTenant.id)) && p.status === 'pending');
-                      const grouped = {};
-                      pending.forEach(p => { const m = p.month || 'Advance/Other'; grouped[m] = (grouped[m] || 0) + (p.dueAmount !== undefined ? p.dueAmount : p.totalAmount); });
-                      return Object.keys(grouped).map(m => (
-                        <div key={m} style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', fontSize: '13px', fontWeight: 600, color: 'var(--text-primary)', background: 'rgba(255,255,255,0.5)', padding: '6px 12px', borderRadius: '8px', border: '1px solid rgba(239,68,68,0.1)' }}>
-                          <span style={{ display: 'flex', alignItems: 'center', gap: '6px' }}>📅 {m}</span>
-                          <span style={{ color: '#ef4444', fontWeight: 700 }}>₹{grouped[m].toLocaleString('en-IN')}</span>
-                        </div>
-                      ));
-                    })()}
+
+                <div style={{ display: 'flex', alignItems: 'center', gap: '8px', marginBottom: '16px', color: 'var(--text-primary)', fontWeight: 700, fontSize: '15px' }}><FileText size={18} style={{ color: 'var(--warning)' }} /> Documents</div>
+                <div style={{ display: 'flex', gap: '12px', flexWrap: 'wrap' }}>
+                  <div style={{ background: 'var(--bg-card)', border: '1px solid var(--border-primary)', padding: '12px', borderRadius: '12px', display: 'flex', alignItems: 'center', gap: '12px', cursor: isDocUploaded(detailTenant.idProof) ? 'pointer' : 'default', flex: '1 1 calc(50% - 6px)', opacity: isDocUploaded(detailTenant.idProof) ? 1 : 0.5 }} onClick={() => handleViewDoc(detailTenant.idProof, 'Tenant Aadhaar')}><FileText size={16} style={{ color: isDocUploaded(detailTenant.idProof) ? 'var(--accent-primary)' : 'var(--text-tertiary)' }} /><span style={{ fontSize: '12px', fontWeight: 600, flex: 1 }}>Aadhaar</span>{isDocUploaded(detailTenant.idProof) ? <Download size={14} style={{ color: 'var(--text-tertiary)' }} /> : <span style={{ fontSize: '10px', fontWeight: 700, color: 'var(--text-tertiary)', background: 'rgba(255,255,255,0.05)', padding: '2px 8px', borderRadius: '6px' }}>N/A</span>}</div>
+                  <div style={{ background: 'var(--bg-card)', border: '1px solid var(--border-primary)', padding: '12px', borderRadius: '12px', display: 'flex', alignItems: 'center', gap: '12px', cursor: isDocUploaded(detailTenant.parentIdProof) ? 'pointer' : 'default', flex: '1 1 calc(50% - 6px)', opacity: isDocUploaded(detailTenant.parentIdProof) ? 1 : 0.5 }} onClick={() => handleViewDoc(detailTenant.parentIdProof, 'Parent Aadhaar')}><FileText size={16} style={{ color: isDocUploaded(detailTenant.parentIdProof) ? 'var(--accent-primary)' : 'var(--text-tertiary)' }} /><span style={{ fontSize: '12px', fontWeight: 600, flex: 1 }}>Parent ID</span>{isDocUploaded(detailTenant.parentIdProof) ? <Download size={14} style={{ color: 'var(--text-tertiary)' }} /> : <span style={{ fontSize: '10px', fontWeight: 700, color: 'var(--text-tertiary)', background: 'rgba(255,255,255,0.05)', padding: '2px 8px', borderRadius: '6px' }}>N/A</span>}</div>
+                  <div style={{ background: 'var(--bg-card)', border: '1px solid var(--border-primary)', padding: '12px', borderRadius: '12px', display: 'flex', alignItems: 'center', gap: '12px', cursor: isDocUploaded(detailTenant.avatar) ? 'pointer' : 'default', flex: '1 1 100%', opacity: isDocUploaded(detailTenant.avatar) ? 1 : 0.5 }} onClick={() => handleViewDoc(detailTenant.avatar, 'Tenant Photo')}><Image size={16} style={{ color: isDocUploaded(detailTenant.avatar) ? 'var(--accent-primary)' : 'var(--text-tertiary)' }} /><span style={{ fontSize: '12px', fontWeight: 600, flex: 1 }}>Tenant Photo</span>{isDocUploaded(detailTenant.avatar) ? <Download size={14} style={{ color: 'var(--text-tertiary)' }} /> : <span style={{ fontSize: '10px', fontWeight: 700, color: 'var(--text-tertiary)', background: 'rgba(255,255,255,0.05)', padding: '2px 8px', borderRadius: '6px' }}>N/A</span>}</div>
+                </div>
+              </div>
+
+              {/* Roommates Card */}
+              {detailTenant.coTenants && detailTenant.coTenants.length > 0 && (
+                <div style={{ background: 'var(--bg-secondary)', padding: '20px', borderRadius: '20px', border: '1px solid var(--border-primary)' }}>
+                  <div style={{ display: 'flex', alignItems: 'center', gap: '8px', marginBottom: '16px', color: 'var(--text-primary)', fontWeight: 700, fontSize: '15px' }}>
+                    <Users size={18} style={{ color: 'var(--accent-primary)' }} /> Roommates ({detailTenant.coTenants.length})
                   </div>
-                )}
-              </div>
+                  <div style={{ display: 'flex', flexDirection: 'column', gap: '16px' }}>
+                    {detailTenant.coTenants.map((ct, idx) => (
+                      <div key={idx} style={{ background: 'var(--bg-card)', padding: '16px', borderRadius: '16px', border: '1px solid var(--border-primary)' }}>
+                        <div style={{ display: 'flex', alignItems: 'center', gap: '12px', marginBottom: '16px' }}>
+                          <img src={ct.avatar || `https://api.dicebear.com/9.x/initials/svg?seed=${ct.name}&backgroundColor=6366f1`} alt="" style={{ width: '40px', height: '40px', borderRadius: '50%', objectFit: 'cover', border: '2px solid var(--bg-secondary)' }} />
+                          <div>
+                            <div style={{ fontSize: '14px', fontWeight: 700, color: 'var(--text-primary)' }}>{ct.name}</div>
+                            <div style={{ fontSize: '12px', color: 'var(--text-tertiary)', fontWeight: 600 }}>{ct.phone}</div>
+                          </div>
+                        </div>
+                        <div style={{ display: 'flex', flexDirection: 'column', gap: '8px', marginBottom: '16px' }}>
+                          <div style={{ fontSize: '11px', color: 'var(--text-tertiary)', fontWeight: 600, display: 'flex', justifyContent: 'space-between' }}>
+                            <span>Guardian</span>
+                            <span style={{ color: 'var(--text-primary)' }}>{ct.parentName || '-'} {ct.parentPhone ? `(${ct.parentPhone})` : ''}</span>
+                          </div>
+                        </div>
+                        <div style={{ display: 'flex', gap: '8px' }}>
+                          <div style={{ background: 'var(--bg-secondary)', padding: '8px 12px', borderRadius: '8px', fontSize: '11px', fontWeight: 600, display: 'flex', justifyContent: 'space-between', alignItems: 'center', flex: 1, cursor: isDocUploaded(ct.idProof) ? 'pointer' : 'default', border: '1px solid var(--border-primary)', opacity: isDocUploaded(ct.idProof) ? 1 : 0.5 }} onClick={() => handleViewDoc(ct.idProof, `${ct.name} - Aadhaar`)}>
+                            <span style={{color: isDocUploaded(ct.idProof) ? 'inherit' : 'var(--text-tertiary)'}}>Aadhaar</span>
+                            {isDocUploaded(ct.idProof) ? <Download size={12} style={{color: 'var(--accent-primary)'}}/> : <span style={{ fontSize: '9px', fontWeight: 700, color: 'var(--text-tertiary)', background: 'rgba(255,255,255,0.05)', padding: '2px 4px', borderRadius: '4px' }}>N/A</span>}
+                          </div>
+                          <div style={{ background: 'var(--bg-secondary)', padding: '8px 12px', borderRadius: '8px', fontSize: '11px', fontWeight: 600, display: 'flex', justifyContent: 'space-between', alignItems: 'center', flex: 1, cursor: isDocUploaded(ct.parentIdProof) ? 'pointer' : 'default', border: '1px solid var(--border-primary)', opacity: isDocUploaded(ct.parentIdProof) ? 1 : 0.5 }} onClick={() => handleViewDoc(ct.parentIdProof, `${ct.name} - Parent ID`)}>
+                            <span style={{color: isDocUploaded(ct.parentIdProof) ? 'inherit' : 'var(--text-tertiary)'}}>Parent ID</span>
+                            {isDocUploaded(ct.parentIdProof) ? <Download size={12} style={{color: 'var(--accent-primary)'}}/> : <span style={{ fontSize: '9px', fontWeight: 700, color: 'var(--text-tertiary)', background: 'rgba(255,255,255,0.05)', padding: '2px 4px', borderRadius: '4px' }}>N/A</span>}
+                          </div>
+                          <div style={{ background: 'var(--bg-secondary)', padding: '8px 12px', borderRadius: '8px', fontSize: '11px', fontWeight: 600, display: 'flex', justifyContent: 'space-between', alignItems: 'center', flex: 1, cursor: isDocUploaded(ct.avatar) ? 'pointer' : 'default', border: '1px solid var(--border-primary)', opacity: isDocUploaded(ct.avatar) ? 1 : 0.5 }} onClick={() => handleViewDoc(ct.avatar, `${ct.name} - Photo`)}>
+                            <span style={{color: isDocUploaded(ct.avatar) ? 'inherit' : 'var(--text-tertiary)'}}>Photo</span>
+                            {isDocUploaded(ct.avatar) ? <Download size={12} style={{color: 'var(--accent-primary)'}}/> : <span style={{ fontSize: '9px', fontWeight: 700, color: 'var(--text-tertiary)', background: 'rgba(255,255,255,0.05)', padding: '2px 4px', borderRadius: '4px' }}>N/A</span>}
+                          </div>
+                        </div>
+                      </div>
+                    ))}
+                  </div>
+                </div>
+              )}
             </div>
-            {/* Rent Payment Tracker Grid */}
-            <div style={{ background: 'var(--bg-secondary)', padding: '20px', borderRadius: '20px', border: '1px solid var(--border-primary)', gridColumn: '1 / -1' }}>
-              <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', marginBottom: '20px', flexWrap: 'wrap', gap: '12px' }}>
-                <div style={{ display: 'flex', alignItems: 'center', gap: '8px', color: 'var(--text-primary)', fontWeight: 700, fontSize: '15px' }}>
-                  <Calendar size={18} style={{ color: 'var(--accent-primary)' }} />
-                  Rent Payment Tracker
-                </div>
-                {/* Year selector tabs */}
-                <div style={{ display: 'flex', gap: '4px', background: 'var(--bg-primary)', padding: '4px', borderRadius: '12px', border: '1px solid var(--border-primary)' }}>
-                  {getTrackerYears(detailTenant).map(yr => (
-                    <button
-                      key={yr}
-                      type="button"
-                      onClick={() => setTrackerYear(yr)}
-                      style={{
-                        background: trackerYear === yr ? 'var(--accent-primary)' : 'transparent',
-                        color: trackerYear === yr ? '#fff' : 'var(--text-secondary)',
-                        border: 'none',
-                        padding: '6px 14px',
-                        borderRadius: '8px',
-                        fontSize: '12px',
-                        fontWeight: 700,
-                        cursor: 'pointer',
-                        transition: 'all 0.2s ease'
-                      }}
-                    >
-                      {yr}
-                    </button>
-                  ))}
-                </div>
-              </div>
-              
-              <div style={{ display: 'grid', gridTemplateColumns: 'repeat(auto-fill, minmax(110px, 1fr))', gap: '12px' }}>
-                {trackerMonths.map((mName, mIdx) => {
-                  const status = getMonthStatus(detailTenant, trackerYear, mIdx);
-                  const paidDate = status === 'completed' ? getMonthPaidDate(detailTenant, trackerYear, mIdx) : null;
-                  
-                  let bgColor = 'rgba(255, 255, 255, 0.02)';
-                  let textColor = 'var(--text-tertiary)';
-                  let borderColor = 'var(--border-primary)';
-                  let badgeText = 'Not Due';
-                  let badgeBg = 'rgba(255, 255, 255, 0.05)';
-                  let badgeColor = 'var(--text-tertiary)';
-                  let opacity = 0.5;
 
-                  if (status === 'completed') {
-                    bgColor = 'rgba(16, 185, 129, 0.02)';
-                    textColor = 'var(--text-primary)';
-                    borderColor = 'rgba(16, 185, 129, 0.15)';
-                    badgeText = 'Paid ✓';
-                    badgeBg = 'rgba(16, 185, 129, 0.1)';
-                    badgeColor = '#10b981';
-                    opacity = 1;
-                  } else if (status === 'pending') {
-                    bgColor = 'rgba(239, 68, 68, 0.02)';
-                    textColor = 'var(--text-primary)';
-                    borderColor = 'rgba(239, 68, 68, 0.15)';
-                    badgeText = 'Pending ✗';
-                    badgeBg = 'rgba(239, 68, 68, 0.1)';
-                    badgeColor = '#ef4444';
-                    opacity = 1;
-                  } else if (status === 'N/A') {
-                    bgColor = 'transparent';
-                    textColor = 'var(--text-tertiary)';
-                    borderColor = 'rgba(255, 255, 255, 0.05)';
-                    badgeText = 'N/A';
-                    badgeBg = 'rgba(255, 255, 255, 0.02)';
-                    badgeColor = 'var(--text-tertiary)';
-                    opacity = 0.35;
-                  }
-
-                  return (
-                    <div
-                      key={mName}
-                      style={{
-                        background: bgColor,
-                        border: `1px solid ${borderColor}`,
-                        borderRadius: '16px',
-                        padding: '16px 12px',
-                        textAlign: 'center',
-                        display: 'flex',
-                        flexDirection: 'column',
-                        alignItems: 'center',
-                        justifyContent: 'center',
-                        gap: '6px',
-                        opacity: opacity,
-                        transition: 'all 0.2s ease',
-                        boxShadow: status === 'completed' || status === 'pending' ? '0 4px 12px rgba(0, 0, 0, 0.05)' : 'none'
-                      }}
-                    >
-                      <span style={{ fontSize: '14px', fontWeight: 700, color: 'var(--text-primary)' }}>
-                        {mName}
-                      </span>
-                      <span style={{ 
-                        fontSize: '11px', 
-                        fontWeight: 800, 
-                        color: badgeColor, 
-                        background: badgeBg, 
-                        padding: '3px 8px', 
-                        borderRadius: '8px',
-                        textTransform: 'uppercase',
-                        letterSpacing: '0.02em'
-                      }}>
-                        {badgeText}
-                      </span>
-                      {status === 'completed' && paidDate && (
-                        <span style={{
-                          fontSize: '10px',
-                          fontWeight: 600,
-                          color: 'rgba(16, 185, 129, 0.7)',
-                          marginTop: '2px'
-                        }}>
-                          {paidDate}
-                        </span>
-                      )}
+            {/* Right Column: Rent/Deposit/Dues + Rent Payment Tracker */}
+            <div style={{ display: 'flex', flexDirection: 'column', gap: '24px' }}>
+              {/* Rent / Deposit / Dues */}
+              <div style={{ background: 'var(--bg-secondary)', padding: '20px', borderRadius: '20px', border: '1px solid var(--border-primary)', display: 'grid', gridTemplateColumns: '1fr 1fr', gap: '20px' }}>
+                <div style={{ display: 'flex', flexDirection: 'column', gap: '4px' }}>
+                  <span style={{ fontSize: '12px', color: 'var(--text-tertiary)', fontWeight: 700, textTransform: 'uppercase' }}>Monthly Rent</span>
+                  <span style={{ fontSize: '20px', fontWeight: 800 }}>₹{detailTenant.rent?.toLocaleString('en-IN') || '-'}</span>
+                </div>
+                <div style={{ display: 'flex', flexDirection: 'column', gap: '4px' }}>
+                  <span style={{ fontSize: '12px', color: 'var(--text-tertiary)', fontWeight: 700, textTransform: 'uppercase' }}>Deposit</span>
+                  <span style={{ fontSize: '20px', fontWeight: 800 }}>₹{detailTenant.deposit?.toLocaleString('en-IN') || '-'}</span>
+                </div>
+                <div style={{ display: 'flex', flexDirection: 'column', gap: '8px', gridColumn: '1 / -1', background: detailTenant.pendingDues > 0 ? 'rgba(239,68,68,0.05)' : 'rgba(52,211,153,0.05)', padding: '16px', borderRadius: '20px', border: detailTenant.pendingDues > 0 ? '1px solid rgba(239,68,68,0.15)' : '1px solid rgba(52,211,153,0.15)' }}>
+                  <div style={{ fontSize: '12px', color: detailTenant.pendingDues > 0 ? 'rgba(239,68,68,0.8)' : 'rgba(52,211,153,0.8)', fontWeight: 800, textTransform: 'uppercase', display: 'flex', justifyContent: 'space-between', alignItems: 'center' }}>
+                    <span>{detailTenant.pendingDues > 0 ? getPendingMonthsLabel(detailTenant._id || detailTenant.id) : `${new Date().toLocaleDateString('en-IN', { month: 'short' })} Rent: Paid ✓${getPaidDateLabel(detailTenant._id || detailTenant.id)}`}</span>
+                    {detailTenant.pendingDues > 0 && <button style={{ background: '#ef4444', color: 'white', border: 'none', padding: '6px 14px', borderRadius: '10px', fontSize: '12px', fontWeight: 700, cursor: 'pointer', boxShadow: '0 4px 12px rgba(239,68,68,0.2)' }} onClick={() => openPayDues(detailTenant)}>Pay Now</button>}
+                  </div>
+                  <div style={{ fontSize: '28px', fontWeight: 800, color: detailTenant.pendingDues > 0 ? '#ef4444' : '#34d399' }}>
+                    {detailTenant.pendingDues > 0 ? `₹${detailTenant.pendingDues.toLocaleString('en-IN')} Due` : 'No Pending Dues'}
+                  </div>
+                  {detailTenant.pendingDues > 0 && payments.filter(p => (p.tenantId === (detailTenant._id || detailTenant.id) || p._id === (detailTenant._id || detailTenant.id)) && p.status === 'pending').length > 0 && (
+                    <div style={{ marginTop: '8px', paddingTop: '12px', borderTop: '1px solid rgba(239,68,68,0.15)', display: 'flex', flexDirection: 'column', gap: '6px' }}>
+                      <div style={{ fontSize: '11px', fontWeight: 700, color: 'rgba(239,68,68,0.7)', textTransform: 'uppercase', letterSpacing: '0.05em' }}>Dues Breakdown</div>
+                      {(() => {
+                        const pending = payments.filter(p => (p.tenantId === (detailTenant._id || detailTenant.id) || p._id === (detailTenant._id || detailTenant.id)) && p.status === 'pending');
+                        const grouped = {};
+                        pending.forEach(p => { const m = p.month || 'Advance/Other'; grouped[m] = (grouped[m] || 0) + (p.dueAmount !== undefined ? p.dueAmount : p.totalAmount); });
+                        return Object.keys(grouped).map(m => (
+                          <div key={m} style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', fontSize: '13px', fontWeight: 600, color: 'var(--text-primary)', background: 'rgba(255,255,255,0.5)', padding: '6px 12px', borderRadius: '8px', border: '1px solid rgba(239,68,68,0.1)' }}>
+                            <span style={{ display: 'flex', alignItems: 'center', gap: '6px' }}>📅 {m}</span>
+                            <span style={{ color: '#ef4444', fontWeight: 700 }}>₹{grouped[m].toLocaleString('en-IN')}</span>
+                          </div>
+                        ));
+                      })()}
                     </div>
-                  );
-                })}
+                  )}
+                </div>
               </div>
-            </div>
 
-            <div style={{ background: 'var(--bg-secondary)', padding: '20px', borderRadius: '20px', border: '1px solid var(--border-primary)', gridColumn: '1 / -1' }}>
-              <div style={{ display: 'flex', alignItems: 'center', gap: '8px', marginBottom: '16px', color: 'var(--text-primary)', fontWeight: 700, fontSize: '15px' }}><FileText size={18} style={{ color: 'var(--warning)' }} /> Documents</div>
-              <div style={{ display: 'flex', gap: '12px', flexWrap: 'wrap' }}>
-                <div style={{ background: 'var(--bg-card)', border: '1px solid var(--border-primary)', padding: '12px 16px', borderRadius: '12px', display: 'flex', alignItems: 'center', gap: '12px', cursor: isDocUploaded(detailTenant.idProof) ? 'pointer' : 'default', flex: '1 1 200px', opacity: isDocUploaded(detailTenant.idProof) ? 1 : 0.5 }} onClick={() => handleViewDoc(detailTenant.idProof, 'Tenant Aadhaar')}><FileText size={20} style={{ color: isDocUploaded(detailTenant.idProof) ? 'var(--accent-primary)' : 'var(--text-tertiary)' }} /><span style={{ fontSize: '13px', fontWeight: 600, flex: 1 }}>Tenant Aadhaar</span>{isDocUploaded(detailTenant.idProof) ? <Download size={14} style={{ color: 'var(--text-tertiary)' }} /> : <span style={{ fontSize: '10px', fontWeight: 700, color: 'var(--text-tertiary)', background: 'rgba(255,255,255,0.05)', padding: '2px 8px', borderRadius: '6px' }}>Not Uploaded</span>}</div>
-                <div style={{ background: 'var(--bg-card)', border: '1px solid var(--border-primary)', padding: '12px 16px', borderRadius: '12px', display: 'flex', alignItems: 'center', gap: '12px', cursor: isDocUploaded(detailTenant.parentIdProof) ? 'pointer' : 'default', flex: '1 1 200px', opacity: isDocUploaded(detailTenant.parentIdProof) ? 1 : 0.5 }} onClick={() => handleViewDoc(detailTenant.parentIdProof, 'Parent Aadhaar')}><FileText size={20} style={{ color: isDocUploaded(detailTenant.parentIdProof) ? 'var(--accent-primary)' : 'var(--text-tertiary)' }} /><span style={{ fontSize: '13px', fontWeight: 600, flex: 1 }}>Parent Aadhaar</span>{isDocUploaded(detailTenant.parentIdProof) ? <Download size={14} style={{ color: 'var(--text-tertiary)' }} /> : <span style={{ fontSize: '10px', fontWeight: 700, color: 'var(--text-tertiary)', background: 'rgba(255,255,255,0.05)', padding: '2px 8px', borderRadius: '6px' }}>Not Uploaded</span>}</div>
-                <div style={{ background: 'var(--bg-card)', border: '1px solid var(--border-primary)', padding: '12px 16px', borderRadius: '12px', display: 'flex', alignItems: 'center', gap: '12px', cursor: isDocUploaded(detailTenant.avatar) ? 'pointer' : 'default', flex: '1 1 200px', opacity: isDocUploaded(detailTenant.avatar) ? 1 : 0.5 }} onClick={() => handleViewDoc(detailTenant.avatar, 'Tenant Photo')}><Image size={20} style={{ color: isDocUploaded(detailTenant.avatar) ? 'var(--accent-primary)' : 'var(--text-tertiary)' }} /><span style={{ fontSize: '13px', fontWeight: 600, flex: 1 }}>Tenant Photo</span>{isDocUploaded(detailTenant.avatar) ? <Download size={14} style={{ color: 'var(--text-tertiary)' }} /> : <span style={{ fontSize: '10px', fontWeight: 700, color: 'var(--text-tertiary)', background: 'rgba(255,255,255,0.05)', padding: '2px 8px', borderRadius: '6px' }}>Not Uploaded</span>}</div>
+              {/* Rent Payment Tracker Grid */}
+              <div style={{ background: 'var(--bg-secondary)', padding: '20px', borderRadius: '20px', border: '1px solid var(--border-primary)' }}>
+                <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', marginBottom: '20px', flexWrap: 'wrap', gap: '12px' }}>
+                  <div style={{ display: 'flex', alignItems: 'center', gap: '8px', color: 'var(--text-primary)', fontWeight: 700, fontSize: '15px' }}>
+                    <Calendar size={18} style={{ color: 'var(--accent-primary)' }} />
+                    Rent Payment Tracker
+                  </div>
+                  <div style={{ display: 'flex', gap: '4px', background: 'var(--bg-primary)', padding: '4px', borderRadius: '12px', border: '1px solid var(--border-primary)' }}>
+                    {getTrackerYears(detailTenant).map(yr => (
+                      <button
+                        key={yr}
+                        type="button"
+                        onClick={() => setTrackerYear(yr)}
+                        style={{
+                          background: trackerYear === yr ? 'var(--accent-primary)' : 'transparent',
+                          color: trackerYear === yr ? '#fff' : 'var(--text-secondary)',
+                          border: 'none',
+                          padding: '6px 14px',
+                          borderRadius: '8px',
+                          fontSize: '12px',
+                          fontWeight: 700,
+                          cursor: 'pointer',
+                          transition: 'all 0.2s ease'
+                        }}
+                      >
+                        {yr}
+                      </button>
+                    ))}
+                  </div>
+                </div>
+                
+                <div style={{ display: 'grid', gridTemplateColumns: 'repeat(3, 1fr)', gap: '12px' }}>
+                  {trackerMonths.map((mName, mIdx) => {
+                    const status = getMonthStatus(detailTenant, trackerYear, mIdx);
+                    const paidDate = status === 'completed' ? getMonthPaidDate(detailTenant, trackerYear, mIdx) : null;
+                    
+                    let bgColor = 'rgba(255, 255, 255, 0.02)';
+                    let textColor = 'var(--text-tertiary)';
+                    let borderColor = 'var(--border-primary)';
+                    let badgeText = 'Not Due';
+                    let badgeBg = 'rgba(255, 255, 255, 0.05)';
+                    let badgeColor = 'var(--text-tertiary)';
+                    let opacity = 0.5;
+
+                    if (status === 'completed') {
+                      bgColor = 'rgba(16, 185, 129, 0.02)';
+                      textColor = 'var(--text-primary)';
+                      borderColor = 'rgba(16, 185, 129, 0.15)';
+                      badgeText = 'Paid ✓';
+                      badgeBg = 'rgba(16, 185, 129, 0.1)';
+                      badgeColor = '#10b981';
+                      opacity = 1;
+                    } else if (status === 'pending') {
+                      bgColor = 'rgba(239, 68, 68, 0.02)';
+                      textColor = 'var(--text-primary)';
+                      borderColor = 'rgba(239, 68, 68, 0.15)';
+                      badgeText = 'Pending ✗';
+                      badgeBg = 'rgba(239, 68, 68, 0.1)';
+                      badgeColor = '#ef4444';
+                      opacity = 1;
+                    } else if (status === 'N/A') {
+                      bgColor = 'transparent';
+                      textColor = 'var(--text-tertiary)';
+                      borderColor = 'rgba(255, 255, 255, 0.05)';
+                      badgeText = 'N/A';
+                      badgeBg = 'rgba(255, 255, 255, 0.02)';
+                      badgeColor = 'var(--text-tertiary)';
+                      opacity = 0.35;
+                    }
+
+                    return (
+                      <div
+                        key={mName}
+                        style={{
+                          background: bgColor,
+                          border: `1px solid ${borderColor}`,
+                          borderRadius: '16px',
+                          padding: '16px 12px',
+                          textAlign: 'center',
+                          display: 'flex',
+                          flexDirection: 'column',
+                          alignItems: 'center',
+                          justifyContent: 'center',
+                          gap: '6px',
+                          opacity: opacity,
+                          transition: 'all 0.2s ease',
+                          boxShadow: status === 'completed' || status === 'pending' ? '0 4px 12px rgba(0, 0, 0, 0.05)' : 'none'
+                        }}
+                      >
+                        <span style={{ fontSize: '14px', fontWeight: 700, color: 'var(--text-primary)' }}>
+                          {mName}
+                        </span>
+                        <span style={{ 
+                          fontSize: '11px', 
+                          fontWeight: 800, 
+                          color: badgeColor, 
+                          background: badgeBg, 
+                          padding: '3px 8px', 
+                          borderRadius: '8px',
+                          textTransform: 'uppercase',
+                          letterSpacing: '0.02em'
+                        }}>
+                          {badgeText}
+                        </span>
+                        {status === 'completed' && paidDate && (
+                          <span style={{
+                            fontSize: '10px',
+                            fontWeight: 600,
+                            color: 'rgba(16, 185, 129, 0.7)',
+                            marginTop: '2px'
+                          }}>
+                            {paidDate}
+                          </span>
+                        )}
+                      </div>
+                    );
+                  })}
+                </div>
               </div>
             </div>
           </div>
-
-          {detailTenant.coTenants && detailTenant.coTenants.length > 0 && (
-              <div style={{ marginBottom: '32px' }}>
-                  <div style={{ display: 'flex', alignItems: 'center', gap: '8px', marginBottom: '16px', color: 'var(--text-primary)', fontWeight: 700, fontSize: '15px' }}>
-                      <Users size={18} style={{ color: 'var(--accent-primary)' }} /> Roommates ({detailTenant.coTenants.length})
-                  </div>
-                  <div style={{ display: 'grid', gridTemplateColumns: 'repeat(auto-fill, minmax(280px, 1fr))', gap: '16px' }}>
-                      {detailTenant.coTenants.map((ct, idx) => (
-                          <div key={idx} style={{ background: 'var(--bg-secondary)', padding: '16px', borderRadius: '16px', border: '1px solid var(--border-primary)' }}>
-                              <div style={{ display: 'flex', alignItems: 'center', gap: '12px', marginBottom: '16px' }}>
-                                  <img src={ct.avatar || `https://api.dicebear.com/9.x/initials/svg?seed=${ct.name}&backgroundColor=6366f1`} alt="" style={{ width: '40px', height: '40px', borderRadius: '50%', objectFit: 'cover', border: '2px solid var(--bg-card)' }} />
-                                  <div>
-                                      <div style={{ fontSize: '14px', fontWeight: 700, color: 'var(--text-primary)' }}>{ct.name}</div>
-                                      <div style={{ fontSize: '12px', color: 'var(--text-tertiary)', fontWeight: 600 }}>{ct.phone}</div>
-                                  </div>
-                              </div>
-                              <div style={{ display: 'flex', flexDirection: 'column', gap: '8px', marginBottom: '16px' }}>
-                                  <div style={{ fontSize: '11px', color: 'var(--text-tertiary)', fontWeight: 600, display: 'flex', justifyContent: 'space-between' }}>
-                                    <span>Guardian</span>
-                                    <span style={{ color: 'var(--text-primary)' }}>{ct.parentName || '-'} {ct.parentPhone ? `(${ct.parentPhone})` : ''}</span>
-                                  </div>
-                              </div>
-                              <div style={{ display: 'flex', gap: '8px' }}>
-                                  <div style={{ background: 'var(--bg-card)', padding: '8px 12px', borderRadius: '8px', fontSize: '11px', fontWeight: 600, display: 'flex', justifyContent: 'space-between', alignItems: 'center', flex: 1, cursor: isDocUploaded(ct.idProof) ? 'pointer' : 'default', border: '1px solid var(--border-primary)', opacity: isDocUploaded(ct.idProof) ? 1 : 0.5 }} onClick={() => handleViewDoc(ct.idProof, `${ct.name} - Aadhaar`)}>
-                                      <span style={{color: isDocUploaded(ct.idProof) ? 'inherit' : 'var(--text-tertiary)'}}>Aadhaar</span>
-                                      {isDocUploaded(ct.idProof) ? <Download size={12} style={{color: 'var(--accent-primary)'}}/> : <span style={{ fontSize: '9px', fontWeight: 700, color: 'var(--text-tertiary)', background: 'rgba(255,255,255,0.05)', padding: '2px 4px', borderRadius: '4px' }}>N/A</span>}
-                                  </div>
-                                  <div style={{ background: 'var(--bg-card)', padding: '8px 12px', borderRadius: '8px', fontSize: '11px', fontWeight: 600, display: 'flex', justifyContent: 'space-between', alignItems: 'center', flex: 1, cursor: isDocUploaded(ct.parentIdProof) ? 'pointer' : 'default', border: '1px solid var(--border-primary)', opacity: isDocUploaded(ct.parentIdProof) ? 1 : 0.5 }} onClick={() => handleViewDoc(ct.parentIdProof, `${ct.name} - Parent ID`)}>
-                                      <span style={{color: isDocUploaded(ct.parentIdProof) ? 'inherit' : 'var(--text-tertiary)'}}>Parent ID</span>
-                                      {isDocUploaded(ct.parentIdProof) ? <Download size={12} style={{color: 'var(--accent-primary)'}}/> : <span style={{ fontSize: '9px', fontWeight: 700, color: 'var(--text-tertiary)', background: 'rgba(255,255,255,0.05)', padding: '2px 4px', borderRadius: '4px' }}>N/A</span>}
-                                  </div>
-                                  <div style={{ background: 'var(--bg-card)', padding: '8px 12px', borderRadius: '8px', fontSize: '11px', fontWeight: 600, display: 'flex', justifyContent: 'space-between', alignItems: 'center', flex: 1, cursor: isDocUploaded(ct.avatar) ? 'pointer' : 'default', border: '1px solid var(--border-primary)', opacity: isDocUploaded(ct.avatar) ? 1 : 0.5 }} onClick={() => handleViewDoc(ct.avatar, `${ct.name} - Photo`)}>
-                                      <span style={{color: isDocUploaded(ct.avatar) ? 'inherit' : 'var(--text-tertiary)'}}>Photo</span>
-                                      {isDocUploaded(ct.avatar) ? <Download size={12} style={{color: 'var(--accent-primary)'}}/> : <span style={{ fontSize: '9px', fontWeight: 700, color: 'var(--text-tertiary)', background: 'rgba(255,255,255,0.05)', padding: '2px 4px', borderRadius: '4px' }}>N/A</span>}
-                                  </div>
-                              </div>
-                          </div>
-                      ))}
-                  </div>
-              </div>
-          )}
 
           <div style={{ display: 'flex', alignItems: 'center', gap: '8px', marginBottom: '16px', color: 'var(--text-primary)', fontWeight: 700, fontSize: '15px' }}><History size={18} style={{ color: 'var(--accent-primary)' }} /> Payment History</div>
           <div style={{ background: 'var(--bg-secondary)', border: '1px solid var(--border-primary)', borderRadius: '20px', overflow: 'hidden' }}>
