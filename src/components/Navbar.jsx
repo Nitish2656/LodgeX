@@ -139,7 +139,14 @@ export default function Navbar() {
         <div className="navbar-notif-wrapper" ref={notifRef}>
           <button
             className={`navbar-icon-btn ${showNotifPanel ? 'active' : ''}`}
-            onClick={() => { setShowNotifPanel(!showNotifPanel); setShowProfileMenu(false); }}
+            onClick={() => {
+              if (window.innerWidth <= 768) {
+                setActivePage('notifications');
+              } else {
+                setShowNotifPanel(!showNotifPanel);
+                setShowProfileMenu(false);
+              }
+            }}
           >
             <Bell size={20} />
             {unreadNotifications > 0 && (
