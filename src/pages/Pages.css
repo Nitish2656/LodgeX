@@ -1544,8 +1544,8 @@
   
   .mini-stat-card {
     min-width: 0;
-    padding: 12px 4px;
-    gap: 6px;
+    padding: 8px 2px;
+    gap: 4px;
     flex-direction: column;
     justify-content: center;
     align-items: center;
@@ -1563,8 +1563,8 @@
   }
 
   .mini-stat-label {
-    font-size: 10px;
-    line-height: 1.2;
+    font-size: 9px;
+    line-height: 1.1;
   }
 
   .toolbar-filters {
@@ -1792,8 +1792,8 @@
   
   .mini-stat-card {
     min-width: 0;
-    padding: 12px 4px;
-    gap: 6px;
+    padding: 8px 2px;
+    gap: 4px;
     flex-direction: column;
     justify-content: center;
     align-items: center;
@@ -1811,8 +1811,8 @@
   }
 
   .mini-stat-label {
-    font-size: 10px;
-    line-height: 1.2;
+    font-size: 9px;
+    line-height: 1.1;
   }
 
   .data-table th,
