@@ -652,17 +652,13 @@ export default function RoomsPage() {
       <div className="page-header animate-in">
         <div>
           <h1 className="page-title">Rooms</h1>
-          <p className="page-subtitle">Manage all {rooms.length} rooms and tenants</p>
+          <p className="page-subtitle">{rooms.filter(r => r.status === 'available').length} Rooms Vacant</p>
         </div>
       </div>
 
 
       <div className="page-toolbar animate-in">
         <div className="toolbar-left">
-          <div className="page-title" style={{ fontSize: '20px', fontWeight: 700, color: 'var(--text-primary)', display: 'flex', alignItems: 'center', gap: '8px' }}>
-            <BedDouble size={20} />
-            <span className="mobile-title">Rooms</span>
-          </div>
         </div>
         <div className="toolbar-right">
           <div className="toolbar-filters">
