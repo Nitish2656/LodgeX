@@ -1537,28 +1537,34 @@
   }
 
   .mini-stats {
-    display: flex;
-    flex-wrap: nowrap;
-    overflow-x: auto;
-    gap: 12px;
-    padding-bottom: 8px;
-    scrollbar-width: none;
-    -ms-overflow-style: none;
-  }
-  .mini-stats::-webkit-scrollbar {
-    display: none;
+    display: grid;
+    grid-template-columns: repeat(3, 1fr);
+    gap: 8px;
   }
   
   .mini-stat-card {
-    min-width: 140px;
-    flex: 0 0 auto;
-    padding: 16px 12px;
-    gap: 12px;
-    justify-content: flex-start;
+    min-width: 0;
+    padding: 12px 4px;
+    gap: 6px;
+    flex-direction: column;
+    justify-content: center;
+    align-items: center;
+    text-align: center;
+  }
+  
+  .mini-stat-card > div {
+    display: flex;
+    flex-direction: column;
+    align-items: center;
   }
   
   .mini-stat-value {
-    font-size: 16px;
+    font-size: 14px;
+  }
+
+  .mini-stat-label {
+    font-size: 10px;
+    line-height: 1.2;
   }
 
   .toolbar-filters {
@@ -1779,28 +1785,34 @@
   /* Tenant cards use their default flex row and grid layout on mobile */
 
   .mini-stats {
-    display: flex;
-    flex-wrap: nowrap;
-    overflow-x: auto;
-    gap: 12px;
-    padding-bottom: 8px;
-    scrollbar-width: none;
-    -ms-overflow-style: none;
-  }
-  .mini-stats::-webkit-scrollbar {
-    display: none;
+    display: grid;
+    grid-template-columns: repeat(3, 1fr);
+    gap: 8px;
   }
   
   .mini-stat-card {
-    min-width: 140px;
-    flex: 0 0 auto;
-    padding: 16px 12px;
-    gap: 12px;
-    justify-content: flex-start;
+    min-width: 0;
+    padding: 12px 4px;
+    gap: 6px;
+    flex-direction: column;
+    justify-content: center;
+    align-items: center;
+    text-align: center;
+  }
+  
+  .mini-stat-card > div {
+    display: flex;
+    flex-direction: column;
+    align-items: center;
   }
   
   .mini-stat-value {
-    font-size: 16px;
+    font-size: 14px;
+  }
+
+  .mini-stat-label {
+    font-size: 10px;
+    line-height: 1.2;
   }
 
   .data-table th,
