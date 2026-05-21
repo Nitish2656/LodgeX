@@ -433,7 +433,7 @@ export default function RoomsPage() {
     } else if (modalType === 'assign') {
       setIsEditingTenant(false);
       setEditTenantId(null);
-      setAssignData({ name: '', phone: '', address: '', parentName: '', parentPhone: '', joinDate: new Date().toISOString().split('T')[0], coTenants: [], roomId: room._id || room.id, roomNumber: room.number, rent: room.rent, deposit: '', paidAmount: '', dueAmount: 0, method: 'Cash', photoFile: null, photoPreview: null, tenantAadhaar: null, parentAadhaar: null });
+      setAssignData({ name: '', phone: '', address: '', parentName: '', parentPhone: '', joinDate: new Date().toISOString().split('T')[0], coTenants: [], roomId: room._id || room.id, roomNumber: room.number, rent: room.rent, deposit: '', paidAmount: '', dueAmount: room.rent, method: 'Cash', photoFile: null, photoPreview: null, tenantAadhaar: null, parentAadhaar: null });
       setAddStep(1);
       setShowAssignModal(true);
     } else if (modalType === 'deleteRoom') {
