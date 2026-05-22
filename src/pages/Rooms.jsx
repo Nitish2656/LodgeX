@@ -1329,38 +1329,37 @@ export default function RoomsPage() {
           </div>
 
           <div style={{ display: 'flex', alignItems: 'center', gap: '8px', marginBottom: '16px', color: 'var(--text-primary)', fontWeight: 700, fontSize: '15px' }}><History size={18} style={{ color: 'var(--accent-primary)' }} /> Payment History</div>
-          <div style={{ background: 'var(--bg-secondary)', border: '1px solid var(--border-primary)', borderRadius: '20px', overflowX: 'auto' }}>
-            <table className="data-table" style={{ border: 'none', margin: 0, width: '100%', minWidth: '500px' }}>
-              <thead style={{ background: 'transparent' }}><tr><th style={{ paddingLeft: '24px', borderBottom: '1px solid var(--border-primary)' }}>Date</th><th style={{ borderBottom: '1px solid var(--border-primary)' }}>Amount Paid</th><th style={{ borderBottom: '1px solid var(--border-primary)' }}>Method</th><th style={{ paddingRight: '24px', borderBottom: '1px solid var(--border-primary)' }}>Status</th></tr></thead>
-              <tbody>
-                {getTenantPayments(detailTenant._id || detailTenant.id).length > 0 ? (
-                  getTenantPayments(detailTenant._id || detailTenant.id).map((p, idx, arr) => (
-                    <tr key={p._id || p.id}>
-                      <td style={{ paddingLeft: '24px', borderBottom: idx === arr.length - 1 ? 'none' : '1px solid var(--border-primary)' }}><div style={{ display: 'flex', flexDirection: 'column', gap: '2px' }}><span style={{ fontSize: '13px', fontWeight: '500' }}>{new Date(p.date).toLocaleDateString('en-IN', { day: 'numeric', month: 'short', year: 'numeric' })}</span></div></td>
-                      <td style={{ borderBottom: idx === arr.length - 1 ? 'none' : '1px solid var(--border-primary)' }} className="text-bold text-success">+₹{p.paidAmount.toLocaleString('en-IN')}</td>
-                      <td style={{ borderBottom: idx === arr.length - 1 ? 'none' : '1px solid var(--border-primary)' }}>
-                        <div style={{ display: 'flex', flexDirection: 'column', gap: '4px', alignItems: 'flex-start' }}>
-                          <span style={{ background: 'var(--bg-card)', padding: '4px 10px', borderRadius: '8px', fontSize: '12px', fontWeight: 600 }}>{p.method}</span>
-                          {p.notes && (() => {
-                            let customNote = p.notes;
-                            if (customNote.includes(' - ')) customNote = customNote.split(' - ').slice(1).join(' - ');
-                            else if (customNote.match(/^(Partial payment|Full payment|Full dues cleared|Advance\/Deposit|Payment on update)/)) customNote = null;
-                            return customNote ? (
-                              <span style={{ fontSize: '11px', color: 'var(--text-tertiary)', maxWidth: '150px', whiteSpace: 'nowrap', overflow: 'hidden', textOverflow: 'ellipsis' }} title={customNote}>
-                                {customNote}
-                              </span>
-                            ) : null;
-                          })()}
-                        </div>
-                      </td>
-                      <td style={{ paddingRight: '24px', borderBottom: idx === arr.length - 1 ? 'none' : '1px solid var(--border-primary)' }}><span className={`status-pill completed`}>completed</span></td>
-                    </tr>
-                  ))
-                ) : (
-                  <tr><td colSpan="4" style={{textAlign: 'center', padding: '32px', color: 'var(--text-tertiary)', fontWeight: 600, borderBottom: 'none'}}>No payments recorded yet.</td></tr>
-                )}
-              </tbody>
-            </table>
+          <div style={{ display: 'flex', flexDirection: 'column', gap: '12px' }}>
+            {getTenantPayments(detailTenant._id || detailTenant.id).length > 0 ? (
+              getTenantPayments(detailTenant._id || detailTenant.id).map((p, idx) => (
+                <div key={p._id || p.id} style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', padding: '16px', background: 'var(--bg-secondary)', border: '1px solid var(--border-primary)', borderRadius: '16px' }}>
+                  <div style={{ display: 'flex', flexDirection: 'column', gap: '6px' }}>
+                    <span style={{ fontSize: '14px', fontWeight: 600, color: 'var(--text-primary)' }}>
+                      {new Date(p.date).toLocaleDateString('en-IN', { day: 'numeric', month: 'short', year: 'numeric' })}
+                    </span>
+                    <div style={{ display: 'flex', alignItems: 'center', gap: '6px', flexWrap: 'wrap' }}>
+                      <span style={{ background: 'var(--bg-card)', border: '1px solid var(--border-primary)', padding: '4px 8px', borderRadius: '6px', fontSize: '11px', fontWeight: 700, color: 'var(--text-secondary)' }}>{p.method}</span>
+                      {p.notes && (() => {
+                        let customNote = p.notes;
+                        if (customNote.includes(' - ')) customNote = customNote.split(' - ').slice(1).join(' - ');
+                        else if (customNote.match(/^(Partial payment|Full payment|Full dues cleared|Advance\/Deposit|Payment on update)/)) customNote = null;
+                        return customNote ? (
+                          <span style={{ fontSize: '11px', color: 'var(--text-tertiary)', maxWidth: '140px', whiteSpace: 'nowrap', overflow: 'hidden', textOverflow: 'ellipsis' }} title={customNote}>
+                            {customNote}
+                          </span>
+                        ) : null;
+                      })()}
+                    </div>
+                  </div>
+                  <div style={{ display: 'flex', flexDirection: 'column', alignItems: 'flex-end', gap: '4px', flexShrink: 0 }}>
+                    <span style={{ fontSize: '16px', fontWeight: 800, color: '#10b981' }}>+₹{p.paidAmount.toLocaleString('en-IN')}</span>
+                    <span style={{ fontSize: '10px', fontWeight: 800, color: '#10b981', background: 'rgba(16, 185, 129, 0.1)', padding: '2px 6px', borderRadius: '4px', textTransform: 'uppercase', letterSpacing: '0.05em' }}>Paid</span>
+                  </div>
+                </div>
+              ))
+            ) : (
+              <div style={{ textAlign: 'center', padding: '32px', background: 'var(--bg-secondary)', borderRadius: '16px', border: '1px solid var(--border-primary)', color: 'var(--text-tertiary)', fontWeight: 600 }}>No payments recorded yet.</div>
+            )}
           </div>
         </Modal>
       )}
