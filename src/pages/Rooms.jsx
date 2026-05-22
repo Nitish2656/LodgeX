@@ -1,6 +1,6 @@
 import { useState, useRef, useEffect } from 'react';
 import { BedDouble, Search, Wrench, Users, DoorOpen, Calendar, CalendarClock, MoreVertical, Edit2, Trash2, LogOut, IndianRupee, UserPlus, UploadCloud, Plus, CalendarPlus, ArrowRightLeft, Phone, MapPin, ShieldCheck, FileText, Download, History, Image, Camera } from 'lucide-react';
-import { useStore } from '../data/store';
+import { useStore, authFetch, API_BASE_URL } from '../data/store';
 import Modal from '../components/Modal';
 import './Pages.css';
 
@@ -240,6 +240,16 @@ export default function RoomsPage() {
         });
         setPageAction(null);
       }
+    } else if (pageAction?.type === 'ADD_TENANT') {
+      if (rooms && rooms.length > 0) {
+        const availableRoom = rooms.find(r => r.status === 'available');
+        if (availableRoom) {
+          openModal(availableRoom, 'assign');
+        } else {
+          alert('No vacant rooms available to assign a tenant.');
+        }
+        setPageAction(null);
+      }
     }
   }, [pageAction, rooms, tenants, setPageAction]);
 
@@ -254,8 +264,8 @@ export default function RoomsPage() {
       const currentDue = singleP.dueAmount !== undefined ? singleP.dueAmount : singleP.totalAmount;
       if (currentDue !== tenant.pendingDues) {
         try {
-          const API_URL = import.meta.env.VITE_API_URL || 'https://lodgex-backend.onrender.com/api';
-          await fetch(`${API_URL}/payments/${singleP._id || singleP.id}`, { method: 'PATCH', headers: { 'Content-Type': 'application/json' }, body: JSON.stringify({ dueAmount: tenant.pendingDues }) });
+          const API_BASE_URL = import.meta.env.VITE_API_BASE_URL || 'https://lodgex-backend.onrender.com/api';
+          await authFetch(`${API_BASE_URL}/payments/${singleP._id || singleP.id}`, { method: 'PATCH', headers: { 'Content-Type': 'application/json' }, body: JSON.stringify({ dueAmount: tenant.pendingDues }) });
           await fetchPayments();
         } catch(e) { console.error('Failed to reconcile:', e); }
       }

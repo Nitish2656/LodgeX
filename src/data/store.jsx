@@ -1,6 +1,22 @@
 import { createContext, useContext, useState, useCallback, useEffect, useMemo } from 'react';
 
-const API_BASE_URL = import.meta.env.VITE_API_URL || 'http://localhost:5001/api';
+export const API_BASE_URL = import.meta.env.VITE_API_URL || 'http://localhost:5001/api';
+
+const globalFetch = globalThis.fetch;
+
+export const authFetch = async (url, options = {}) => {
+  const token = localStorage.getItem('lodgex_token');
+  const headers = { ...options.headers };
+  if (token) {
+    headers['Authorization'] = `Bearer ${token}`;
+  }
+  if (!(options.body instanceof FormData)) {
+    if (!headers['Content-Type']) {
+      headers['Content-Type'] = 'application/json';
+    }
+  }
+  return globalFetch(url, { ...options, headers });
+};
 
 // ===== Mock Data =====
 const generateRooms = () => {
@@ -116,7 +132,7 @@ export function StoreProvider({ children }) {
 
   const fetchRooms = useCallback(async () => {
     try {
-      const response = await fetch(`${API_BASE_URL}/rooms`);
+      const response = await authFetch(`${API_BASE_URL}/rooms`);
       const data = await response.json();
       if (response.ok) {
         setRooms(data);
@@ -128,7 +144,7 @@ export function StoreProvider({ children }) {
 
   const fetchTenants = useCallback(async () => {
     try {
-      const response = await fetch(`${API_BASE_URL}/tenants`);
+      const response = await authFetch(`${API_BASE_URL}/tenants`);
       const data = await response.json();
       if (response.ok) {
         setTenants(data);
@@ -140,7 +156,7 @@ export function StoreProvider({ children }) {
 
   const fetchTenantById = useCallback(async (id) => {
     try {
-      const response = await fetch(`${API_BASE_URL}/tenants/${id}`);
+      const response = await authFetch(`${API_BASE_URL}/tenants/${id}`);
       if (response.ok) {
         return await response.json();
       }
@@ -152,7 +168,7 @@ export function StoreProvider({ children }) {
 
   const fetchPayments = useCallback(async () => {
     try {
-      const response = await fetch(`${API_BASE_URL}/payments`);
+      const response = await authFetch(`${API_BASE_URL}/payments`);
       const data = await response.json();
       if (response.ok) {
         setPayments(data);
@@ -164,7 +180,7 @@ export function StoreProvider({ children }) {
 
   const fetchExpenses = useCallback(async () => {
     try {
-      const response = await fetch(`${API_BASE_URL}/expenses`);
+      const response = await authFetch(`${API_BASE_URL}/expenses`);
       if (response.ok) {
         setExpenses(await response.json());
       }
@@ -173,7 +189,7 @@ export function StoreProvider({ children }) {
 
   const fetchElectricity = useCallback(async () => {
     try {
-      const response = await fetch(`${API_BASE_URL}/electricity`);
+      const response = await authFetch(`${API_BASE_URL}/electricity`);
       if (response.ok) {
         setElectricity(await response.json());
       }
@@ -182,7 +198,7 @@ export function StoreProvider({ children }) {
 
   const fetchSettings = useCallback(async () => {
     try {
-      const response = await fetch(`${API_BASE_URL}/settings`);
+      const response = await authFetch(`${API_BASE_URL}/settings`);
       if (response.ok) {
         setSettings(await response.json());
       }
@@ -243,7 +259,7 @@ export function StoreProvider({ children }) {
   const updatePassword = async (currentPassword, newPassword) => {
     try {
       const token = localStorage.getItem('lodgex_token');
-      const response = await fetch(`${API_BASE_URL}/auth/update-password`, {
+      const response = await authFetch(`${API_BASE_URL}/auth/update-password`, {
         method: 'POST',
         headers: { 
             'Content-Type': 'application/json',
@@ -290,7 +306,7 @@ export function StoreProvider({ children }) {
     const formData = new FormData();
     formData.append('file', file);
     try {
-      const response = await fetch(`${API_BASE_URL}/files/upload`, {
+      const response = await authFetch(`${API_BASE_URL}/files/upload`, {
         method: 'POST',
         body: formData
       });
@@ -310,7 +326,7 @@ export function StoreProvider({ children }) {
 
   const addPayment = async (paymentData) => {
     try {
-      const response = await fetch(`${API_BASE_URL}/payments`, {
+      const response = await authFetch(`${API_BASE_URL}/payments`, {
         method: 'POST',
         headers: { 'Content-Type': 'application/json' },
         body: JSON.stringify(paymentData)
@@ -331,7 +347,7 @@ export function StoreProvider({ children }) {
           if (currentDue <= amountLeft) {
             // This pending payment is fully cleared!
             amountLeft -= currentDue;
-            await fetch(`${API_BASE_URL}/payments/${p._id || p.id}`, {
+            await authFetch(`${API_BASE_URL}/payments/${p._id || p.id}`, {
               method: 'PATCH',
               headers: { 'Content-Type': 'application/json' },
               body: JSON.stringify({ dueAmount: 0, status: 'completed' })
@@ -340,7 +356,7 @@ export function StoreProvider({ children }) {
             // Partially clear this pending payment
             const remainingDue = currentDue - amountLeft;
             amountLeft = 0;
-            await fetch(`${API_BASE_URL}/payments/${p._id || p.id}`, {
+            await authFetch(`${API_BASE_URL}/payments/${p._id || p.id}`, {
               method: 'PATCH',
               headers: { 'Content-Type': 'application/json' },
               body: JSON.stringify({ dueAmount: remainingDue })
@@ -355,7 +371,7 @@ export function StoreProvider({ children }) {
             : t
         ));
         // 2. Persist to DB
-        await fetch(`${API_BASE_URL}/tenants/${paymentData.tenantId}`, {
+        await authFetch(`${API_BASE_URL}/tenants/${paymentData.tenantId}`, {
           method: 'PATCH',
           headers: { 'Content-Type': 'application/json' },
           body: JSON.stringify({ pendingDues: paymentData.dueAmount })
@@ -371,7 +387,7 @@ export function StoreProvider({ children }) {
 
   const addTenant = async (tenantData) => {
     try {
-      const response = await fetch(`${API_BASE_URL}/tenants`, {
+      const response = await authFetch(`${API_BASE_URL}/tenants`, {
         method: 'POST',
         headers: { 'Content-Type': 'application/json' },
         body: JSON.stringify({
@@ -383,7 +399,7 @@ export function StoreProvider({ children }) {
       const newTenant = await response.json();
       if (response.ok) {
         // Update room status
-        await fetch(`${API_BASE_URL}/rooms/${tenantData.roomId}`, {
+        await authFetch(`${API_BASE_URL}/rooms/${tenantData.roomId}`, {
           method: 'PATCH',
           headers: { 'Content-Type': 'application/json' },
           body: JSON.stringify({ status: 'occupied', tenantId: newTenant._id || newTenant.id })
@@ -402,14 +418,14 @@ export function StoreProvider({ children }) {
 
   const updatePayment = async (id, paymentData) => {
     try {
-      const response = await fetch(`${API_BASE_URL}/payments/${id}`, {
+      const response = await authFetch(`${API_BASE_URL}/payments/${id}`, {
         method: 'PATCH',
         headers: { 'Content-Type': 'application/json' },
         body: JSON.stringify(paymentData)
       });
       if (response.ok) {
         // Update tenant dues
-        await fetch(`${API_BASE_URL}/tenants/${paymentData.tenantId}`, {
+        await authFetch(`${API_BASE_URL}/tenants/${paymentData.tenantId}`, {
           method: 'PATCH',
           headers: { 'Content-Type': 'application/json' },
           body: JSON.stringify({ pendingDues: paymentData.dueAmount })
@@ -424,7 +440,7 @@ export function StoreProvider({ children }) {
 
   const deletePayment = async (id) => {
     try {
-      const response = await fetch(`${API_BASE_URL}/payments/${id}`, {
+      const response = await authFetch(`${API_BASE_URL}/payments/${id}`, {
         method: 'DELETE'
       });
       if (response.ok) {
@@ -437,7 +453,7 @@ export function StoreProvider({ children }) {
 
   const updateTenant = async (id, data) => {
     try {
-      const response = await fetch(`${API_BASE_URL}/tenants/${id}`, {
+      const response = await authFetch(`${API_BASE_URL}/tenants/${id}`, {
         method: 'PATCH',
         headers: { 'Content-Type': 'application/json' },
         body: JSON.stringify(data)
@@ -448,7 +464,7 @@ export function StoreProvider({ children }) {
         if (oldTenant && oldTenant.roomId?.toString() !== data.roomId?.toString()) {
           // Free old room
           if (oldTenant.roomId) {
-            await fetch(`${API_BASE_URL}/rooms/${oldTenant.roomId}`, {
+            await authFetch(`${API_BASE_URL}/rooms/${oldTenant.roomId}`, {
               method: 'PATCH',
               headers: { 'Content-Type': 'application/json' },
               body: JSON.stringify({ status: 'available', tenantId: null })
@@ -456,7 +472,7 @@ export function StoreProvider({ children }) {
           }
           // Occupy new room
           if (data.roomId) {
-            await fetch(`${API_BASE_URL}/rooms/${data.roomId}`, {
+            await authFetch(`${API_BASE_URL}/rooms/${data.roomId}`, {
               method: 'PATCH',
               headers: { 'Content-Type': 'application/json' },
               body: JSON.stringify({ status: 'occupied', tenantId: id })
@@ -479,13 +495,13 @@ export function StoreProvider({ children }) {
     if (!tenant) return;
 
     try {
-      const response = await fetch(`${API_BASE_URL}/tenants/${id}`, {
+      const response = await authFetch(`${API_BASE_URL}/tenants/${id}`, {
         method: 'DELETE'
       });
       if (response.ok) {
         // Free the room
         if (tenant.roomId) {
-          await fetch(`${API_BASE_URL}/rooms/${tenant.roomId}`, {
+          await authFetch(`${API_BASE_URL}/rooms/${tenant.roomId}`, {
             method: 'PATCH',
             headers: { 'Content-Type': 'application/json' },
             body: JSON.stringify({ status: 'available', tenantId: null })
@@ -505,7 +521,7 @@ export function StoreProvider({ children }) {
 
     try {
       // Mark tenant as archived
-      await fetch(`${API_BASE_URL}/tenants/${room.tenantId}`, {
+      await authFetch(`${API_BASE_URL}/tenants/${room.tenantId}`, {
         method: 'PATCH',
         headers: { 'Content-Type': 'application/json' },
         body: JSON.stringify({
@@ -515,7 +531,7 @@ export function StoreProvider({ children }) {
         })
       });
       // Free room
-      await fetch(`${API_BASE_URL}/rooms/${roomId}`, {
+      await authFetch(`${API_BASE_URL}/rooms/${roomId}`, {
         method: 'PATCH',
         headers: { 'Content-Type': 'application/json' },
         body: JSON.stringify({ status: 'available', tenantId: null })
@@ -581,7 +597,7 @@ export function StoreProvider({ children }) {
 
   const addRoom = async (roomData) => {
     try {
-      const response = await fetch(`${API_BASE_URL}/rooms`, {
+      const response = await authFetch(`${API_BASE_URL}/rooms`, {
         method: 'POST',
         headers: { 'Content-Type': 'application/json' },
         body: JSON.stringify(roomData)
@@ -596,7 +612,7 @@ export function StoreProvider({ children }) {
 
   const updateRoom = async (id, roomData) => {
     try {
-      const response = await fetch(`${API_BASE_URL}/rooms/${id}`, {
+      const response = await authFetch(`${API_BASE_URL}/rooms/${id}`, {
         method: 'PATCH',
         headers: { 'Content-Type': 'application/json' },
         body: JSON.stringify(roomData)
@@ -612,7 +628,7 @@ export function StoreProvider({ children }) {
   const deleteRoom = async (id) => {
     try {
       const room = rooms.find(r => (r._id || r.id) === id);
-      const response = await fetch(`${API_BASE_URL}/rooms/${id}`, {
+      const response = await authFetch(`${API_BASE_URL}/rooms/${id}`, {
         method: 'DELETE'
       });
       if (response.ok) {
@@ -636,7 +652,7 @@ export function StoreProvider({ children }) {
       : 'maintenance';
 
     try {
-      const response = await fetch(`${API_BASE_URL}/rooms/${room._id || room.id}`, {
+      const response = await authFetch(`${API_BASE_URL}/rooms/${room._id || room.id}`, {
         method: 'PATCH',
         headers: { 'Content-Type': 'application/json' },
         body: JSON.stringify({ status: newStatus })
@@ -651,7 +667,7 @@ export function StoreProvider({ children }) {
 
   const addExpense = async (expense) => {
     try {
-      const response = await fetch(`${API_BASE_URL}/expenses`, {
+      const response = await authFetch(`${API_BASE_URL}/expenses`, {
         method: 'POST',
         headers: { 'Content-Type': 'application/json' },
         body: JSON.stringify(expense)
@@ -662,14 +678,14 @@ export function StoreProvider({ children }) {
 
   const deleteExpense = async (id) => {
     try {
-      const response = await fetch(`${API_BASE_URL}/expenses/${id}`, { method: 'DELETE' });
+      const response = await authFetch(`${API_BASE_URL}/expenses/${id}`, { method: 'DELETE' });
       if (response.ok) fetchExpenses();
     } catch (error) { console.error('Error deleting expense:', error); }
   };
 
   const addElectricity = async (record) => {
     try {
-      const response = await fetch(`${API_BASE_URL}/electricity`, {
+      const response = await authFetch(`${API_BASE_URL}/electricity`, {
         method: 'POST',
         headers: { 'Content-Type': 'application/json' },
         body: JSON.stringify(record)
@@ -680,7 +696,7 @@ export function StoreProvider({ children }) {
 
   const updateElectricity = async (id, data) => {
     try {
-      const response = await fetch(`${API_BASE_URL}/electricity/${id}`, {
+      const response = await authFetch(`${API_BASE_URL}/electricity/${id}`, {
         method: 'PATCH',
         headers: { 'Content-Type': 'application/json' },
         body: JSON.stringify(data)
@@ -691,14 +707,14 @@ export function StoreProvider({ children }) {
 
   const deleteElectricity = async (id) => {
     try {
-      const response = await fetch(`${API_BASE_URL}/electricity/${id}`, { method: 'DELETE' });
+      const response = await authFetch(`${API_BASE_URL}/electricity/${id}`, { method: 'DELETE' });
       if (response.ok) fetchElectricity();
     } catch (error) { console.error('Error deleting electricity:', error); }
   };
 
   const updateSettings = async (newSettings) => {
     try {
-      const response = await fetch(`${API_BASE_URL}/settings`, {
+      const response = await authFetch(`${API_BASE_URL}/settings`, {
         method: 'PATCH',
         headers: { 'Content-Type': 'application/json' },
         body: JSON.stringify(newSettings)

@@ -118,8 +118,7 @@ export default function Dashboard() {
     if (!amountPaid || amountPaid <= 0) return alert('Enter a valid amount');
     
     let totalAmount = paymentFormData.pendingDues > 0 ? paymentFormData.pendingDues : paymentFormData.rent;
-    let dueAmount = totalAmount - amountPaid;
-    if (dueAmount < 0) dueAmount = 0; // Prevent negative dues if they overpay
+    let dueAmount = Math.max(0, paymentFormData.pendingDues - amountPaid);
 
     addPayment({
         tenantId: paymentFormData.tenantId,
@@ -172,7 +171,7 @@ export default function Dashboard() {
       <div className="quick-actions animate-in">
         <h3 className="section-title">Quick Actions</h3>
         <div className="quick-actions-grid">
-          <button className="quick-action-btn" onClick={() => navigateWithAction('tenants', 'add')}>
+          <button className="quick-action-btn" onClick={() => navigateWithAction('rooms', { type: 'ADD_TENANT' })}>
             <div className="quick-action-icon" style={{ background: 'rgba(99,102,241,0.12)', color: '#818cf8' }}><Plus size={18} /></div>
             <span>Add Tenant</span>
           </button>

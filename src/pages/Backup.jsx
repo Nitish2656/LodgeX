@@ -1,6 +1,6 @@
 import { useState, useEffect, useRef } from 'react';
 import { Database, Download, Upload, CheckCircle, Clock, HardDrive, Shield, Trash2, RotateCcw, X, Info } from 'lucide-react';
-import { useStore } from '../data/store';
+import { useStore, authFetch, API_BASE_URL } from '../data/store';
 import Modal from '../components/Modal';
 import './Pages.css';
 
@@ -27,8 +27,8 @@ export default function BackupPage() {
   const fetchHistory = async () => {
     setLoadingHistory(true);
     try {
-      const baseUrl = import.meta.env.VITE_API_URL || 'http://localhost:5001/api';
-      const response = await fetch(`${baseUrl}/backup/history`);
+      const API_BASE_URL = import.meta.env.VITE_API_URL || 'http://localhost:5001/api';
+      const response = await authFetch(`${API_BASE_URL}/backup/history`);
       if (response.ok) {
         const data = await response.json();
         setHistory(data);
@@ -47,13 +47,13 @@ export default function BackupPage() {
   const handleBackup = async () => {
     setBacking(true);
     try {
-      const baseUrl = import.meta.env.VITE_API_URL || 'http://localhost:5001/api';
+      const API_BASE_URL = import.meta.env.VITE_API_URL || 'http://localhost:5001/api';
       
       // 1. Save backup to DB history
-      await fetch(`${baseUrl}/backup/save-backup`, { method: 'POST' });
+      await authFetch(`${API_BASE_URL}/backup/save-backup`, { method: 'POST' });
       
       // 2. Export/Download a local JSON copy for the user
-      const response = await fetch(`${baseUrl}/backup/export`);
+      const response = await authFetch(`${API_BASE_URL}/backup/export`);
       if (!response.ok) throw new Error('Backup export failed');
       
       const blob = await response.blob();
@@ -135,11 +135,11 @@ export default function BackupPage() {
     if (window.confirm('Restoring will overwrite current live database for selected options. Are you sure?')) {
       setRestoring(true);
       try {
-        const baseUrl = import.meta.env.VITE_API_URL || 'http://localhost:5001/api';
+        const API_BASE_URL = import.meta.env.VITE_API_URL || 'http://localhost:5001/api';
         
         if (selectedBackupId) {
           // Cloud history restore
-          const response = await fetch(`${baseUrl}/backup/restore/${selectedBackupId}`, {
+          const response = await authFetch(`${API_BASE_URL}/backup/restore/${selectedBackupId}`, {
             method: 'POST',
             headers: { 'Content-Type': 'application/json' },
             body: JSON.stringify({ restoreOptions })
@@ -147,7 +147,7 @@ export default function BackupPage() {
           if (!response.ok) throw new Error('Cloud restore failed');
         } else {
           // Manual upload restore
-          const response = await fetch(`${baseUrl}/backup/import`, {
+          const response = await authFetch(`${API_BASE_URL}/backup/import`, {
             method: 'POST',
             headers: { 'Content-Type': 'application/json' },
             body: JSON.stringify({
@@ -169,8 +169,8 @@ export default function BackupPage() {
 
   const handleDownloadBackup = async (id, type) => {
     try {
-      const baseUrl = import.meta.env.VITE_API_URL || 'http://localhost:5001/api';
-      const response = await fetch(`${baseUrl}/backup/download/${id}`);
+      const API_BASE_URL = import.meta.env.VITE_API_URL || 'http://localhost:5001/api';
+      const response = await authFetch(`${API_BASE_URL}/backup/download/${id}`);
       if (!response.ok) throw new Error('Failed to download backup');
       
       const blob = await response.blob();
@@ -190,8 +190,8 @@ export default function BackupPage() {
   const handleDeleteBackup = async (id) => {
     if (window.confirm('Are you sure you want to delete this backup from cloud history?')) {
       try {
-        const baseUrl = import.meta.env.VITE_API_URL || 'http://localhost:5001/api';
-        const response = await fetch(`${baseUrl}/backup/${id}`, {
+        const API_BASE_URL = import.meta.env.VITE_API_URL || 'http://localhost:5001/api';
+        const response = await authFetch(`${API_BASE_URL}/backup/${id}`, {
           method: 'DELETE'
         });
         if (response.ok) {
