@@ -1174,14 +1174,14 @@ export default function RoomsPage() {
               <div style={{ background: 'var(--bg-secondary)', padding: '20px', borderRadius: '20px', border: '1px solid var(--border-primary)' }}>
                 <div style={{ display: 'flex', alignItems: 'center', gap: '8px', marginBottom: '16px', color: 'var(--text-primary)', fontWeight: 700, fontSize: '15px' }}><Phone size={18} style={{ color: 'var(--accent-primary)' }} /> Tenant Details</div>
                 <div style={{ display: 'flex', flexDirection: 'column', gap: '12px', marginBottom: '24px' }}>
-                  <div style={{ display: 'flex', justifyContent: 'space-between' }}><span style={{ fontSize: '13px', color: 'var(--text-tertiary)', fontWeight: 600 }}>Phone</span><span style={{ fontSize: '14px', fontWeight: 600 }}>{detailTenant.phone}</span></div>
-                  <div style={{ display: 'flex', justifyContent: 'space-between' }}><span style={{ fontSize: '13px', color: 'var(--text-tertiary)', fontWeight: 600 }}>Address</span><span style={{ fontSize: '14px', fontWeight: 600, textAlign: 'right', maxWidth: '180px' }}>{detailTenant.address || '-'}</span></div>
+                  <div style={{ display: 'flex', gap: '16px', alignItems: 'flex-start' }}><span style={{ fontSize: '13px', color: 'var(--text-tertiary)', fontWeight: 600, width: '100px', flexShrink: 0 }}>Phone</span><span style={{ fontSize: '14px', fontWeight: 600, color: 'var(--text-primary)' }}>{detailTenant.phone}</span></div>
+                  <div style={{ display: 'flex', gap: '16px', alignItems: 'flex-start' }}><span style={{ fontSize: '13px', color: 'var(--text-tertiary)', fontWeight: 600, width: '100px', flexShrink: 0 }}>Address</span><span style={{ fontSize: '14px', fontWeight: 600, color: 'var(--text-primary)', wordBreak: 'break-word', lineHeight: '1.4' }}>{detailTenant.address || '-'}</span></div>
                 </div>
 
                 <div style={{ display: 'flex', alignItems: 'center', gap: '8px', marginBottom: '16px', color: 'var(--text-primary)', fontWeight: 700, fontSize: '15px' }}><ShieldCheck size={18} style={{ color: 'var(--success)' }} /> Guardian Details</div>
                 <div style={{ display: 'flex', flexDirection: 'column', gap: '12px', marginBottom: '24px' }}>
-                  <div style={{ display: 'flex', justifyContent: 'space-between' }}><span style={{ fontSize: '13px', color: 'var(--text-tertiary)', fontWeight: 600 }}>Name</span><span style={{ fontSize: '14px', fontWeight: 600 }}>{detailTenant.parentName || '-'}</span></div>
-                  <div style={{ display: 'flex', justifyContent: 'space-between' }}><span style={{ fontSize: '13px', color: 'var(--text-tertiary)', fontWeight: 600 }}>Contact</span><span style={{ fontSize: '14px', fontWeight: 600 }}>{detailTenant.parentPhone || '-'}</span></div>
+                  <div style={{ display: 'flex', gap: '16px', alignItems: 'flex-start' }}><span style={{ fontSize: '13px', color: 'var(--text-tertiary)', fontWeight: 600, width: '100px', flexShrink: 0 }}>Name</span><span style={{ fontSize: '14px', fontWeight: 600, color: 'var(--text-primary)' }}>{detailTenant.parentName || '-'}</span></div>
+                  <div style={{ display: 'flex', gap: '16px', alignItems: 'flex-start' }}><span style={{ fontSize: '13px', color: 'var(--text-tertiary)', fontWeight: 600, width: '100px', flexShrink: 0 }}>Contact</span><span style={{ fontSize: '14px', fontWeight: 600, color: 'var(--text-primary)' }}>{detailTenant.parentPhone || '-'}</span></div>
                 </div>
 
                 <div style={{ display: 'flex', alignItems: 'center', gap: '8px', marginBottom: '16px', color: 'var(--text-primary)', fontWeight: 700, fontSize: '15px' }}><FileText size={18} style={{ color: 'var(--warning)' }} /> Documents</div>
