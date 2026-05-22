@@ -1,5 +1,5 @@
 import { useState, useMemo, useEffect } from 'react';
-import { Search, IndianRupee, CreditCard, Banknote, Smartphone, Plus, Edit2, Trash2 } from 'lucide-react';
+import { Search, IndianRupee, CreditCard, Banknote, Smartphone, Plus, Edit2, Trash2, SlidersHorizontal } from 'lucide-react';
 import { useStore } from '../data/store';
 import Modal from '../components/Modal';
 import './Pages.css';
@@ -37,6 +37,7 @@ export default function PaymentsPage() {
   }, [pageAction, setPageAction]);
   const [search, setSearch] = useState('');
   const [filter, setFilter] = useState('all');
+  const [showFilterDropdown, setShowFilterDropdown] = useState(false);
 
   const [showAddModal, setShowAddModal] = useState(false);
   const [showEditModal, setShowEditModal] = useState(false);
@@ -145,12 +146,41 @@ export default function PaymentsPage() {
             <Search size={16} />
             <input type="text" placeholder="Search by tenant or room..." value={search} onChange={(e) => setSearch(e.target.value)} />
             </div>
-            <div className="toolbar-filters">
-            {['all', 'Cash', 'Online'].map(f => (
-                <button key={f} className={`filter-btn ${filter === f ? 'active' : ''}`} onClick={() => setFilter(f)}>
-                {f === 'all' ? 'All Methods' : f}
-                </button>
-            ))}
+            <div className="filter-dropdown-container">
+              <button 
+                className={`filter-icon-btn ${filter !== 'all' ? 'active' : ''}`} 
+                onClick={() => setShowFilterDropdown(!showFilterDropdown)}
+                title="Filter Transactions"
+              >
+                <SlidersHorizontal size={18} />
+                {filter !== 'all' && <span className="filter-active-dot" />}
+              </button>
+
+              {showFilterDropdown && (
+                <>
+                  <div className="filter-dropdown-overlay" onClick={() => setShowFilterDropdown(false)} />
+                  <div className="filter-dropdown-menu">
+                    <div className="filter-dropdown-header">Filter By Method</div>
+                    {[
+                      { value: 'all', label: 'All Methods' },
+                      { value: 'Cash', label: 'Cash' },
+                      { value: 'Online', label: 'Online' }
+                    ].map(opt => (
+                      <button
+                        key={opt.value}
+                        onClick={() => {
+                          setFilter(opt.value);
+                          setShowFilterDropdown(false);
+                        }}
+                        className={`filter-dropdown-item ${filter === opt.value ? 'active' : ''}`}
+                      >
+                        {opt.label}
+                        {filter === opt.value && <span className="filter-item-dot" />}
+                      </button>
+                    ))}
+                  </div>
+                </>
+              )}
             </div>
         </div>
         <div className="toolbar-right">
@@ -239,9 +269,17 @@ export default function PaymentsPage() {
                   <span style={{ fontSize: '14px', fontWeight: 600, color: 'var(--text-primary)', whiteSpace: 'nowrap', overflow: 'hidden', textOverflow: 'ellipsis', textTransform: 'uppercase' }}>
                     {tName}
                   </span>
-                  <span style={{ fontSize: '12px', color: 'var(--text-secondary)', lineHeight: 1.4 }}>
-                    Room {getTenantRoom(p)} {p.notes ? `• ${p.notes.replace(/\s*\(₹[\d,]+\s*remaining\)/g, '')}` : ''}
+                  <span style={{ fontSize: '12px', color: 'var(--text-secondary)', fontWeight: '500' }}>
+                    Room {getTenantRoom(p)}
                   </span>
+                  {(() => {
+                    const cleaned = p.notes ? p.notes.replace(/\s*\(₹[\d,]+\s*remaining\)/g, '').replace(/\s*-\s*/g, ' ').trim() : '';
+                    return cleaned ? (
+                      <span style={{ fontSize: '11px', color: 'var(--text-secondary)', opacity: 0.9, lineHeight: 1.3 }}>
+                        {cleaned}
+                      </span>
+                    ) : null;
+                  })()}
                   <span style={{ fontSize: '11px', color: 'var(--text-tertiary)', marginTop: '2px' }}>
                     {new Date(p.date).toLocaleDateString('en-IN', { day: 'numeric', month: 'short', year: 'numeric' })}, {new Date(p.date).toLocaleTimeString('en-IN', { hour: 'numeric', minute: '2-digit', hour12: true })}
                   </span>

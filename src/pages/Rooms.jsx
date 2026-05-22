@@ -1340,9 +1340,17 @@ export default function RoomsPage() {
                     <span style={{ fontSize: '14px', fontWeight: 600, color: 'var(--text-primary)', whiteSpace: 'nowrap', overflow: 'hidden', textOverflow: 'ellipsis', textTransform: 'uppercase' }}>
                       RENT PAYMENT
                     </span>
-                    <span style={{ fontSize: '12px', color: 'var(--text-secondary)', lineHeight: 1.4 }}>
-                      Room {detailTenant?.roomNumber} {p.notes ? `• ${p.notes.replace(/\s*\(₹[\d,]+\s*remaining\)/g, '')}` : ''}
+                    <span style={{ fontSize: '12px', color: 'var(--text-secondary)', fontWeight: '500' }}>
+                      Room {detailTenant?.roomNumber}
                     </span>
+                    {(() => {
+                      const cleaned = p.notes ? p.notes.replace(/\s*\(₹[\d,]+\s*remaining\)/g, '').replace(/\s*-\s*/g, ' ').trim() : '';
+                      return cleaned ? (
+                        <span style={{ fontSize: '11px', color: 'var(--text-secondary)', opacity: 0.9, lineHeight: 1.3 }}>
+                          {cleaned}
+                        </span>
+                      ) : null;
+                    })()}
                     <span style={{ fontSize: '11px', color: 'var(--text-tertiary)', marginTop: '2px' }}>
                       {new Date(p.date).toLocaleDateString('en-IN', { day: 'numeric', month: 'short', year: 'numeric' })}, {new Date(p.date).toLocaleTimeString('en-IN', { hour: 'numeric', minute: '2-digit', hour12: true })}
                     </span>
