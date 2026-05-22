@@ -1,5 +1,5 @@
 import { useState, useMemo, useEffect } from 'react';
-import { Search, IndianRupee, CreditCard, Banknote, Smartphone, Plus, Edit2, Trash2, SlidersHorizontal } from 'lucide-react';
+import { Search, IndianRupee, CreditCard, Banknote, Smartphone, Plus, Edit2, Trash2, Filter } from 'lucide-react';
 import { useStore } from '../data/store';
 import Modal from '../components/Modal';
 import './Pages.css';
@@ -152,7 +152,7 @@ export default function PaymentsPage() {
                 onClick={() => setShowFilterDropdown(!showFilterDropdown)}
                 title="Filter Transactions"
               >
-                <SlidersHorizontal size={18} />
+                <Filter size={18} />
                 {filter !== 'all' && <span className="filter-active-dot" />}
               </button>
 
