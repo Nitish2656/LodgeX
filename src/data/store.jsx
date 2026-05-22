@@ -105,6 +105,10 @@ export function StoreProvider({ children }) {
   const [electricity, setElectricity] = useState([]);
   const [settings, setSettings] = useState(null);
 
+  const [tenantsLoaded, setTenantsLoaded] = useState(false);
+  const [paymentsLoaded, setPaymentsLoaded] = useState(false);
+  const [hasCheckedBills, setHasCheckedBills] = useState(false);
+
   const [readNotifications, setReadNotifications] = useState(() => {
     const saved = localStorage.getItem('lodgex_read_notifications');
     return saved ? JSON.parse(saved) : [];
@@ -148,6 +152,7 @@ export function StoreProvider({ children }) {
       const data = await response.json();
       if (response.ok) {
         setTenants(data);
+        setTenantsLoaded(true);
       }
     } catch (error) {
       console.error('Error fetching tenants:', error);
@@ -172,6 +177,7 @@ export function StoreProvider({ children }) {
       const data = await response.json();
       if (response.ok) {
         setPayments(data);
+        setPaymentsLoaded(true);
       }
     } catch (error) {
       console.error('Error fetching payments:', error);
@@ -219,17 +225,35 @@ export function StoreProvider({ children }) {
   const toggleTheme = useCallback(() => setTheme(prev => prev === 'dark' ? 'light' : 'dark'), []);
 
   const [sidebarOpen, setSidebarOpen] = useState(true);
-  const [activePage, setActivePage] = useState(() => localStorage.getItem('lodgex_active_page') || 'dashboard');
+  const [activePageState, setActivePageState] = useState(() => {
+    const saved = localStorage.getItem('lodgex_active_page') || 'dashboard';
+    return saved === 'tenants' ? 'rooms' : saved;
+  });
   const [searchQuery, setSearchQuery] = useState('');
   const [pageAction, setPageAction] = useState(null);
 
   useEffect(() => {
-    localStorage.setItem('lodgex_active_page', activePage);
-  }, [activePage]);
+    localStorage.setItem('lodgex_active_page', activePageState);
+  }, [activePageState]);
+
+  const setActivePage = useCallback((page) => {
+    const targetPage = page === 'tenants' ? 'rooms' : page;
+    setActivePageState(targetPage);
+  }, []);
 
   const navigateWithAction = useCallback((page, action) => {
-    setPageAction(action);
-    setActivePage(page);
+    let targetPage = page;
+    let targetAction = action;
+
+    if (page === 'tenants') {
+      targetPage = 'rooms';
+      if (action === 'add') {
+        targetAction = { type: 'ADD_TENANT' };
+      }
+    }
+
+    setPageAction(targetAction);
+    setActivePageState(targetPage);
   }, []);
 
   const login = useCallback(async (email, password) => {
@@ -298,6 +322,9 @@ export function StoreProvider({ children }) {
     localStorage.removeItem('lodgex_token');
     localStorage.removeItem('lodgex_user');
     setActivePage('dashboard');
+    setTenantsLoaded(false);
+    setPaymentsLoaded(false);
+    setHasCheckedBills(false);
   }, []);
 
   // File Upload
@@ -555,7 +582,11 @@ export function StoreProvider({ children }) {
       const alreadyBilled = payments.some(p =>
         (p.tenantId === t._id || p.tenantId === t.id) &&
         p.month === currentMonthLabel &&
-        (p.notes?.includes('Monthly Rent') || p.notes === 'Rent payment')
+        (p.notes?.toLowerCase().includes('rent') ||
+         p.notes?.toLowerCase().includes('monthly') ||
+         p.notes?.toLowerCase().includes('allocation') || 
+         p.notes?.toLowerCase().includes('deposit') || 
+         p.notes?.toLowerCase().includes('advance'))
       );
 
       if (!alreadyBilled) {
@@ -566,6 +597,11 @@ export function StoreProvider({ children }) {
         // Skip auto-billing if this is the month they joined (initial dues are handled manually)
         const joinMonthLabel = joinDate.toLocaleDateString('en-IN', { month: 'short', year: 'numeric' });
         if (joinMonthLabel === currentMonthLabel) continue;
+
+        // Skip auto-billing if they were created in the current month (initial dues handled manually)
+        const createdDate = t.createdAt ? new Date(t.createdAt) : new Date(t.joinDate);
+        const createdMonthLabel = createdDate.toLocaleDateString('en-IN', { month: 'short', year: 'numeric' });
+        if (createdMonthLabel === currentMonthLabel) continue;
 
         await addPayment({
           tenantId: t._id || t.id,
@@ -594,6 +630,13 @@ export function StoreProvider({ children }) {
     }
     return billedCount;
   }, [tenants, payments, addPayment, updateTenant, fetchTenants, fetchPayments]);
+
+  useEffect(() => {
+    if (tenantsLoaded && paymentsLoaded && !hasCheckedBills && isAuthenticated) {
+      setHasCheckedBills(true);
+      checkMonthlyBills();
+    }
+  }, [tenantsLoaded, paymentsLoaded, hasCheckedBills, isAuthenticated, checkMonthlyBills]);
 
   const addRoom = async (roomData) => {
     try {
@@ -912,7 +955,7 @@ export function StoreProvider({ children }) {
 
     isAuthenticated, currentUser, login, signup, logout, updatePassword,
     theme, toggleTheme,
-    sidebarOpen, setSidebarOpen, activePage, setActivePage,
+    sidebarOpen, setSidebarOpen, activePage: activePageState, setActivePage,
     searchQuery, setSearchQuery, searchResults,
     pageAction, setPageAction, navigateWithAction,
 
