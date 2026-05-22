@@ -207,65 +207,45 @@ export default function PaymentsPage() {
           {filtered.length === 0 && <div className="page-empty">No payments match your search</div>}
         </div>
 
-        <div className="mobile-only animate-in" style={{ flexDirection: 'column', gap: '12px' }}>
+        <div className="mobile-only animate-in" style={{ flexDirection: 'column', padding: '0 8px' }}>
           {filtered.slice(0, 50).map(p => {
             const MethodIcon = methodIcons[p.method] || CreditCard;
             return (
-              <div key={p._id || p.id} style={{ display: 'flex', flexDirection: 'column', padding: '16px', background: 'var(--bg-card)', border: '1px solid var(--border-primary)', borderRadius: '16px', gap: '16px' }}>
-                <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'flex-start' }}>
-                  <div style={{ display: 'flex', flexDirection: 'column', gap: '4px' }}>
-                    <span style={{ fontSize: '16px', fontWeight: 700, color: 'var(--text-primary)' }}>{getTenantName(p)}</span>
-                    <span style={{ fontSize: '12px', fontWeight: 600, color: 'var(--text-secondary)' }}>Room {getTenantRoom(p)}</span>
-                  </div>
-                  <div style={{ display: 'flex', gap: '6px' }}>
-                    <button className="table-action-btn edit" onClick={() => openEdit(p)} title="Edit" style={{ background: 'var(--bg-secondary)' }}><Edit2 size={14} /></button>
-                    <button className="table-action-btn delete" onClick={() => openDelete(p)} title="Delete" style={{ background: 'var(--bg-secondary)' }}><Trash2 size={14} /></button>
-                  </div>
+              <div key={p._id || p.id} style={{ display: 'flex', alignItems: 'center', padding: '16px 0', borderBottom: '1px solid var(--border-primary)' }}>
+                {/* Avatar / Icon */}
+                <div style={{ width: '48px', height: '48px', borderRadius: '50%', background: 'rgba(16, 185, 129, 0.1)', display: 'flex', alignItems: 'center', justifyContent: 'center', marginRight: '16px', flexShrink: 0, color: '#10b981' }}>
+                  <MethodIcon size={20} />
                 </div>
                 
-                <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', background: 'var(--bg-secondary)', padding: '12px', borderRadius: '12px' }}>
-                  <div style={{ display: 'flex', flexDirection: 'column', gap: '2px' }}>
-                    <span style={{ fontSize: '11px', color: 'var(--text-tertiary)', fontWeight: 600, textTransform: 'uppercase' }}>Total</span>
-                    <span style={{ fontSize: '14px', fontWeight: 700, color: 'var(--text-secondary)' }}>₹{(p.totalAmount || 0).toLocaleString('en-IN')}</span>
+                {/* Main Info */}
+                <div style={{ flex: 1, minWidth: 0, display: 'flex', flexDirection: 'column', gap: '4px' }}>
+                  <div style={{ display: 'flex', alignItems: 'center', gap: '8px' }}>
+                    <span style={{ fontSize: '16px', fontWeight: 600, color: 'var(--text-primary)', whiteSpace: 'nowrap', overflow: 'hidden', textOverflow: 'ellipsis' }}>{getTenantName(p)}</span>
                   </div>
-                  <div style={{ display: 'flex', flexDirection: 'column', gap: '2px' }}>
-                    <span style={{ fontSize: '11px', color: 'var(--text-tertiary)', fontWeight: 600, textTransform: 'uppercase' }}>Paid</span>
-                    <span style={{ fontSize: '14px', fontWeight: 800, color: '#10b981' }}>+₹{(p.paidAmount || 0).toLocaleString('en-IN')}</span>
+                  <div style={{ fontSize: '13px', color: 'var(--text-tertiary)', display: 'flex', alignItems: 'center', gap: '6px' }}>
+                    <span style={{ background: 'var(--bg-secondary)', padding: '2px 6px', borderRadius: '4px', fontSize: '11px', fontWeight: 600, color: 'var(--text-secondary)' }}>Rm {getTenantRoom(p)}</span>
+                    <span>•</span>
+                    <span>{new Date(p.date).toLocaleDateString('en-IN', { day: 'numeric', month: 'short' })}</span>
                   </div>
-                  <div style={{ display: 'flex', flexDirection: 'column', gap: '2px', alignItems: 'flex-end' }}>
-                    <span style={{ fontSize: '11px', color: 'var(--text-tertiary)', fontWeight: 600, textTransform: 'uppercase' }}>Due</span>
-                    <span style={{ fontSize: '14px', fontWeight: 700, color: p.dueAmount > 0 ? '#ef4444' : 'var(--text-tertiary)' }}>{p.dueAmount > 0 ? `₹${p.dueAmount.toLocaleString()}` : '-'}</span>
-                  </div>
-                </div>
-
-                <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'flex-end' }}>
-                  <div style={{ display: 'flex', flexDirection: 'column', gap: '6px' }}>
-                    <span style={{ fontSize: '13px', fontWeight: '600', color: 'var(--text-secondary)' }}>
-                      {new Date(p.date).toLocaleDateString('en-IN', { day: 'numeric', month: 'short', year: 'numeric' })}
-                    </span>
-                    <div style={{ display: 'flex', alignItems: 'center', gap: '6px', flexWrap: 'wrap' }}>
-                      <div className="method-badge" style={{ padding: '4px 8px', borderRadius: '6px', fontSize: '11px', margin: 0 }}>
-                        <MethodIcon size={12} />
-                        {p.method}
-                      </div>
-                      {p.notes && (() => {
-                        let customNote = p.notes;
-                        if (customNote.includes(' - ')) customNote = customNote.split(' - ').slice(1).join(' - ');
-                        else if (customNote.match(/^(Partial payment|Full payment|Full dues cleared|Advance\/Deposit|Payment on update)/)) customNote = null;
-                        return customNote ? (
-                          <span style={{ fontSize: '11px', color: 'var(--text-tertiary)', maxWidth: '140px', whiteSpace: 'nowrap', overflow: 'hidden', textOverflow: 'ellipsis' }} title={customNote}>
-                            {customNote}
-                          </span>
-                        ) : null;
-                      })()}
+                  {p.dueAmount > 0 && (
+                    <div style={{ fontSize: '12px', color: '#ef4444', fontWeight: 500 }}>
+                      Due: ₹{p.dueAmount.toLocaleString('en-IN')}
                     </div>
+                  )}
+                </div>
+                
+                {/* Amount & Actions */}
+                <div style={{ display: 'flex', flexDirection: 'column', alignItems: 'flex-end', gap: '6px', marginLeft: '12px', flexShrink: 0 }}>
+                  <span style={{ fontSize: '16px', fontWeight: 700, color: '#10b981' }}>+₹{(p.paidAmount || 0).toLocaleString('en-IN')}</span>
+                  <div style={{ display: 'flex', gap: '12px', marginTop: '4px' }}>
+                    <button onClick={() => openEdit(p)} style={{ background: 'none', border: 'none', color: 'var(--text-tertiary)', padding: 0, cursor: 'pointer' }}><Edit2 size={14} /></button>
+                    <button onClick={() => openDelete(p)} style={{ background: 'none', border: 'none', color: '#ef4444', padding: 0, cursor: 'pointer' }}><Trash2 size={14} /></button>
                   </div>
-                  <span className={`status-pill completed`}>completed</span>
                 </div>
               </div>
             );
           })}
-          {filtered.length === 0 && <div className="page-empty">No payments match your search</div>}
+          {filtered.length === 0 && <div className="page-empty" style={{ border: 'none', background: 'transparent' }}>No payments match your search</div>}
         </div>
       </>
 
