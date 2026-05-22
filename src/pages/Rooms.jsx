@@ -1293,81 +1293,30 @@ export default function RoomsPage() {
                     const status = getMonthStatus(detailTenant, trackerYear, mIdx);
                     const paidDate = status === 'completed' ? getMonthPaidDate(detailTenant, trackerYear, mIdx) : null;
                     
-                    let bgColor = 'rgba(255, 255, 255, 0.02)';
-                    let textColor = 'var(--text-tertiary)';
-                    let borderColor = 'var(--border-primary)';
                     let badgeText = 'Not Due';
-                    let badgeBg = 'rgba(255, 255, 255, 0.05)';
-                    let badgeColor = 'var(--text-tertiary)';
-                    let opacity = 0.5;
 
                     if (status === 'completed') {
-                      bgColor = 'rgba(16, 185, 129, 0.02)';
-                      textColor = 'var(--text-primary)';
-                      borderColor = 'rgba(16, 185, 129, 0.15)';
                       badgeText = 'Paid ✓';
-                      badgeBg = 'rgba(16, 185, 129, 0.1)';
-                      badgeColor = '#10b981';
-                      opacity = 1;
                     } else if (status === 'pending') {
-                      bgColor = 'rgba(239, 68, 68, 0.02)';
-                      textColor = 'var(--text-primary)';
-                      borderColor = 'rgba(239, 68, 68, 0.15)';
                       badgeText = 'Pending ✗';
-                      badgeBg = 'rgba(239, 68, 68, 0.1)';
-                      badgeColor = '#ef4444';
-                      opacity = 1;
                     } else if (status === 'N/A') {
-                      bgColor = 'transparent';
-                      textColor = 'var(--text-tertiary)';
-                      borderColor = 'rgba(255, 255, 255, 0.05)';
                       badgeText = 'N/A';
-                      badgeBg = 'rgba(255, 255, 255, 0.02)';
-                      badgeColor = 'var(--text-tertiary)';
-                      opacity = 0.35;
                     }
 
+                    const normalizedStatus = status === 'N/A' ? 'na' : status.toLowerCase();
                     return (
                       <div
                         key={mName}
-                        style={{
-                          background: bgColor,
-                          border: `1px solid ${borderColor}`,
-                          borderRadius: '16px',
-                          padding: '16px 12px',
-                          textAlign: 'center',
-                          display: 'flex',
-                          flexDirection: 'column',
-                          alignItems: 'center',
-                          justifyContent: 'center',
-                          gap: '6px',
-                          opacity: opacity,
-                          transition: 'all 0.2s ease',
-                          boxShadow: status === 'completed' || status === 'pending' ? '0 4px 12px rgba(0, 0, 0, 0.05)' : 'none'
-                        }}
+                        className={`tracker-card status-${normalizedStatus}`}
                       >
-                        <span style={{ fontSize: '14px', fontWeight: 700, color: 'var(--text-primary)' }}>
+                        <span className="tracker-card-name">
                           {mName}
                         </span>
-                        <span style={{ 
-                          fontSize: '11px', 
-                          fontWeight: 800, 
-                          color: badgeColor, 
-                          background: badgeBg, 
-                          padding: '3px 8px', 
-                          borderRadius: '8px',
-                          textTransform: 'uppercase',
-                          letterSpacing: '0.02em'
-                        }}>
+                        <span className="tracker-card-badge">
                           {badgeText}
                         </span>
                         {status === 'completed' && paidDate && (
-                          <span style={{
-                            fontSize: '10px',
-                            fontWeight: 600,
-                            color: 'rgba(16, 185, 129, 0.7)',
-                            marginTop: '2px'
-                          }}>
+                          <span className="tracker-card-date">
                             {paidDate}
                           </span>
                         )}
