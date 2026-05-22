@@ -10,7 +10,6 @@ import {
   Tooltip, CartesianGrid, Legend
 } from 'recharts';
 import { useStore } from '../data/store';
-import Modal from '../components/Modal';
 import './Dashboard.css';
 
 // Animated counter hook
@@ -76,67 +75,19 @@ const chartTooltipStyle = {
 
 export default function Dashboard() {
   const {
-    rooms, tenants, payments, setActivePage, navigateWithAction,
+    rooms, tenants, payments, setActivePage,
     occupiedRooms, availableRooms, maintenanceRooms,
     totalPendingDues, monthlyRevenueTotal, monthlyExpenseTotal, monthlyProfit, yearlyProfit,
     totalDepositsCollected, totalMonthlyIncome, pendingElectricity,
     monthlyRevenue, occupancyData, expenseBreakdown,
-    addPayment, checkMonthlyBills
+    checkMonthlyBills
   } = useStore();
 
   useEffect(() => {
     checkMonthlyBills();
   }, []);
 
-  const [showAddPaymentModal, setShowAddPaymentModal] = useState(false);
-  const [paymentFormData, setPaymentFormData] = useState({});
 
-  const activeTenants = tenants.filter(t => t.status === 'active');
-  const parseNum = (val) => val === '' ? '' : Number(val);
-
-  const openAddPayment = () => {
-    const firstTenant = activeTenants[0];
-    const defaultAmount = firstTenant ? (firstTenant.pendingDues > 0 ? firstTenant.pendingDues : firstTenant.rent) : 0;
-    
-    setPaymentFormData({
-        tenantId: firstTenant?._id || firstTenant?.id || '',
-        tenantName: firstTenant?.name || '',
-        roomId: firstTenant?.roomId || '',
-        roomNumber: firstTenant?.roomNumber || '',
-        pendingDues: firstTenant?.pendingDues || 0,
-        rent: firstTenant?.rent || 0,
-        amount: defaultAmount,
-        method: 'Cash',
-        notes: firstTenant?.pendingDues > 0 ? 'Clearing pending dues' : 'Monthly rent payment'
-    });
-    setShowAddPaymentModal(true);
-  };
-
-  const handleAddPaymentSubmit = (e) => {
-    e.preventDefault();
-    const amountPaid = Number(paymentFormData.amount);
-    if (!amountPaid || amountPaid <= 0) return alert('Enter a valid amount');
-    
-    let totalAmount = paymentFormData.pendingDues > 0 ? paymentFormData.pendingDues : paymentFormData.rent;
-    let dueAmount = totalAmount - amountPaid;
-    if (dueAmount < 0) dueAmount = 0; // Prevent negative dues if they overpay
-
-    addPayment({
-        tenantId: paymentFormData.tenantId,
-        tenantName: paymentFormData.tenantName,
-        roomId: paymentFormData.roomId,
-        roomNumber: paymentFormData.roomNumber,
-        totalAmount: totalAmount,
-        paidAmount: amountPaid,
-        dueAmount: dueAmount,
-        method: paymentFormData.method,
-        status: 'completed',
-        notes: (dueAmount > 0 ? `Partial payment (₹${dueAmount.toLocaleString('en-IN')} remaining)` : 'Full payment') + (paymentFormData.notes ? ` - ${paymentFormData.notes}` : ''),
-        date: new Date().toISOString(),
-        month: new Date().toLocaleDateString('en-IN', { month: 'short', year: 'numeric' })
-    });
-    setShowAddPaymentModal(false);
-  };
 
   const recentPayments = payments.slice(0, 5);
   const dueAlerts = tenants.filter(t => t.pendingDues > 0).slice(0, 5);
@@ -168,28 +119,6 @@ export default function Dashboard() {
         <StatCard icon={PiggyBank} label="Yearly Profit" value={yearlyProfit} prefix="₹" color="#a78bfa" delay={8} />
       </div>
 
-      {/* Quick Actions */}
-      <div className="quick-actions animate-in">
-        <h3 className="section-title">Quick Actions</h3>
-        <div className="quick-actions-grid">
-          <button className="quick-action-btn" onClick={() => navigateWithAction('tenants', 'add')}>
-            <div className="quick-action-icon" style={{ background: 'rgba(99,102,241,0.12)', color: '#818cf8' }}><Plus size={18} /></div>
-            <span>Add Tenant</span>
-          </button>
-          <button className="quick-action-btn" onClick={openAddPayment}>
-            <div className="quick-action-icon" style={{ background: 'rgba(52,211,153,0.12)', color: '#34d399' }}><CreditCard size={18} /></div>
-            <span>Pay Dues</span>
-          </button>
-          <button className="quick-action-btn" onClick={() => setActivePage('reports')}>
-            <div className="quick-action-icon" style={{ background: 'rgba(96,165,250,0.12)', color: '#60a5fa' }}><Download size={18} /></div>
-            <span>Generate Report</span>
-          </button>
-          <button className="quick-action-btn" onClick={() => setActivePage('backup')}>
-            <div className="quick-action-icon" style={{ background: 'rgba(167,139,250,0.12)', color: '#a78bfa' }}><Database size={18} /></div>
-            <span>Backup Database</span>
-          </button>
-        </div>
-      </div>
 
       {/* Charts Row 1 */}
       <div className="charts-grid">
@@ -397,84 +326,7 @@ export default function Dashboard() {
         </div>
       </div>
 
-      <Modal isOpen={showAddPaymentModal} onClose={() => setShowAddPaymentModal(false)} title={`Quick Payment - ${activeTenants.find(t => (t._id || t.id) === paymentFormData.tenantId)?.name || 'Select Tenant'}`} maxWidth="420px">
-        <form onSubmit={handleAddPaymentSubmit}>
-          <div className="payment-modal-body" style={{ display: 'flex', flexDirection: 'column', gap: '20px' }}>
-            
-            {/* Tenant Selection */}
-            <div className="form-group full">
-                <label className="form-label" style={{ fontSize: '12px', fontWeight: 600 }}>Select Tenant</label>
-                <select className="form-select" style={{ height: '48px', borderRadius: '12px' }} value={paymentFormData.tenantId || ''} onChange={e => {
-                    const t = activeTenants.find(tenant => (tenant._id || tenant.id) === e.target.value);
-                    const amount = t.pendingDues > 0 ? t.pendingDues : t.rent;
-                    setPaymentFormData({
-                      ...paymentFormData, 
-                      tenantId: t._id || t.id, 
-                      tenantName: t.name,
-                      roomId: t.roomId,
-                      roomNumber: t.roomNumber,
-                      pendingDues: t.pendingDues || 0,
-                      rent: t.rent || 0,
-                      amount: amount, 
-                      notes: t.pendingDues > 0 ? 'Clearing pending dues' : 'Monthly rent payment'
-                    });
-                }} required>
-                    {activeTenants.map(t => (
-                        <option key={t._id || t.id} value={t._id || t.id}>{t.name} (Room {t.roomNumber})</option>
-                    ))}
-                </select>
-            </div>
 
-            {/* Outstanding Summary */}
-            <div className="payment-summary-card" style={{ background: 'rgba(248, 113, 113, 0.05)', borderRadius: '16px', padding: '20px', border: '1px dashed rgba(248, 113, 113, 0.3)', textAlign: 'center' }}>
-                <span style={{ fontSize: '11px', fontWeight: 600, color: 'var(--text-secondary)', textTransform: 'uppercase' }}>Current Balance</span>
-                <div style={{ fontSize: '28px', fontWeight: 800, color: 'var(--danger)', marginTop: '2px' }}>₹{(paymentFormData.pendingDues || 0).toLocaleString('en-IN')}</div>
-            </div>
-
-            {/* Arrears Breakdown */}
-            <div className="payment-section">
-                <div style={{ background: 'rgba(255,255,255,0.02)', borderRadius: '12px', border: '1px solid var(--border-primary)', maxHeight: '120px', overflowY: 'auto' }}>
-                    {(paymentFormData.pendingDues || 0) > 0 ? (
-                        <div style={{ display: 'flex', justifyContent: 'space-between', padding: '10px 14px' }}>
-                            <span style={{ fontSize: '12px', color: 'var(--text-secondary)' }}>
-                                {new Date().toLocaleDateString('en-IN', { month: 'long', year: 'numeric' })}
-                            </span>
-                            <span style={{ fontSize: '12px', fontWeight: 700, color: 'var(--danger)' }}>₹{paymentFormData.pendingDues.toLocaleString('en-IN')}</span>
-                        </div>
-                    ) : (
-                        <div style={{ padding: '12px', textAlign: 'center', color: 'var(--text-tertiary)', fontSize: '12px' }}>No pending dues.</div>
-                    )}
-                </div>
-            </div>
-
-            {/* Payment Fields */}
-            <div className="payment-form-stack" style={{ display: 'flex', flexDirection: 'column', gap: '16px' }}>
-                <div className="form-group">
-                    <label className="form-label" style={{ fontSize: '12px', fontWeight: 600 }}>Amount (₹)</label>
-                    <input type="number" className="form-input" style={{ height: '52px', borderRadius: '12px', fontSize: '18px', fontWeight: 700 }} value={paymentFormData.amount ?? ''} onChange={e => setPaymentFormData({...paymentFormData, amount: parseNum(e.target.value)})} required min="1" />
-                </div>
-                <div className="form-group">
-                    <label className="form-label" style={{ fontSize: '12px', fontWeight: 600 }}>Method</label>
-                    <select className="form-select" style={{ height: '48px', borderRadius: '12px' }} value={paymentFormData.method || 'Cash'} onChange={e => setPaymentFormData({...paymentFormData, method: e.target.value})}>
-                        <option value="Cash">💵 Cash</option>
-                        <option value="Online">📱 Online</option>
-                    </select>
-                </div>
-                {paymentFormData.method === 'Online' && (
-                  <div className="form-group">
-                    <label className="form-label" style={{ fontSize: '12px', fontWeight: 600 }}>Online Payment Notes / UPI Details</label>
-                    <input type="text" className="form-input" style={{ height: '48px', borderRadius: '12px' }} placeholder="e.g. PhonePe - txn_id_12345" value={paymentFormData.notes || ''} onChange={e => setPaymentFormData({...paymentFormData, notes: e.target.value})} />
-                  </div>
-                )}
-            </div>
-          </div>
-
-          <div className="form-actions" style={{ marginTop: '24px', borderTop: '1px solid var(--border-primary)', paddingTop: '20px' }}>
-            <button type="button" className="btn btn-ghost" style={{ flex: 1 }} onClick={() => setShowAddPaymentModal(false)}>Cancel</button>
-            <button type="submit" className="btn btn-primary" style={{ flex: 2, height: '48px', fontWeight: 700 }}>Confirm ₹{(Number(paymentFormData.amount) || 0).toLocaleString('en-IN')}</button>
-          </div>
-        </form>
-      </Modal>
 
     </div>
   );
