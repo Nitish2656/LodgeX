@@ -140,34 +140,111 @@ export default function PaymentsPage() {
         </div>
       </div>
 
-      <div className="table-wrapper animate-in">
-        <table className="data-table">
-          <thead>
-            <tr>
-              <th>Tenant</th>
-              <th>Room</th>
-              <th>Total</th>
-              <th>Paid</th>
-              <th>Due</th>
-              <th>Method</th>
-              <th>Date</th>
-              <th>Status</th>
-              <th>Actions</th>
-            </tr>
-          </thead>
-          <tbody>
-            {filtered.slice(0, 50).map(p => {
-              const MethodIcon = methodIcons[p.method] || CreditCard;
-              return (
-                <tr key={p._id || p.id}>
-                  <td><span className="table-cell-name">{getTenantName(p)}</span></td>
-                  <td><span className="table-room-badge">{getTenantRoom(p)}</span></td>
-                  <td>₹{(p.totalAmount || 0).toLocaleString('en-IN')}</td>
-                  <td className="text-bold text-success">₹{(p.paidAmount || 0).toLocaleString('en-IN')}</td>
-                  <td className="text-danger">{p.dueAmount > 0 ? `₹${p.dueAmount.toLocaleString()}` : '-'}</td>
-                  <td>
-                    <div style={{ display: 'flex', flexDirection: 'column', gap: '4px' }}>
-                      <div className="method-badge" style={{ width: 'fit-content' }}>
+      <>
+        <div className="desktop-only table-wrapper animate-in">
+          <table className="data-table">
+            <thead>
+              <tr>
+                <th>Tenant</th>
+                <th>Room</th>
+                <th>Total</th>
+                <th>Paid</th>
+                <th>Due</th>
+                <th>Method</th>
+                <th>Date</th>
+                <th>Status</th>
+                <th>Actions</th>
+              </tr>
+            </thead>
+            <tbody>
+              {filtered.slice(0, 50).map(p => {
+                const MethodIcon = methodIcons[p.method] || CreditCard;
+                return (
+                  <tr key={p._id || p.id}>
+                    <td><span className="table-cell-name">{getTenantName(p)}</span></td>
+                    <td><span className="table-room-badge">{getTenantRoom(p)}</span></td>
+                    <td>₹{(p.totalAmount || 0).toLocaleString('en-IN')}</td>
+                    <td className="text-bold text-success">₹{(p.paidAmount || 0).toLocaleString('en-IN')}</td>
+                    <td className="text-danger">{p.dueAmount > 0 ? `₹${p.dueAmount.toLocaleString()}` : '-'}</td>
+                    <td>
+                      <div style={{ display: 'flex', flexDirection: 'column', gap: '4px' }}>
+                        <div className="method-badge" style={{ width: 'fit-content' }}>
+                          <MethodIcon size={12} />
+                          {p.method}
+                        </div>
+                        {p.notes && (() => {
+                          let customNote = p.notes;
+                          if (customNote.includes(' - ')) customNote = customNote.split(' - ').slice(1).join(' - ');
+                          else if (customNote.match(/^(Partial payment|Full payment|Full dues cleared|Advance\/Deposit|Payment on update)/)) customNote = null;
+                          return customNote ? (
+                            <span style={{ fontSize: '11px', color: 'var(--text-tertiary)', maxWidth: '120px', whiteSpace: 'nowrap', overflow: 'hidden', textOverflow: 'ellipsis' }} title={customNote}>
+                              {customNote}
+                            </span>
+                          ) : null;
+                        })()}
+                      </div>
+                    </td>
+                    <td>
+                      <div style={{ display: 'flex', flexDirection: 'column', gap: '2px' }}>
+                        <span style={{ fontSize: '13px', fontWeight: '500' }}>{new Date(p.date).toLocaleDateString('en-IN', { day: 'numeric', month: 'short', year: 'numeric' })}</span>
+                        <span style={{ fontSize: '11px', color: 'var(--text-tertiary)', opacity: 0.8 }}>
+                          {new Date(p.date).toLocaleTimeString('en-IN', { hour: '2-digit', minute: '2-digit', hour12: true })}
+                        </span>
+                      </div>
+                    </td>
+                    <td><span className={`status-pill completed`}>completed</span></td>
+                    <td>
+                      <div style={{ display: 'flex', gap: '4px' }}>
+                          <button className="table-action-btn edit" onClick={() => openEdit(p)} title="Edit"><Edit2 size={14} /></button>
+                          <button className="table-action-btn delete" onClick={() => openDelete(p)} title="Delete"><Trash2 size={14} /></button>
+                      </div>
+                    </td>
+                  </tr>
+                );
+              })}
+            </tbody>
+          </table>
+          {filtered.length === 0 && <div className="page-empty">No payments match your search</div>}
+        </div>
+
+        <div className="mobile-only animate-in" style={{ flexDirection: 'column', gap: '12px' }}>
+          {filtered.slice(0, 50).map(p => {
+            const MethodIcon = methodIcons[p.method] || CreditCard;
+            return (
+              <div key={p._id || p.id} style={{ display: 'flex', flexDirection: 'column', padding: '16px', background: 'var(--bg-card)', border: '1px solid var(--border-primary)', borderRadius: '16px', gap: '16px' }}>
+                <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'flex-start' }}>
+                  <div style={{ display: 'flex', flexDirection: 'column', gap: '4px' }}>
+                    <span style={{ fontSize: '16px', fontWeight: 700, color: 'var(--text-primary)' }}>{getTenantName(p)}</span>
+                    <span style={{ fontSize: '12px', fontWeight: 600, color: 'var(--text-secondary)' }}>Room {getTenantRoom(p)}</span>
+                  </div>
+                  <div style={{ display: 'flex', gap: '6px' }}>
+                    <button className="table-action-btn edit" onClick={() => openEdit(p)} title="Edit" style={{ background: 'var(--bg-secondary)' }}><Edit2 size={14} /></button>
+                    <button className="table-action-btn delete" onClick={() => openDelete(p)} title="Delete" style={{ background: 'var(--bg-secondary)' }}><Trash2 size={14} /></button>
+                  </div>
+                </div>
+                
+                <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', background: 'var(--bg-secondary)', padding: '12px', borderRadius: '12px' }}>
+                  <div style={{ display: 'flex', flexDirection: 'column', gap: '2px' }}>
+                    <span style={{ fontSize: '11px', color: 'var(--text-tertiary)', fontWeight: 600, textTransform: 'uppercase' }}>Total</span>
+                    <span style={{ fontSize: '14px', fontWeight: 700, color: 'var(--text-secondary)' }}>₹{(p.totalAmount || 0).toLocaleString('en-IN')}</span>
+                  </div>
+                  <div style={{ display: 'flex', flexDirection: 'column', gap: '2px' }}>
+                    <span style={{ fontSize: '11px', color: 'var(--text-tertiary)', fontWeight: 600, textTransform: 'uppercase' }}>Paid</span>
+                    <span style={{ fontSize: '14px', fontWeight: 800, color: '#10b981' }}>+₹{(p.paidAmount || 0).toLocaleString('en-IN')}</span>
+                  </div>
+                  <div style={{ display: 'flex', flexDirection: 'column', gap: '2px', alignItems: 'flex-end' }}>
+                    <span style={{ fontSize: '11px', color: 'var(--text-tertiary)', fontWeight: 600, textTransform: 'uppercase' }}>Due</span>
+                    <span style={{ fontSize: '14px', fontWeight: 700, color: p.dueAmount > 0 ? '#ef4444' : 'var(--text-tertiary)' }}>{p.dueAmount > 0 ? `₹${p.dueAmount.toLocaleString()}` : '-'}</span>
+                  </div>
+                </div>
+
+                <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'flex-end' }}>
+                  <div style={{ display: 'flex', flexDirection: 'column', gap: '6px' }}>
+                    <span style={{ fontSize: '13px', fontWeight: '600', color: 'var(--text-secondary)' }}>
+                      {new Date(p.date).toLocaleDateString('en-IN', { day: 'numeric', month: 'short', year: 'numeric' })}
+                    </span>
+                    <div style={{ display: 'flex', alignItems: 'center', gap: '6px', flexWrap: 'wrap' }}>
+                      <div className="method-badge" style={{ padding: '4px 8px', borderRadius: '6px', fontSize: '11px', margin: 0 }}>
                         <MethodIcon size={12} />
                         {p.method}
                       </div>
@@ -176,35 +253,21 @@ export default function PaymentsPage() {
                         if (customNote.includes(' - ')) customNote = customNote.split(' - ').slice(1).join(' - ');
                         else if (customNote.match(/^(Partial payment|Full payment|Full dues cleared|Advance\/Deposit|Payment on update)/)) customNote = null;
                         return customNote ? (
-                          <span style={{ fontSize: '11px', color: 'var(--text-tertiary)', maxWidth: '120px', whiteSpace: 'nowrap', overflow: 'hidden', textOverflow: 'ellipsis' }} title={customNote}>
+                          <span style={{ fontSize: '11px', color: 'var(--text-tertiary)', maxWidth: '140px', whiteSpace: 'nowrap', overflow: 'hidden', textOverflow: 'ellipsis' }} title={customNote}>
                             {customNote}
                           </span>
                         ) : null;
                       })()}
                     </div>
-                  </td>
-                  <td>
-                    <div style={{ display: 'flex', flexDirection: 'column', gap: '2px' }}>
-                      <span style={{ fontSize: '13px', fontWeight: '500' }}>{new Date(p.date).toLocaleDateString('en-IN', { day: 'numeric', month: 'short', year: 'numeric' })}</span>
-                      <span style={{ fontSize: '11px', color: 'var(--text-tertiary)', opacity: 0.8 }}>
-                        {new Date(p.date).toLocaleTimeString('en-IN', { hour: '2-digit', minute: '2-digit', hour12: true })}
-                      </span>
-                    </div>
-                  </td>
-                  <td><span className={`status-pill completed`}>completed</span></td>
-                  <td>
-                    <div style={{ display: 'flex', gap: '4px' }}>
-                        <button className="table-action-btn edit" onClick={() => openEdit(p)} title="Edit"><Edit2 size={14} /></button>
-                        <button className="table-action-btn delete" onClick={() => openDelete(p)} title="Delete"><Trash2 size={14} /></button>
-                    </div>
-                  </td>
-                </tr>
-              );
-            })}
-          </tbody>
-        </table>
-        {filtered.length === 0 && <div className="page-empty">No payments match your search</div>}
-      </div>
+                  </div>
+                  <span className={`status-pill completed`}>completed</span>
+                </div>
+              </div>
+            );
+          })}
+          {filtered.length === 0 && <div className="page-empty">No payments match your search</div>}
+        </div>
+      </>
 
 
 
