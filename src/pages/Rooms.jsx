@@ -1340,7 +1340,7 @@ export default function RoomsPage() {
                     <span style={{ fontSize: '14px', fontWeight: 600, color: 'var(--text-primary)', whiteSpace: 'nowrap', overflow: 'hidden', textOverflow: 'ellipsis', textTransform: 'uppercase' }}>
                       RENT PAYMENT
                     </span>
-                    <span style={{ fontSize: '12px', color: 'var(--text-secondary)', whiteSpace: 'nowrap', overflow: 'hidden', textOverflow: 'ellipsis' }}>
+                    <span style={{ fontSize: '12px', color: 'var(--text-secondary)', lineHeight: 1.4 }}>
                       Room {detailTenant?.roomNumber} {p.notes ? `• ${p.notes}` : ''}
                     </span>
                     <span style={{ fontSize: '11px', color: 'var(--text-tertiary)', marginTop: '2px' }}>
