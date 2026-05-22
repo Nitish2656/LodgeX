@@ -1332,31 +1332,29 @@ export default function RoomsPage() {
           <div style={{ display: 'flex', flexDirection: 'column', gap: '12px' }}>
             {getTenantPayments(detailTenant._id || detailTenant.id).length > 0 ? (
               getTenantPayments(detailTenant._id || detailTenant.id).map((p, idx) => (
-                <div key={p._id || p.id} style={{ display: 'flex', alignItems: 'center', padding: '12px 0', borderBottom: '1px solid var(--border-primary)' }}>
-                  <div style={{ width: '44px', height: '44px', borderRadius: '50%', background: 'rgba(16, 185, 129, 0.1)', display: 'flex', alignItems: 'center', justifyContent: 'center', marginRight: '16px', flexShrink: 0, color: '#10b981' }}>
+                <div key={p._id || p.id} style={{ display: 'flex', alignItems: 'flex-start', padding: '16px 0', borderBottom: '1px solid var(--border-primary)' }}>
+                  <div style={{ width: '40px', height: '40px', borderRadius: '50%', background: 'rgba(16, 185, 129, 0.1)', display: 'flex', alignItems: 'center', justifyContent: 'center', marginRight: '16px', flexShrink: 0, color: '#10b981' }}>
                     <IndianRupee size={20} />
                   </div>
-                  <div style={{ flex: 1, minWidth: 0, display: 'flex', flexDirection: 'column', gap: '4px' }}>
-                    <span style={{ fontSize: '15px', fontWeight: 600, color: 'var(--text-primary)' }}>
-                      {new Date(p.date).toLocaleDateString('en-IN', { day: 'numeric', month: 'short', year: 'numeric' })}
+                  <div style={{ flex: 1, minWidth: 0, display: 'flex', flexDirection: 'column', gap: '2px' }}>
+                    <span style={{ fontSize: '14px', fontWeight: 600, color: 'var(--text-primary)', whiteSpace: 'nowrap', overflow: 'hidden', textOverflow: 'ellipsis', textTransform: 'uppercase' }}>
+                      RENT PAYMENT
                     </span>
-                    <div style={{ display: 'flex', alignItems: 'center', gap: '6px', flexWrap: 'wrap' }}>
-                      <span style={{ fontSize: '12px', color: 'var(--text-secondary)', fontWeight: 600 }}>{p.method}</span>
-                      {p.notes && (() => {
-                        let customNote = p.notes;
-                        if (customNote.includes(' - ')) customNote = customNote.split(' - ').slice(1).join(' - ');
-                        else if (customNote.match(/^(Partial payment|Full payment|Full dues cleared|Advance\/Deposit|Payment on update)/)) customNote = null;
-                        return customNote ? (
-                          <span style={{ fontSize: '11px', color: 'var(--text-tertiary)', maxWidth: '140px', whiteSpace: 'nowrap', overflow: 'hidden', textOverflow: 'ellipsis' }}>
-                            • {customNote}
-                          </span>
-                        ) : null;
-                      })()}
-                    </div>
+                    <span style={{ fontSize: '12px', color: 'var(--text-secondary)', whiteSpace: 'nowrap', overflow: 'hidden', textOverflow: 'ellipsis' }}>
+                      Room {detailTenant?.roomNumber} {p.notes ? `• ${p.notes}` : ''}
+                    </span>
+                    <span style={{ fontSize: '11px', color: 'var(--text-tertiary)', marginTop: '2px' }}>
+                      {new Date(p.date).toLocaleDateString('en-IN', { day: 'numeric', month: 'short', year: 'numeric' })}, {new Date(p.date).toLocaleTimeString('en-IN', { hour: 'numeric', minute: '2-digit', hour12: true })}
+                    </span>
                   </div>
-                  <div style={{ display: 'flex', flexDirection: 'column', alignItems: 'flex-end', gap: '4px', flexShrink: 0, marginLeft: '12px' }}>
-                    <span style={{ fontSize: '16px', fontWeight: 700, color: '#10b981' }}>+₹{p.paidAmount.toLocaleString('en-IN')}</span>
-                    <span style={{ fontSize: '10px', fontWeight: 800, color: '#10b981', background: 'rgba(16, 185, 129, 0.1)', padding: '2px 6px', borderRadius: '4px', textTransform: 'uppercase', letterSpacing: '0.05em' }}>Paid</span>
+                  <div style={{ display: 'flex', flexDirection: 'column', alignItems: 'flex-end', gap: '6px', marginLeft: '12px', flexShrink: 0 }}>
+                    <span style={{ fontSize: '15px', fontWeight: 600, color: '#10b981' }}>+₹{p.paidAmount.toLocaleString('en-IN')}</span>
+                    <div style={{ display: 'flex', alignItems: 'center', gap: '4px', marginTop: '12px' }}>
+                      <span style={{ fontSize: '11px', color: 'var(--text-secondary)' }}>Via {p.method}</span>
+                      <div style={{ width: '14px', height: '14px', borderRadius: '50%', background: '#0ea5e9', display: 'flex', alignItems: 'center', justifyContent: 'center', color: '#fff' }}>
+                        <IndianRupee size={8} strokeWidth={3} />
+                      </div>
+                    </div>
                   </div>
                 </div>
               ))

@@ -6,6 +6,23 @@ import './Pages.css';
 
 const methodIcons = { Cash: Banknote, UPI: Smartphone, 'Bank Transfer': CreditCard };
 
+const getInitials = (name) => {
+  if (!name) return '?';
+  const parts = name.trim().split(' ');
+  if (parts.length >= 2) return (parts[0][0] + parts[1][0]).toUpperCase();
+  return name.slice(0, 2).toUpperCase();
+};
+
+const getAvatarColor = (name) => {
+  if (!name) return '#2563eb';
+  const colors = ['#2563eb', '#16a34a', '#d97706', '#dc2626', '#7c3aed', '#0891b2', '#be185d'];
+  let hash = 0;
+  for (let i = 0; i < name.length; i++) {
+    hash = name.charCodeAt(i) + ((hash << 5) - hash);
+  }
+  return colors[Math.abs(hash) % colors.length];
+};
+
 export default function PaymentsPage() {
   const { 
     payments, activeTenants, tenants, addPayment, updatePayment, deletePayment,
@@ -207,39 +224,44 @@ export default function PaymentsPage() {
           {filtered.length === 0 && <div className="page-empty">No payments match your search</div>}
         </div>
 
-        <div className="mobile-only animate-in" style={{ flexDirection: 'column', padding: '0 8px' }}>
+        <div className="mobile-only animate-in" style={{ flexDirection: 'column', padding: '0 8px', background: 'var(--bg-primary)' }}>
           {filtered.slice(0, 50).map(p => {
-            const MethodIcon = methodIcons[p.method] || CreditCard;
+            const tName = getTenantName(p);
             return (
-              <div key={p._id || p.id} style={{ display: 'flex', alignItems: 'center', padding: '16px 0', borderBottom: '1px solid var(--border-primary)' }}>
-                {/* Avatar / Icon */}
-                <div style={{ width: '48px', height: '48px', borderRadius: '50%', background: 'rgba(16, 185, 129, 0.1)', display: 'flex', alignItems: 'center', justifyContent: 'center', marginRight: '16px', flexShrink: 0, color: '#10b981' }}>
-                  <MethodIcon size={20} />
+              <div key={p._id || p.id} style={{ display: 'flex', alignItems: 'flex-start', padding: '16px 0', borderBottom: '1px solid var(--border-primary)' }}>
+                {/* Avatar */}
+                <div style={{ width: '40px', height: '40px', borderRadius: '50%', background: getAvatarColor(tName), display: 'flex', alignItems: 'center', justifyContent: 'center', marginRight: '16px', flexShrink: 0, color: '#fff', fontSize: '14px', fontWeight: 600 }}>
+                  {getInitials(tName)}
                 </div>
                 
-                {/* Main Info */}
-                <div style={{ flex: 1, minWidth: 0, display: 'flex', flexDirection: 'column', gap: '4px' }}>
-                  <div style={{ display: 'flex', alignItems: 'center', gap: '8px' }}>
-                    <span style={{ fontSize: '16px', fontWeight: 600, color: 'var(--text-primary)', whiteSpace: 'nowrap', overflow: 'hidden', textOverflow: 'ellipsis' }}>{getTenantName(p)}</span>
-                  </div>
-                  <div style={{ fontSize: '13px', color: 'var(--text-tertiary)', display: 'flex', alignItems: 'center', gap: '6px' }}>
-                    <span style={{ background: 'var(--bg-secondary)', padding: '2px 6px', borderRadius: '4px', fontSize: '11px', fontWeight: 600, color: 'var(--text-secondary)' }}>Rm {getTenantRoom(p)}</span>
-                    <span>•</span>
-                    <span>{new Date(p.date).toLocaleDateString('en-IN', { day: 'numeric', month: 'short' })}</span>
-                  </div>
-                  {p.dueAmount > 0 && (
-                    <div style={{ fontSize: '12px', color: '#ef4444', fontWeight: 500 }}>
-                      Due: ₹{p.dueAmount.toLocaleString('en-IN')}
-                    </div>
-                  )}
+                {/* Middle Info */}
+                <div style={{ flex: 1, minWidth: 0, display: 'flex', flexDirection: 'column', gap: '2px' }}>
+                  <span style={{ fontSize: '14px', fontWeight: 600, color: 'var(--text-primary)', whiteSpace: 'nowrap', overflow: 'hidden', textOverflow: 'ellipsis', textTransform: 'uppercase' }}>
+                    {tName}
+                  </span>
+                  <span style={{ fontSize: '12px', color: 'var(--text-secondary)', whiteSpace: 'nowrap', overflow: 'hidden', textOverflow: 'ellipsis' }}>
+                    Room {getTenantRoom(p)} {p.notes ? `• ${p.notes}` : ''}
+                  </span>
+                  <span style={{ fontSize: '11px', color: 'var(--text-tertiary)', marginTop: '2px' }}>
+                    {new Date(p.date).toLocaleDateString('en-IN', { day: 'numeric', month: 'short', year: 'numeric' })}, {new Date(p.date).toLocaleTimeString('en-IN', { hour: 'numeric', minute: '2-digit', hour12: true })}
+                  </span>
                 </div>
                 
-                {/* Amount & Actions */}
+                {/* Right Actions & Amount */}
                 <div style={{ display: 'flex', flexDirection: 'column', alignItems: 'flex-end', gap: '6px', marginLeft: '12px', flexShrink: 0 }}>
-                  <span style={{ fontSize: '16px', fontWeight: 700, color: '#10b981' }}>+₹{(p.paidAmount || 0).toLocaleString('en-IN')}</span>
+                  <span style={{ fontSize: '15px', fontWeight: 600, color: '#10b981' }}>+₹{(p.paidAmount || 0).toLocaleString('en-IN')}</span>
+                  {p.dueAmount > 0 && <span style={{ fontSize: '10px', color: '#ef4444', fontWeight: 600 }}>Due: ₹{p.dueAmount.toLocaleString('en-IN')}</span>}
+                  
+                  <div style={{ display: 'flex', alignItems: 'center', gap: '4px', marginTop: p.dueAmount > 0 ? '4px' : '12px' }}>
+                    <span style={{ fontSize: '11px', color: 'var(--text-secondary)' }}>Via {p.method}</span>
+                    <div style={{ width: '14px', height: '14px', borderRadius: '50%', background: '#0ea5e9', display: 'flex', alignItems: 'center', justifyContent: 'center', color: '#fff' }}>
+                      <IndianRupee size={8} strokeWidth={3} />
+                    </div>
+                  </div>
+
                   <div style={{ display: 'flex', gap: '12px', marginTop: '4px' }}>
-                    <button onClick={() => openEdit(p)} style={{ background: 'none', border: 'none', color: 'var(--text-tertiary)', padding: 0, cursor: 'pointer' }}><Edit2 size={14} /></button>
-                    <button onClick={() => openDelete(p)} style={{ background: 'none', border: 'none', color: '#ef4444', padding: 0, cursor: 'pointer' }}><Trash2 size={14} /></button>
+                    <button onClick={() => openEdit(p)} style={{ background: 'none', border: 'none', color: 'var(--text-tertiary)', padding: 0, cursor: 'pointer' }}><Edit2 size={12} /></button>
+                    <button onClick={() => openDelete(p)} style={{ background: 'none', border: 'none', color: '#ef4444', padding: 0, cursor: 'pointer' }}><Trash2 size={12} /></button>
                   </div>
                 </div>
               </div>
