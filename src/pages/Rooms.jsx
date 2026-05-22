@@ -11,6 +11,23 @@ const statusConfig = {
   maintenance: { label: 'Maintenance', color: 'var(--danger)', bg: 'var(--danger-bg)' },
 };
 
+const getInitials = (name) => {
+  if (!name) return '?';
+  const parts = name.trim().split(' ');
+  if (parts.length >= 2) return (parts[0][0] + parts[1][0]).toUpperCase();
+  return name.slice(0, 2).toUpperCase();
+};
+
+const getAvatarColor = (name) => {
+  if (!name) return '#2563eb';
+  const colors = ['#2563eb', '#16a34a', '#d97706', '#dc2626', '#7c3aed', '#0891b2', '#be185d'];
+  let hash = 0;
+  for (let i = 0; i < name.length; i++) {
+    hash = name.charCodeAt(i) + ((hash << 5) - hash);
+  }
+  return colors[Math.abs(hash) % colors.length];
+};
+
 export default function RoomsPage() {
   const { rooms, tenants, payments, updateTenant, deleteTenant, vacateRoom, addPayment, addTenant, addRoom, updateRoom, deleteRoom, toggleRoomMaintenance, navigateWithAction, fetchTenantById, fetchPayments, uploadFile, searchQuery, pageAction, setPageAction } = useStore();
   const [filter, setFilter] = useState('all');
@@ -1331,41 +1348,51 @@ export default function RoomsPage() {
           <div style={{ display: 'flex', alignItems: 'center', gap: '8px', marginBottom: '16px', color: 'var(--text-primary)', fontWeight: 700, fontSize: '15px' }}><History size={18} style={{ color: 'var(--accent-primary)' }} /> Payment History</div>
           <div style={{ display: 'flex', flexDirection: 'column', gap: '12px' }}>
             {getTenantPayments(detailTenant._id || detailTenant.id).length > 0 ? (
-              getTenantPayments(detailTenant._id || detailTenant.id).map((p, idx) => (
-                <div key={p._id || p.id} style={{ display: 'flex', alignItems: 'flex-start', padding: '16px 0', borderBottom: '1px solid var(--border-primary)' }}>
-                  <div style={{ width: '40px', height: '40px', borderRadius: '50%', background: 'rgba(16, 185, 129, 0.1)', display: 'flex', alignItems: 'center', justifyContent: 'center', marginRight: '16px', flexShrink: 0, color: '#10b981' }}>
-                    <IndianRupee size={20} />
-                  </div>
-                  <div style={{ flex: 1, minWidth: 0, display: 'flex', flexDirection: 'column', gap: '2px' }}>
-                    <span style={{ fontSize: '14px', fontWeight: 600, color: 'var(--text-primary)', whiteSpace: 'nowrap', overflow: 'hidden', textOverflow: 'ellipsis', textTransform: 'uppercase' }}>
-                      RENT PAYMENT
-                    </span>
-                    <span style={{ fontSize: '12px', color: 'var(--text-secondary)', fontWeight: '500' }}>
-                      Room {detailTenant?.roomNumber}
-                    </span>
-                    {(() => {
-                      const cleaned = p.notes ? p.notes.replace(/\s*\(₹[\d,]+\s*remaining\)/g, '').replace(/\s*-\s*/g, ' ').trim() : '';
-                      return cleaned ? (
-                        <span style={{ fontSize: '11px', color: 'var(--text-secondary)', opacity: 0.9, lineHeight: 1.3 }}>
-                          {cleaned}
-                        </span>
-                      ) : null;
-                    })()}
-                    <span style={{ fontSize: '11px', color: 'var(--text-tertiary)', marginTop: '2px' }}>
-                      {new Date(p.date).toLocaleDateString('en-IN', { day: 'numeric', month: 'short', year: 'numeric' })}, {new Date(p.date).toLocaleTimeString('en-IN', { hour: 'numeric', minute: '2-digit', hour12: true })}
-                    </span>
-                  </div>
-                  <div style={{ display: 'flex', flexDirection: 'column', alignItems: 'flex-end', gap: '6px', marginLeft: '12px', flexShrink: 0 }}>
-                    <span style={{ fontSize: '15px', fontWeight: 600, color: '#10b981' }}>+₹{p.paidAmount.toLocaleString('en-IN')}</span>
-                    <div style={{ display: 'flex', alignItems: 'center', gap: '4px', marginTop: '12px' }}>
-                      <span style={{ fontSize: '11px', color: 'var(--text-secondary)' }}>Via {p.method}</span>
-                      <div style={{ width: '14px', height: '14px', borderRadius: '50%', background: '#0ea5e9', display: 'flex', alignItems: 'center', justifyContent: 'center', color: '#fff' }}>
-                        <IndianRupee size={8} strokeWidth={3} />
+              getTenantPayments(detailTenant._id || detailTenant.id).map((p, idx) => {
+                const tName = detailTenant?.name || 'Unknown';
+                return (
+                  <div key={p._id || p.id} style={{ display: 'flex', alignItems: 'flex-start', padding: '16px 0', borderBottom: '1px solid var(--border-primary)' }}>
+                    {/* Avatar */}
+                    <div style={{ width: '40px', height: '40px', borderRadius: '50%', background: getAvatarColor(tName), display: 'flex', alignItems: 'center', justifyContent: 'center', marginRight: '16px', flexShrink: 0, color: '#fff', fontSize: '14px', fontWeight: 600 }}>
+                      {getInitials(tName)}
+                    </div>
+                    
+                    {/* Middle Info */}
+                    <div style={{ flex: 1, minWidth: 0, display: 'flex', flexDirection: 'column', gap: '2px' }}>
+                      <span style={{ fontSize: '14px', fontWeight: 600, color: 'var(--text-primary)', whiteSpace: 'nowrap', overflow: 'hidden', textOverflow: 'ellipsis', textTransform: 'uppercase' }}>
+                        {tName}
+                      </span>
+                      <span style={{ fontSize: '12px', color: 'var(--text-secondary)', fontWeight: '500' }}>
+                        Room {p.roomNumber || detailTenant?.roomNumber || '-'}
+                      </span>
+                      {(() => {
+                        const cleaned = p.notes ? p.notes.replace(/\s*\(₹[\d,]+\s*remaining\)/g, '').replace(/\s*-\s*/g, ' ').trim() : '';
+                        return cleaned ? (
+                          <span style={{ fontSize: '11px', color: 'var(--text-secondary)', opacity: 0.9, lineHeight: 1.3 }}>
+                            {cleaned}
+                          </span>
+                        ) : null;
+                      })()}
+                      <span style={{ fontSize: '11px', color: 'var(--text-tertiary)', marginTop: '2px' }}>
+                        {new Date(p.date).toLocaleDateString('en-IN', { day: 'numeric', month: 'short', year: 'numeric' })}, {new Date(p.date).toLocaleTimeString('en-IN', { hour: 'numeric', minute: '2-digit', hour12: true })}
+                      </span>
+                    </div>
+                    
+                    {/* Right Actions & Amount */}
+                    <div style={{ display: 'flex', flexDirection: 'column', alignItems: 'flex-end', gap: '6px', marginLeft: '12px', flexShrink: 0 }}>
+                      <span style={{ fontSize: '15px', fontWeight: 600, color: '#10b981' }}>+₹{(p.paidAmount || 0).toLocaleString('en-IN')}</span>
+                      {p.dueAmount > 0 && <span style={{ fontSize: '10px', color: '#ef4444', fontWeight: 600 }}>Due: ₹{p.dueAmount.toLocaleString('en-IN')}</span>}
+                      
+                      <div style={{ display: 'flex', alignItems: 'center', gap: '4px', marginTop: p.dueAmount > 0 ? '4px' : '12px' }}>
+                        <span style={{ fontSize: '11px', color: 'var(--text-secondary)' }}>Via {p.method}</span>
+                        <div style={{ width: '14px', height: '14px', borderRadius: '50%', background: '#0ea5e9', display: 'flex', alignItems: 'center', justifyContent: 'center', color: '#fff' }}>
+                          <IndianRupee size={8} strokeWidth={3} />
+                        </div>
                       </div>
                     </div>
                   </div>
-                </div>
-              ))
+                );
+              })
             ) : (
               <div style={{ textAlign: 'center', padding: '32px', background: 'var(--bg-secondary)', borderRadius: '16px', border: '1px solid var(--border-primary)', color: 'var(--text-tertiary)', fontWeight: 600 }}>No payments recorded yet.</div>
             )}
