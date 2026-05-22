@@ -240,7 +240,7 @@ export default function PaymentsPage() {
                     {tName}
                   </span>
                   <span style={{ fontSize: '12px', color: 'var(--text-secondary)', lineHeight: 1.4 }}>
-                    Room {getTenantRoom(p)} {p.notes ? `• ${p.notes}` : ''}
+                    Room {getTenantRoom(p)} {p.notes ? `• ${p.notes.replace(/\s*\(₹[\d,]+\s*remaining\)/g, '')}` : ''}
                   </span>
                   <span style={{ fontSize: '11px', color: 'var(--text-tertiary)', marginTop: '2px' }}>
                     {new Date(p.date).toLocaleDateString('en-IN', { day: 'numeric', month: 'short', year: 'numeric' })}, {new Date(p.date).toLocaleTimeString('en-IN', { hour: 'numeric', minute: '2-digit', hour12: true })}
